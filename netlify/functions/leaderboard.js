@@ -1,6 +1,16 @@
 // netlify/functions/leaderboard.js
+//
+// GET  /.netlify/functions/leaderboard?form=best-score&limit=50
+// POST /.netlify/functions/leaderboard   (JSON önerilir; UTF-8 sağlam)
+//
+// Amaç:
+// - Leaderboard listesi: her playerId sadece 1 kez görünür (en yüksek skor).
+// - playerId yoksa fallback: aynı isim tekilleşir (Anonim spam da kesilir).
+// - Response: sadece {id, name, score, mode, playedAt} döner. (raw/ip/user_agent yok)
 
-const DEFAULT_LIMIT = 20;
+const DEFAULT_FORM = "best-score";
+const DEFAULT_LIMIT = 50;
+const MAX_LIMIT = 200;
 
 function corsHeaders() {
   return {
@@ -13,7 +23,11 @@ function corsHeaders() {
 function json(statusCode, data) {
   return {
     statusCode,
-    headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders() },
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store",
+      ...corsHeaders(),
+    },
     body: JSON.stringify(data),
   };
 }
@@ -21,15 +35,13 @@ function json(statusCode, data) {
 function sanitizeName(v) {
   let s = (v ?? "").toString().trim();
   if (!s) return "Anonim";
-  // aşırı uzun/garip girişleri kırp
+  s = s.replace(/[\u0000-\u001F\u007F]/g, ""); // kontrol karakterleri
   s = s.slice(0, 32);
-  // kontrol karakterlerini temizle
-  s = s.replace(/[\u0000-\u001F\u007F]/g, "");
   return s || "Anonim";
 }
 
 function toInt(v, fallback = 0) {
-  const n = Number.parseInt(v, 10);
+  const n = Number.parseInt(String(v ?? ""), 10);
   return Number.isFinite(n) ? n : fallback;
 }
 
@@ -45,22 +57,16 @@ function safeIsoDate(v) {
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
 
-// event.body hem JSON hem x-www-form-urlencoded gelebilir.
-// Türkçe karakterler için JSON en sağlamı; ama yine de iki formatı da destekliyoruz.
 function parseBody(event) {
   if (!event.body) return {};
   const ct = (event.headers?.["content-type"] || event.headers?.["Content-Type"] || "").toLowerCase();
 
-  // JSON
+  // JSON (UTF-8 için en sağlamı)
   if (ct.includes("application/json")) {
-    try {
-      return JSON.parse(event.body);
-    } catch {
-      return {};
-    }
+    try { return JSON.parse(event.body); } catch { return {}; }
   }
 
-  // Form URL Encoded
+  // x-www-form-urlencoded (fallback)
   if (ct.includes("application/x-www-form-urlencoded")) {
     try {
       const params = new URLSearchParams(event.body);
@@ -72,25 +78,17 @@ function parseBody(event) {
     }
   }
 
-  // fallback: dene JSON, olmazsa boş
-  try {
-    return JSON.parse(event.body);
-  } catch {
-    return {};
-  }
+  // Son çare: JSON dene
+  try { return JSON.parse(event.body); } catch { return {}; }
 }
 
-async function netlifyApi(path, { method = "GET", body } = {}) {
+async function netlifyApi(path, { method = "GET" } = {}) {
   const token = process.env.NETLIFY_ACCESS_TOKEN;
   if (!token) throw new Error("Missing NETLIFY_ACCESS_TOKEN env var");
 
   const res = await fetch(`https://api.netlify.com/api/v1${path}`, {
     method,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json; charset=utf-8",
-    },
-    body: body ? JSON.stringify(body) : undefined,
+    headers: { Authorization: `Bearer ${token}` },
   });
 
   const text = await res.text();
@@ -101,29 +99,22 @@ async function netlifyApi(path, { method = "GET", body } = {}) {
     const msg = typeof data === "string" ? data : (data?.message || JSON.stringify(data));
     throw new Error(`Netlify API ${res.status}: ${msg}`);
   }
-
   return data;
 }
 
 async function findFormIdByName(siteId, formName) {
   const forms = await netlifyApi(`/sites/${siteId}/forms`);
-  const f = Array.isArray(forms) ? forms.find(x => x?.name === formName) : null;
+  const f = Array.isArray(forms) ? forms.find((x) => x?.name === formName) : null;
   return f?.id || null;
 }
 
 async function listSubmissions(formId, limit) {
-  // Netlify submissions endpoint
-  // (form submissions list)
   const subs = await netlifyApi(`/forms/${formId}/submissions?per_page=${limit}`);
   return Array.isArray(subs) ? subs : [];
 }
 
-async function createSubmission(formName, fields) {
-  // Netlify Forms için en pratik yöntem:
-  // Sitenin kendi domainine POST etmek (function içinden) yerine
-  // Netlify API ile submission create etmek her hesapta açık olmayabiliyor.
-  // O yüzden burada "site endpoint" kullanıyoruz.
-  // DİKKAT: Bu ancak site canlıysa çalışır.
+// Netlify Forms submission: site root'a POST (Netlify backend formları yakalar)
+async function createSubmissionViaSite(formName, fields) {
   const siteUrl = process.env.URL; // Netlify otomatik verir (prod)
   if (!siteUrl) throw new Error("Missing URL env var (Netlify should provide it).");
 
@@ -135,13 +126,20 @@ async function createSubmission(formName, fields) {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" },
     body: formData.toString(),
+    redirect: "manual",
   });
 
-  // Netlify Forms genelde 200/201 veya redirect döner; 4xx ise hata verelim
   if (res.status >= 400) {
     const t = await res.text();
     throw new Error(`Form submit failed ${res.status}: ${t.slice(0, 200)}`);
   }
+}
+
+function buildKey(rawPlayerId, name) {
+  const pid = (rawPlayerId ?? "").toString().trim();
+  if (pid) return `pid:${pid.slice(0, 64)}`;
+  // playerId yoksa aynı isimleri birleştir (Anonim spamını da azaltır)
+  return `name:${name.toLowerCase()}`;
 }
 
 export async function handler(event) {
@@ -153,11 +151,13 @@ export async function handler(event) {
     const siteId = process.env.NETLIFY_SITE_ID;
     if (!siteId) return json(500, { ok: false, error: "Missing NETLIFY_SITE_ID env var" });
 
-    const url = new URL(event.rawUrl || `https://example.com${event.path}?${event.queryStringParameters || ""}`);
-    const formName = url.searchParams.get("form") || "best-score";
-    const limit = Math.min(toInt(url.searchParams.get("limit"), DEFAULT_LIMIT), 100);
+    const url = new URL(event.rawUrl || `https://example.com${event.path}`);
+    const formName = url.searchParams.get("form") || process.env.NETLIFY_FORM_NAME || DEFAULT_FORM;
 
-    // POST: yeni skor kaydı
+    const limitParam = toInt(url.searchParams.get("limit"), DEFAULT_LIMIT);
+    const limit = Math.max(1, Math.min(MAX_LIMIT, limitParam));
+
+    // ---------- POST: skor kaydı ----------
     if (event.httpMethod === "POST") {
       const body = parseBody(event);
 
@@ -165,10 +165,9 @@ export async function handler(event) {
       const score = Math.max(0, toInt(body.score, 0));
       const mode = pickMode(body.mode);
       const playedAt = safeIsoDate(body.playedAt) || new Date().toISOString();
-      const playerId = (body.playerId ?? "").toString().slice(0, 64);
+      const playerId = (body.playerId ?? "").toString().trim().slice(0, 64);
 
-      // Form’a kaydet (Netlify Forms)
-      await createSubmission(formName, {
+      await createSubmissionViaSite(formName, {
         playerName: name,
         score,
         mode,
@@ -180,22 +179,29 @@ export async function handler(event) {
       return json(200, { ok: true });
     }
 
-    // GET: leaderboard listele
+    // ---------- GET: leaderboard ----------
     const formId = await findFormIdByName(siteId, formName);
     if (!formId) return json(404, { ok: false, error: `Form not found: ${formName}` });
 
     const subs = await listSubmissions(formId, limit);
 
-    // raw’ı komple kaldırıp sadece gerekli alanları döndürüyoruz
-    const rows = subs.map(s => {
-      const raw = s?.data || s?.payload || s?.body || s?.raw || s?.fields || {};
+    // 1) normalize
+    const normalized = subs.map((s) => {
+      const raw = s?.data || {};
       const name = sanitizeName(raw.playerName || raw.name);
       const score = Math.max(0, toInt(raw.score, 0));
       const mode = pickMode(raw.mode);
-      const playedAt = safeIsoDate(raw.playedAt) || safeIsoDate(raw.ts) || safeIsoDate(s?.created_at) || null;
+      const playedAt =
+        safeIsoDate(raw.playedAt) ||
+        safeIsoDate(raw.ts) ||
+        safeIsoDate(s?.created_at) ||
+        null;
+
+      const key = buildKey(raw.playerId, name);
 
       return {
         id: s?.id || null,
+        key, // internal only
         name,
         score,
         mode,
@@ -203,13 +209,44 @@ export async function handler(event) {
       };
     });
 
-    // skor büyükten küçüğe sırala
-    rows.sort((a, b) => (b.score - a.score) || String(b.playedAt || "").localeCompare(String(a.playedAt || "")));
+    // 2) best per key (playerId)
+    const bestByKey = new Map();
+    for (const r of normalized) {
+      const prev = bestByKey.get(r.key);
+
+      if (!prev) {
+        bestByKey.set(r.key, r);
+        continue;
+      }
+
+      if (r.score > prev.score) {
+        bestByKey.set(r.key, r);
+        continue;
+      }
+
+      // eşit skor: daha yeni olanı seç
+      if (r.score === prev.score) {
+        const rT = r.playedAt ? Date.parse(r.playedAt) : -1;
+        const pT = prev.playedAt ? Date.parse(prev.playedAt) : -1;
+        if (rT > pT) bestByKey.set(r.key, r);
+      }
+    }
+
+    // 3) response rows (key'i çıkar)
+    const rows = [...bestByKey.values()].map(({ key, ...rest }) => rest);
+
+    // 4) sort
+    rows.sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      const bT = b.playedAt ? Date.parse(b.playedAt) : -1;
+      const aT = a.playedAt ? Date.parse(a.playedAt) : -1;
+      return bT - aT;
+    });
 
     return json(200, {
       ok: true,
       form: { id: formId, name: formName },
-      count: rows.length,
+      count: rows.length, // unique playerId sayısı
       rows,
     });
   } catch (e) {
