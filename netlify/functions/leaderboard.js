@@ -146,7 +146,7 @@ async function listSubmissionsAll(formId) {
 
 // Netlify Forms submission: site root'a POST (Netlify backend formları yakalar)
 async function createSubmissionViaSite(formName, fields) {
-  const siteUrl = process.env.URL; // Netlify otomatik verir (prod)
+  const siteUrl = process.env.URL; // Netlify prod'da otomatik set eder
   if (!siteUrl) throw new Error("Missing URL env var (Netlify should provide it).");
 
   const formData = new URLSearchParams();
@@ -182,7 +182,11 @@ export async function handler(event) {
     if (!siteId) return json(500, { ok: false, error: "Missing NETLIFY_SITE_ID env var" });
 
     const url = new URL(event.rawUrl || `https://example.com${event.path}`);
-    const formName = url.searchParams.get("form") || process.env.NETLIFY_FORM_NAME || DEFAULT_FORM;
+
+    const formName =
+      url.searchParams.get("form") ||
+      process.env.NETLIFY_FORM_NAME ||
+      DEFAULT_FORM;
 
     const limitParam = toInt(url.searchParams.get("limit"), DEFAULT_LIMIT);
     const limit = Math.max(1, Math.min(MAX_LIMIT, limitParam));
@@ -211,7 +215,7 @@ export async function handler(event) {
       return json(200, { ok: true });
     }
 
-    // ---------- GET: leaderboard ----------
+    // GET: leaderboard
     const formId = await findFormIdByName(siteId, formName);
     if (!formId) return json(404, { ok: false, error: `Form not found: ${formName}` });
 
@@ -225,9 +229,9 @@ export async function handler(event) {
       const score = Math.max(0, toInt(raw.score, 0));
       const mode = normalizeMode(raw.mode);
       const playedAt =
-        safeIsoDate(raw.playedAt) ||
-        safeIsoDate(raw.ts) ||
-        safeIsoDate(s?.created_at) ||
+        safeIso(raw.playedAt) ||
+        safeIso(raw.ts) ||
+        safeIso(s?.created_at) ||
         null;
 
       const key = buildKey(raw.playerId, name);
@@ -243,6 +247,7 @@ export async function handler(event) {
     const bestByKey = new Map();
     for (const r of normalized) {
       const prev = bestByKey.get(r.key);
+      if (!prev) { bestByKey.set(r.key, r); continue; }
 
       if (!prev) { bestByKey.set(r.key, r); continue; }
 
