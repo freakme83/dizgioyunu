@@ -7,16 +7,20 @@
 // - Leaderboard: her playerId sadece 1 kez görünür (en yüksek skor).
 // - Pagination: eski ama yüksek skorlar "kaybolmaz".
 // - mode filtresi: classic/easy ayrı listeler.
-// - playerId yoksa fallback: aynı isim tekilleşir (Anonim spam da kesilir).
+// - playerId yoksa fallback: aynı isim tekilleşir (Anonim spam da azaltılır).
 //
-// Response: { ok, form, count, rows }  (rows: {id, name, score, mode, playedAt})
+// Response: { ok, form, count, rows }
+// rows: { id, name, score, mode, playedAt }
 
 const DEFAULT_FORM = "best-score";
-const DEFAULT_LIMIT = 50;
+const DEFAULT_LIMIT = 25;
 const MAX_LIMIT = 200;
 
-const PER_PAGE = 100;             // Netlify API'de güvenli
-const HARD_MAX_SCAN = 5000;       // runaway önlemek için (gerekirse artır)
+// Netlify API pratikte 100/per_page ile stabil.
+const PER_PAGE = 100;
+
+// Güvenlik: forms büyürse function runaway olmasın.
+const HARD_MAX_SCAN = 5000;
 
 function corsHeaders() {
   return {
@@ -41,7 +45,7 @@ function json(statusCode, data) {
 function sanitizeName(v) {
   let s = (v ?? "").toString().trim();
   if (!s) return "Anonim";
-  s = s.replace(/[\u0000-\u001F\u007F]/g, "");
+  s = s.replace(/[\u0000-\u001F\u007F]/g, ""); // kontrol karakterleri
   s = s.slice(0, 32);
   return s || "Anonim";
 }
@@ -74,14 +78,22 @@ function safeIsoDate(v) {
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
 
+// Bazı deploy'larda dosyanın başka sürümü safeIso() çağırabiliyor.
+// Bu alias, "safeIso is not defined" hatasını da kökten kapatır.
+function safeIso(v) {
+  return safeIsoDate(v);
+}
+
 function parseBody(event) {
   if (!event.body) return {};
   const ct = (event.headers?.["content-type"] || event.headers?.["Content-Type"] || "").toLowerCase();
 
+  // JSON
   if (ct.includes("application/json")) {
     try { return JSON.parse(event.body); } catch { return {}; }
   }
 
+  // x-www-form-urlencoded (fallback)
   if (ct.includes("application/x-www-form-urlencoded")) {
     try {
       const params = new URLSearchParams(event.body);
@@ -93,6 +105,7 @@ function parseBody(event) {
     }
   }
 
+  // Son çare: JSON dene
   try { return JSON.parse(event.body); } catch { return {}; }
 }
 
@@ -105,9 +118,9 @@ async function netlifyApi(path, { method = "GET" } = {}) {
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  const text = await res.text();
+  const txt = await res.text();
   let data;
-  try { data = JSON.parse(text); } catch { data = text; }
+  try { data = JSON.parse(txt); } catch { data = txt; }
 
   if (!res.ok) {
     const msg = typeof data === "string" ? data : (data?.message || JSON.stringify(data));
@@ -137,7 +150,9 @@ async function listSubmissionsAll(formId) {
 
     all.push(...chunk);
 
-    if (chunk.length < PER_PAGE) break; // last page
+    // Son sayfa: chunk < PER_PAGE
+    if (chunk.length < PER_PAGE) break;
+
     page += 1;
   }
 
@@ -146,7 +161,7 @@ async function listSubmissionsAll(formId) {
 
 // Netlify Forms submission: site root'a POST (Netlify backend formları yakalar)
 async function createSubmissionViaSite(formName, fields) {
-  const siteUrl = process.env.URL; // Netlify prod'da otomatik set eder
+  const siteUrl = process.env.URL; // Netlify otomatik verir (prod)
   if (!siteUrl) throw new Error("Missing URL env var (Netlify should provide it).");
 
   const formData = new URLSearchParams();
@@ -169,6 +184,7 @@ async function createSubmissionViaSite(formName, fields) {
 function buildKey(rawPlayerId, name) {
   const pid = (rawPlayerId ?? "").toString().trim();
   if (pid) return `pid:${pid.slice(0, 64)}`;
+  // playerId yoksa aynı isimleri birleştir (Anonim spamını da azaltır)
   return `name:${name.toLowerCase()}`;
 }
 
@@ -182,11 +198,7 @@ export async function handler(event) {
     if (!siteId) return json(500, { ok: false, error: "Missing NETLIFY_SITE_ID env var" });
 
     const url = new URL(event.rawUrl || `https://example.com${event.path}`);
-
-    const formName =
-      url.searchParams.get("form") ||
-      process.env.NETLIFY_FORM_NAME ||
-      DEFAULT_FORM;
+    const formName = url.searchParams.get("form") || process.env.NETLIFY_FORM_NAME || DEFAULT_FORM;
 
     const limitParam = toInt(url.searchParams.get("limit"), DEFAULT_LIMIT);
     const limit = Math.max(1, Math.min(MAX_LIMIT, limitParam));
@@ -215,19 +227,20 @@ export async function handler(event) {
       return json(200, { ok: true });
     }
 
-    // GET: leaderboard
+    // ---------- GET: leaderboard ----------
     const formId = await findFormIdByName(siteId, formName);
     if (!formId) return json(404, { ok: false, error: `Form not found: ${formName}` });
 
-    // Pagination ile tara
+    // Kritik: sadece son N değil, pagination ile tara
     const subs = await listSubmissionsAll(formId);
 
-    // Normalize + mode filter
+    // 1) normalize
     let normalized = subs.map((s) => {
       const raw = s?.data || {};
       const name = sanitizeName(raw.playerName || raw.name);
       const score = Math.max(0, toInt(raw.score, 0));
       const mode = normalizeMode(raw.mode);
+
       const playedAt =
         safeIso(raw.playedAt) ||
         safeIso(raw.ts) ||
@@ -236,23 +249,37 @@ export async function handler(event) {
 
       const key = buildKey(raw.playerId, name);
 
-      return { id: s?.id || null, key, name, score, mode, playedAt };
+      return {
+        id: s?.id || null,
+        key, // internal only
+        name,
+        score,
+        mode,
+        playedAt,
+      };
     });
 
+    // 1.5) mode filtresi
     if (modeFilter !== "all") {
       normalized = normalized.filter((r) => r.mode === modeFilter);
     }
 
-    // Best per player
+    // 2) best per key (playerId)
     const bestByKey = new Map();
     for (const r of normalized) {
       const prev = bestByKey.get(r.key);
-      if (!prev) { bestByKey.set(r.key, r); continue; }
 
-      if (!prev) { bestByKey.set(r.key, r); continue; }
+      if (!prev) {
+        bestByKey.set(r.key, r);
+        continue;
+      }
 
-      if (r.score > prev.score) { bestByKey.set(r.key, r); continue; }
+      if (r.score > prev.score) {
+        bestByKey.set(r.key, r);
+        continue;
+      }
 
+      // eşit skor: daha yeni olanı seç
       if (r.score === prev.score) {
         const rT = r.playedAt ? Date.parse(r.playedAt) : -1;
         const pT = prev.playedAt ? Date.parse(prev.playedAt) : -1;
@@ -260,8 +287,10 @@ export async function handler(event) {
       }
     }
 
+    // 3) response rows (key'i çıkar)
     const rows = [...bestByKey.values()].map(({ key, ...rest }) => rest);
 
+    // 4) sort
     rows.sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
       const bT = b.playedAt ? Date.parse(b.playedAt) : -1;
@@ -269,6 +298,7 @@ export async function handler(event) {
       return bT - aT;
     });
 
+    // 5) limit uygula
     const limited = rows.slice(0, limit);
 
     return json(200, {
