@@ -1,16 +1,22 @@
 // netlify/functions/leaderboard.js
 //
-// GET  /.netlify/functions/leaderboard?form=best-score&limit=50
+// GET  /.netlify/functions/leaderboard?form=best-score&limit=25&mode=classic|easy|all
 // POST /.netlify/functions/leaderboard   (JSON önerilir; UTF-8 sağlam)
 //
 // Amaç:
-// - Leaderboard listesi: her playerId sadece 1 kez görünür (en yüksek skor).
+// - Leaderboard: her playerId sadece 1 kez görünür (en yüksek skor).
+// - Pagination: eski ama yüksek skorlar "kaybolmaz".
+// - mode filtresi: classic/easy ayrı listeler.
 // - playerId yoksa fallback: aynı isim tekilleşir (Anonim spam da kesilir).
-// - Response: sadece {id, name, score, mode, playedAt} döner. (raw/ip/user_agent yok)
+//
+// Response: { ok, form, count, rows }  (rows: {id, name, score, mode, playedAt})
 
 const DEFAULT_FORM = "best-score";
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
+
+const PER_PAGE = 100;             // Netlify API'de güvenli
+const HARD_MAX_SCAN = 5000;       // runaway önlemek için (gerekirse artır)
 
 function corsHeaders() {
   return {
@@ -35,7 +41,7 @@ function json(statusCode, data) {
 function sanitizeName(v) {
   let s = (v ?? "").toString().trim();
   if (!s) return "Anonim";
-  s = s.replace(/[\u0000-\u001F\u007F]/g, ""); // kontrol karakterleri
+  s = s.replace(/[\u0000-\u001F\u007F]/g, "");
   s = s.slice(0, 32);
   return s || "Anonim";
 }
@@ -45,10 +51,21 @@ function toInt(v, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
-function pickMode(v) {
+function normalizeMode(v) {
   const s = (v ?? "").toString().toLowerCase().trim();
   if (s === "easy" || s === "classic") return s;
+  if (s === "kolay") return "easy";
+  if (s === "klasik") return "classic";
   return "classic";
+}
+
+function normalizeModeFilter(v) {
+  const s = (v ?? "").toString().toLowerCase().trim();
+  if (!s || s === "all") return "all";
+  if (s === "easy" || s === "classic") return s;
+  if (s === "kolay") return "easy";
+  if (s === "klasik") return "classic";
+  return "all";
 }
 
 function safeIsoDate(v) {
@@ -61,12 +78,10 @@ function parseBody(event) {
   if (!event.body) return {};
   const ct = (event.headers?.["content-type"] || event.headers?.["Content-Type"] || "").toLowerCase();
 
-  // JSON (UTF-8 için en sağlamı)
   if (ct.includes("application/json")) {
     try { return JSON.parse(event.body); } catch { return {}; }
   }
 
-  // x-www-form-urlencoded (fallback)
   if (ct.includes("application/x-www-form-urlencoded")) {
     try {
       const params = new URLSearchParams(event.body);
@@ -78,7 +93,6 @@ function parseBody(event) {
     }
   }
 
-  // Son çare: JSON dene
   try { return JSON.parse(event.body); } catch { return {}; }
 }
 
@@ -108,9 +122,26 @@ async function findFormIdByName(siteId, formName) {
   return f?.id || null;
 }
 
-async function listSubmissions(formId, limit) {
-  const subs = await netlifyApi(`/forms/${formId}/submissions?per_page=${limit}`);
+async function listSubmissionsPage(formId, perPage, page) {
+  const subs = await netlifyApi(`/forms/${formId}/submissions?per_page=${perPage}&page=${page}`);
   return Array.isArray(subs) ? subs : [];
+}
+
+async function listSubmissionsAll(formId) {
+  const all = [];
+  let page = 1;
+
+  while (all.length < HARD_MAX_SCAN) {
+    const chunk = await listSubmissionsPage(formId, PER_PAGE, page);
+    if (!chunk.length) break;
+
+    all.push(...chunk);
+
+    if (chunk.length < PER_PAGE) break; // last page
+    page += 1;
+  }
+
+  return all.slice(0, HARD_MAX_SCAN);
 }
 
 // Netlify Forms submission: site root'a POST (Netlify backend formları yakalar)
@@ -138,7 +169,6 @@ async function createSubmissionViaSite(formName, fields) {
 function buildKey(rawPlayerId, name) {
   const pid = (rawPlayerId ?? "").toString().trim();
   if (pid) return `pid:${pid.slice(0, 64)}`;
-  // playerId yoksa aynı isimleri birleştir (Anonim spamını da azaltır)
   return `name:${name.toLowerCase()}`;
 }
 
@@ -157,13 +187,15 @@ export async function handler(event) {
     const limitParam = toInt(url.searchParams.get("limit"), DEFAULT_LIMIT);
     const limit = Math.max(1, Math.min(MAX_LIMIT, limitParam));
 
+    const modeFilter = normalizeModeFilter(url.searchParams.get("mode") || "all");
+
     // ---------- POST: skor kaydı ----------
     if (event.httpMethod === "POST") {
       const body = parseBody(event);
 
       const name = sanitizeName(body.playerName || body.name);
       const score = Math.max(0, toInt(body.score, 0));
-      const mode = pickMode(body.mode);
+      const mode = normalizeMode(body.mode);
       const playedAt = safeIsoDate(body.playedAt) || new Date().toISOString();
       const playerId = (body.playerId ?? "").toString().trim().slice(0, 64);
 
@@ -183,14 +215,15 @@ export async function handler(event) {
     const formId = await findFormIdByName(siteId, formName);
     if (!formId) return json(404, { ok: false, error: `Form not found: ${formName}` });
 
-    const subs = await listSubmissions(formId, limit);
+    // Pagination ile tara
+    const subs = await listSubmissionsAll(formId);
 
-    // 1) normalize
-    const normalized = subs.map((s) => {
+    // Normalize + mode filter
+    let normalized = subs.map((s) => {
       const raw = s?.data || {};
       const name = sanitizeName(raw.playerName || raw.name);
       const score = Math.max(0, toInt(raw.score, 0));
-      const mode = pickMode(raw.mode);
+      const mode = normalizeMode(raw.mode);
       const playedAt =
         safeIsoDate(raw.playedAt) ||
         safeIsoDate(raw.ts) ||
@@ -199,32 +232,22 @@ export async function handler(event) {
 
       const key = buildKey(raw.playerId, name);
 
-      return {
-        id: s?.id || null,
-        key, // internal only
-        name,
-        score,
-        mode,
-        playedAt,
-      };
+      return { id: s?.id || null, key, name, score, mode, playedAt };
     });
 
-    // 2) best per key (playerId)
+    if (modeFilter !== "all") {
+      normalized = normalized.filter((r) => r.mode === modeFilter);
+    }
+
+    // Best per player
     const bestByKey = new Map();
     for (const r of normalized) {
       const prev = bestByKey.get(r.key);
 
-      if (!prev) {
-        bestByKey.set(r.key, r);
-        continue;
-      }
+      if (!prev) { bestByKey.set(r.key, r); continue; }
 
-      if (r.score > prev.score) {
-        bestByKey.set(r.key, r);
-        continue;
-      }
+      if (r.score > prev.score) { bestByKey.set(r.key, r); continue; }
 
-      // eşit skor: daha yeni olanı seç
       if (r.score === prev.score) {
         const rT = r.playedAt ? Date.parse(r.playedAt) : -1;
         const pT = prev.playedAt ? Date.parse(prev.playedAt) : -1;
@@ -232,10 +255,8 @@ export async function handler(event) {
       }
     }
 
-    // 3) response rows (key'i çıkar)
     const rows = [...bestByKey.values()].map(({ key, ...rest }) => rest);
 
-    // 4) sort
     rows.sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
       const bT = b.playedAt ? Date.parse(b.playedAt) : -1;
@@ -243,11 +264,13 @@ export async function handler(event) {
       return bT - aT;
     });
 
+    const limited = rows.slice(0, limit);
+
     return json(200, {
       ok: true,
       form: { id: formId, name: formName },
-      count: rows.length, // unique playerId sayısı
-      rows,
+      count: limited.length,
+      rows: limited,
     });
   } catch (e) {
     return json(500, { ok: false, error: String(e?.message || e) });
