@@ -22151,140 +22151,278 @@ document.addEventListener('pointerdown', (e) => {
       </button>
     </div>
 
+    <div class="px-5 pt-4 pb-0">
+      <div class="inline-flex rounded-xl border border-[#4d3f2a]/60 bg-black/20 p-1 gap-1">
+        <button id="leaderboard-tab-classic" class="px-3 py-1.5 rounded-lg text-sm font-bold tracking-wide text-[#d6c3a3] bg-[#1a140c] border border-[#4d3f2a]/60">
+          Klasik
+        </button>
+        <button id="leaderboard-tab-easy" class="px-3 py-1.5 rounded-lg text-sm font-bold tracking-wide text-white/80 hover:text-white border border-transparent">
+          Kolay
+        </button>
+      </div>
+    </div>
+
     <div class="p-5 flex-1 overflow-hidden flex flex-col">
       <div id="leaderboard-loading" class="text-[#d6c3a3]/70 text-sm">Yükleniyor…</div>
-      <ol id="leaderboard-list" class="hidden mt-3 space-y-2 flex-1 overflow-y-auto pr-1 max-h-[420px]"></ol>
-      <div id="leaderboard-empty" class="hidden text-[#d6c3a3]/70 text-sm">Henüz skor yok.</div>
 
-      <div class="mt-4 text-xs text-[#d6c3a3]/50">
-        Not: Her oyuncu (ID) listede yalnızca en yüksek skoru ile görünür.
-      </div>
+      <!-- Classic -->
+      <ol id="leaderboard-list-classic" class="hidden mt-3 space-y-2 flex-1 overflow-y-auto pr-1 max-h-[420px]"></ol>
+
+      <!-- Easy -->
+      <ol id="leaderboard-list-easy" class="hidden mt-3 space-y-2 flex-1 overflow-y-auto pr-1 max-h-[420px]"></ol>
+
+      <div id="leaderboard-empty" class="hidden text-[#d6c3a3]/70 text-sm">Henüz skor yok.</div>
     </div>
   </div>
 </div>
-
-
 
 <script>
 (function(){
   function q(id){ return document.getElementById(id); }
 
-  
-async function loadAndRenderLeaderboard(){
-    const listEl = q('leaderboard-list');
-    const loadingEl = q('leaderboard-loading');
-    const emptyEl = q('leaderboard-empty');
-    if (!listEl) return;
+  var activeMode = 'classic'; // classic | easy
+  var activeRange = 'all';    // future: all | last24h
+  var LIMIT = 25;
 
-    // UI state: loading
-    if (loadingEl) loadingEl.classList.remove('hidden');
-    listEl.classList.add('hidden');
-    if (emptyEl) emptyEl.classList.add('hidden');
-    listEl.innerHTML = '';
+  var cache = {
+    classic: { rows: null, ts: 0 },
+    easy:    { rows: null, ts: 0 }
+  };
 
-    const modeLabel = (m)=>{
-      if(m==='classic') return 'klasik';
-      if(m==='easy') return 'kolay';
-      return String(m||'');
-    };
+  function buildLeaderboardUrl(opts){
+    var mode = (opts && opts.mode) ? opts.mode : activeMode;
+    var range = (opts && opts.range) ? opts.range : activeRange;
+    var limit = (opts && opts.limit) ? opts.limit : LIMIT;
+
+    var params = [];
+    params.push('mode=' + encodeURIComponent(mode));
+    params.push('limit=' + encodeURIComponent(String(limit)));
+
+    // future-proof: range support (UI not exposed yet)
+    if (range && range !== 'all') params.push('range=' + encodeURIComponent(range));
+
+    // cache bust
+    params.push('_=' + Date.now());
+
+    return '/.netlify/functions/leaderboard?' + params.join('&');
+  }
+
+  function escapeHtml(s){
+    return String(s ?? '').replace(/[&<>"']/g, function(c){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]);
+    });
+  }
+
+  function applyTabStyles(){
+    var tabClassic = q('leaderboard-tab-classic');
+    var tabEasy = q('leaderboard-tab-easy');
+
+    if(!tabClassic || !tabEasy) return;
+
+    if(activeMode === 'classic'){
+      tabClassic.className = "px-3 py-1.5 rounded-lg text-sm font-bold tracking-wide text-[#d6c3a3] bg-[#1a140c] border border-[#4d3f2a]/60";
+      tabEasy.className    = "px-3 py-1.5 rounded-lg text-sm font-bold tracking-wide text-white/80 hover:text-white border border-transparent";
+    } else {
+      tabEasy.className    = "px-3 py-1.5 rounded-lg text-sm font-bold tracking-wide text-white bg-white/10 border border-white/20";
+      tabClassic.className = "px-3 py-1.5 rounded-lg text-sm font-bold tracking-wide text-[#d6c3a3]/70 hover:text-[#d6c3a3] border border-transparent";
+    }
+  }
+
+  function setVisibleList(){
+    var listClassic = q('leaderboard-list-classic');
+    var listEasy = q('leaderboard-list-easy');
+    var emptyEl = q('leaderboard-empty');
+
+    if(listClassic) listClassic.classList.add('hidden');
+    if(listEasy) listEasy.classList.add('hidden');
+    if(emptyEl) emptyEl.classList.add('hidden');
+
+    if(activeMode === 'classic'){
+      if(listClassic) listClassic.classList.remove('hidden');
+    } else {
+      if(listEasy) listEasy.classList.remove('hidden');
+    }
+  }
+
+  function renderRows(mode, rows){
+    var listEl = (mode === 'easy') ? q('leaderboard-list-easy') : q('leaderboard-list-classic');
+    if(!listEl) return;
+
+    if(!Array.isArray(rows) || rows.length === 0){
+      listEl.innerHTML = '';
+      return;
+    }
+
+    if(mode === 'classic'){
+      listEl.innerHTML = rows.map(function(r, i){
+        var name = (r && (r.name ?? r.playerName) ? (r.name ?? r.playerName) : 'Anonim').toString();
+        var score = Number(r && r.score ? r.score : 0) || 0;
+        return (
+          '<li class="flex items-center justify-between gap-3 px-3 py-2 rounded-xl border border-[#4d3f2a]/60 bg-black/20">' +
+            '<div class="min-w-0">' +
+              '<span class="font-bold text-[#d6c3a3]">' + (i+1) + '.</span>' +
+              '<span class="text-[#d6c3a3] truncate ml-2">' + escapeHtml(name) + '</span>' +
+            '</div>' +
+            '<div class="text-[#d6c3a3] font-extrabold tabular-nums">' + score + '</div>' +
+          '</li>'
+        );
+      }).join('');
+    } else {
+      listEl.innerHTML = rows.map(function(r, i){
+        var name = (r && (r.name ?? r.playerName) ? (r.name ?? r.playerName) : 'Anonim').toString();
+        var score = Number(r && r.score ? r.score : 0) || 0;
+        return (
+          '<li class="flex items-center justify-between gap-3 px-3 py-2 rounded-xl border border-white/20 bg-white/5">' +
+            '<div class="min-w-0">' +
+              '<span class="font-bold text-white/90">' + (i+1) + '.</span>' +
+              '<span class="text-white truncate ml-2">' + escapeHtml(name) + '</span>' +
+            '</div>' +
+            '<div class="text-white font-extrabold tabular-nums">' + score + '</div>' +
+          '</li>'
+        );
+      }).join('');
+    }
+  }
+
+  async function loadAndRender(mode, force){
+    var loadingEl = q('leaderboard-loading');
+    var emptyEl = q('leaderboard-empty');
+
+    var listClassic = q('leaderboard-list-classic');
+    var listEasy = q('leaderboard-list-easy');
+    if(!listClassic || !listEasy) return;
+
+    var targetList = (mode === 'easy') ? listEasy : listClassic;
+
+    // show loading state
+    if(loadingEl) loadingEl.classList.remove('hidden');
+    if(emptyEl) emptyEl.classList.add('hidden');
+
+    // hide both lists while loading (prevents flicker)
+    listClassic.classList.add('hidden');
+    listEasy.classList.add('hidden');
+    targetList.innerHTML = '';
+
+    // cache: keep it simple (fresh for 20s unless force)
+    var now = Date.now();
+    var entry = cache[mode];
+    var isFresh = entry && entry.rows && (now - entry.ts < 20000);
+
+    if(!force && isFresh){
+      if(loadingEl) loadingEl.classList.add('hidden');
+      setVisibleList();
+      renderRows(mode, entry.rows);
+      return;
+    }
 
     try{
-      const url = '/.netlify/functions/leaderboard?mode=all&limit=25&_=' + Date.now();
-      const res = await fetch(url, {cache:'no-store', headers:{'Accept':'application/json'}});
-      const data = await res.json();
+      var url = buildLeaderboardUrl({ mode: mode, range: activeRange, limit: LIMIT });
+      var res = await fetch(url, { cache:'no-store', headers:{ 'Accept':'application/json' }});
+      var data = await res.json();
 
-      const rows = Array.isArray(data?.rows) ? data.rows
-                : Array.isArray(data?.leaderboard) ? data.leaderboard
-                : [];
+      var rows = Array.isArray(data && data.rows) ? data.rows
+               : Array.isArray(data && data.leaderboard) ? data.leaderboard
+               : [];
 
-      if(rows.length === 0){
-        if (loadingEl) loadingEl.classList.add('hidden');
-        if (emptyEl){
+      cache[mode] = { rows: rows, ts: Date.now() };
+
+      if(loadingEl) loadingEl.classList.add('hidden');
+
+      if(!rows || rows.length === 0){
+        if(emptyEl){
+          // keep color aligned with classic header; no extra explanation
           emptyEl.textContent = 'Henüz skor yok.';
           emptyEl.classList.remove('hidden');
         }
+        // still show the active list container (empty)
+        setVisibleList();
         return;
       }
 
-      // Render
-      listEl.innerHTML = rows.map((r, i)=>{
-        const name = (r?.name ?? r?.playerName ?? 'Anonim').toString();
-        const score = Number(r?.score ?? 0) || 0;
-        const mode = modeLabel(r?.mode);
-        return `
-          <li class="flex items-center justify-between gap-3 px-3 py-2 rounded-xl border border-[#4d3f2a]/60 bg-black/20">
-            <div class="min-w-0">
-              <span class="font-bold text-[#d6c3a3]">${i+1}.</span>
-              <span class="text-[#d6c3a3] truncate">${escapeHtml(name)}</span>
-              <span class="text-[#d6c3a3]/70 text-xs ml-2">(${escapeHtml(mode)})</span>
-            </div>
-            <div class="text-[#d6c3a3] font-extrabold tabular-nums">${score}</div>
-          </li>`;
-      }).join('');
+      setVisibleList();
+      renderRows(mode, rows);
 
-      if (loadingEl) loadingEl.classList.add('hidden');
-      listEl.classList.remove('hidden');
-    }catch(err){
+    } catch(err){
       console.error('[zirvedekiler] load failed:', err);
-      if (loadingEl) loadingEl.classList.add('hidden');
-      if (emptyEl){
+      if(loadingEl) loadingEl.classList.add('hidden');
+      if(emptyEl){
         emptyEl.textContent = 'Skorlar yüklenemedi.';
         emptyEl.classList.remove('hidden');
       }
+      setVisibleList();
     }
-  }
-
-function escapeHtml(s){
-    return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
   function openLeaderboard(){
-    const overlay = q('leaderboard-overlay');
-    if (!overlay) return;
+    var overlay = q('leaderboard-overlay');
+    if(!overlay) return;
     overlay.classList.remove('hidden');
-    loadAndRenderLeaderboard();
-     try { window.__lbOpen = true; } catch (_) {}
 
+    applyTabStyles();
+    setVisibleList();
+    loadAndRender(activeMode, true);
+
+    try { window.__lbOpen = true; } catch (_) {}
   }
 
   function closeLeaderboard(){
-    const overlay = q('leaderboard-overlay');
-    if (!overlay) return;
+    var overlay = q('leaderboard-overlay');
+    if(!overlay) return;
     overlay.classList.add('hidden');
-     try { window.__lbOpen = false; } catch (_) {}
-
+    try { window.__lbOpen = false; } catch (_) {}
   }
 
-  document.addEventListener('DOMContentLoaded', ()=>{
-    const btn = q('leaderboard-btn');
-    const closeBtn = q('leaderboard-close');
-    const overlay = q('leaderboard-overlay');
+  function switchMode(mode){
+    if(mode !== 'classic' && mode !== 'easy') return;
+    if(activeMode === mode){
+      // refresh on re-tap not needed; keep silent
+      return;
+    }
+    activeMode = mode;
+    applyTabStyles();
+    setVisibleList();
+    loadAndRender(activeMode, false);
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    var btn = q('leaderboard-btn');
+    var closeBtn = q('leaderboard-close');
+    var overlay = q('leaderboard-overlay');
+
+    var tabClassic = q('leaderboard-tab-classic');
+    var tabEasy = q('leaderboard-tab-easy');
 
     if(btn){
-      btn.addEventListener('click', (e)=>{ e.preventDefault(); openLeaderboard(); });
+      btn.addEventListener('click', function(e){ e.preventDefault(); openLeaderboard(); });
     }
     if(closeBtn){
-      closeBtn.addEventListener('click', (e)=>{ e.preventDefault(); closeLeaderboard(); });
+      closeBtn.addEventListener('click', function(e){ e.preventDefault(); closeLeaderboard(); });
     }
     if(overlay){
-      overlay.addEventListener('click', (e)=>{
+      overlay.addEventListener('click', function(e){
         if(e.target === overlay) closeLeaderboard();
       });
-      document.addEventListener('keydown', (e)=>{
+      document.addEventListener('keydown', function(e){
         if(e.key === 'Escape' && !overlay.classList.contains('hidden')) closeLeaderboard();
       });
+    }
+
+    if(tabClassic){
+      tabClassic.addEventListener('click', function(e){ e.preventDefault(); switchMode('classic'); });
+    }
+    if(tabEasy){
+      tabEasy.addEventListener('click', function(e){ e.preventDefault(); switchMode('easy'); });
     }
   });
 })();
 </script>
-
-
 
 <!-- (cleanup) removed legacy ZIRVEDEKILER PATCH v8 script -->
 
 <!-- /ZIRVEDEKILER PATCH v8 -->
 
 <!-- release: v7 stable -->
+<!-- preview-trigger: 2026-01-31 -->
 
 
 </body></html>

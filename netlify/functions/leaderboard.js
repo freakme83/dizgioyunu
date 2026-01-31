@@ -1,18 +1,22 @@
 // netlify/functions/leaderboard.js
 //
-// GET  /.netlify/functions/leaderboard?form=best-score&limit=25&mode=all
+// GET  /.netlify/functions/leaderboard?form=best-score&limit=25&mode=classic|easy|all
 // POST /.netlify/functions/leaderboard   (JSON önerilir; UTF-8 sağlam)
 //
-// Fix:
-// - Önceki sürüm sadece son "per_page=limit" submission'ı okuyordu → eski yüksek skorlar görünmüyordu.
-// - Bu sürüm pagination ile submission'ları sayfa sayfa tarar, sonra playerId bazlı max alır, sonra limit uygular.
+// Amaç:
+// - Leaderboard: her playerId sadece 1 kez görünür (en yüksek skor).
+// - Pagination: eski ama yüksek skorlar "kaybolmaz".
+// - mode filtresi: classic/easy ayrı listeler.
+// - playerId yoksa fallback: aynı isim tekilleşir (Anonim spam da kesilir).
+//
+// Response: { ok, form, count, rows }  (rows: {id, name, score, mode, playedAt})
 
 const DEFAULT_FORM = "best-score";
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
 
-const DEFAULT_PER_PAGE = 100;       // Netlify API için güvenli üst sınır
-const HARD_MAX_SCAN = 5000;         // runaway önlemek için (gerekirse 10k)
+const PER_PAGE = 100;             // Netlify API'de güvenli
+const HARD_MAX_SCAN = 5000;       // runaway önlemek için (gerekirse artır)
 
 function corsHeaders() {
   return {
@@ -64,7 +68,7 @@ function normalizeModeFilter(v) {
   return "all";
 }
 
-function safeIso(v) {
+function safeIsoDate(v) {
   if (!v) return null;
   const d = new Date(v);
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
@@ -123,25 +127,24 @@ async function listSubmissionsPage(formId, perPage, page) {
   return Array.isArray(subs) ? subs : [];
 }
 
-async function listSubmissionsAll(formId, perPage) {
+async function listSubmissionsAll(formId) {
   const all = [];
   let page = 1;
 
   while (all.length < HARD_MAX_SCAN) {
-    const chunk = await listSubmissionsPage(formId, perPage, page);
+    const chunk = await listSubmissionsPage(formId, PER_PAGE, page);
     if (!chunk.length) break;
 
     all.push(...chunk);
 
-    // Son sayfa: chunk < perPage
-    if (chunk.length < perPage) break;
-
+    if (chunk.length < PER_PAGE) break; // last page
     page += 1;
   }
 
   return all.slice(0, HARD_MAX_SCAN);
 }
 
+// Netlify Forms submission: site root'a POST (Netlify backend formları yakalar)
 async function createSubmissionViaSite(formName, fields) {
   const siteUrl = process.env.URL; // Netlify prod'da otomatik set eder
   if (!siteUrl) throw new Error("Missing URL env var (Netlify should provide it).");
@@ -190,14 +193,14 @@ export async function handler(event) {
 
     const modeFilter = normalizeModeFilter(url.searchParams.get("mode") || "all");
 
-    // POST: skor kaydı (opsiyonel; senin client zaten "/" a post ediyor, ama bu endpoint'i de tutuyoruz)
+    // ---------- POST: skor kaydı ----------
     if (event.httpMethod === "POST") {
       const body = parseBody(event);
 
       const name = sanitizeName(body.playerName || body.name);
       const score = Math.max(0, toInt(body.score, 0));
       const mode = normalizeMode(body.mode);
-      const playedAt = safeIso(body.playedAt) || safeIso(body.ts) || new Date().toISOString();
+      const playedAt = safeIsoDate(body.playedAt) || new Date().toISOString();
       const playerId = (body.playerId ?? "").toString().trim().slice(0, 64);
 
       await createSubmissionViaSite(formName, {
@@ -216,10 +219,10 @@ export async function handler(event) {
     const formId = await findFormIdByName(siteId, formName);
     if (!formId) return json(404, { ok: false, error: `Form not found: ${formName}` });
 
-    // >>> KRİTİK FIX: tek sayfa değil, pagination ile tara
-    const subs = await listSubmissionsAll(formId, DEFAULT_PER_PAGE);
+    // Pagination ile tara
+    const subs = await listSubmissionsAll(formId);
 
-    // normalize
+    // Normalize + mode filter
     let normalized = subs.map((s) => {
       const raw = s?.data || {};
       const name = sanitizeName(raw.playerName || raw.name);
@@ -240,15 +243,16 @@ export async function handler(event) {
       normalized = normalized.filter((r) => r.mode === modeFilter);
     }
 
-    // best per key
+    // Best per player
     const bestByKey = new Map();
     for (const r of normalized) {
       const prev = bestByKey.get(r.key);
       if (!prev) { bestByKey.set(r.key, r); continue; }
 
+      if (!prev) { bestByKey.set(r.key, r); continue; }
+
       if (r.score > prev.score) { bestByKey.set(r.key, r); continue; }
 
-      // eşit skor: daha yeni olanı seç
       if (r.score === prev.score) {
         const rT = r.playedAt ? Date.parse(r.playedAt) : -1;
         const pT = prev.playedAt ? Date.parse(prev.playedAt) : -1;
@@ -256,10 +260,8 @@ export async function handler(event) {
       }
     }
 
-    // key'i çıkar
     const rows = [...bestByKey.values()].map(({ key, ...rest }) => rest);
 
-    // sort
     rows.sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
       const bT = b.playedAt ? Date.parse(b.playedAt) : -1;
@@ -267,15 +269,12 @@ export async function handler(event) {
       return bT - aT;
     });
 
-    // limit uygula
     const limited = rows.slice(0, limit);
 
     return json(200, {
       ok: true,
       form: { id: formId, name: formName },
-      mode: modeFilter,
-      scannedSubmissions: subs.length,
-      uniquePlayers: rows.length,
+      count: limited.length,
       rows: limited,
     });
   } catch (e) {
