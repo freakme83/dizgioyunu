@@ -1,6 +1,11 @@
 [[redirects]]
-  from = "/*"
+  from = "https://dizgi-oyunu.netlify.app/*"
   to = "https://dizgioyunu.com/:splat"
   status = 301
   force = true
-  conditions = { Host = ["dizgi-oyunu.netlify.app"] }
+
+[[redirects]]
+  from = "http://dizgi-oyunu.netlify.app/*"
+  to = "https://dizgioyunu.com/:splat"
+  status = 301
+  force = true
