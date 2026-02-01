@@ -7,8 +7,14 @@
     <meta name="apple-mobile-web-app-title" content="DİZGİ&lt;">
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="format-detection" content="telephone=no,date=no,address=no,email=no,url=no"><title>DİZGİ‹</title>
- <script src="https://cdn.tailwindcss.com">const CURRENT_VERSION = "1.03";
-const VERSION_POPUP_STORAGE_KEY = "dizgi_seen_version";
+ <script src="https://cdn.tailwindcss.com"></script>
+<script>
+  // App version + one-time popup storage key (kept on window to avoid const collisions)
+  window.DIZGI_VERSION = "1.03";
+  window.DIZGI_SEEN_VERSION_KEY = "dizgi_seen_version";
+  // Back-compat (some scripts may still reference these)
+  window.CURRENT_VERSION = window.DIZGI_VERSION;
+  window.VERSION_POPUP_STORAGE_KEY = window.DIZGI_SEEN_VERSION_KEY;
 </script>
  <style>
         @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap');
@@ -403,6 +409,14 @@ body{
 .rn-close{min-width:44px;min-height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.25);color:#fff;font-size:24px;line-height:1}
 .rn-body{color:rgba(255,255,255,.9);font-size:15px;line-height:1.35;display:grid;gap:4px;margin:10px 0 12px}
 .rn-ok{width:100%;min-height:44px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.28);color:#fff;font-weight:700}
+
+
+.ff-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#000;z-index:9998}
+.ff-overlay[aria-hidden="false"]{display:flex}
+.ff-wrap{max-width:min(92vw,720px);padding:24px 18px;text-align:center}
+.ff-text{color:#fff;font-size:1.05rem;line-height:1.45;white-space:pre-wrap}
+.ff-hint{margin-top:22px;color:rgba(255,255,255,.85);font-size:.85rem;letter-spacing:.08em;text-transform:lowercase;animation:ffBlink 2.8s ease-in-out infinite}
+@keyframes ffBlink{0%,100%{opacity:.35}50%{opacity:.8}}50%{opacity:1}}
 @media (hover:hover) and (pointer:fine){.rn-close:hover,.rn-ok:hover{filter:brightness(1.08)}}
 
 /* v102 input stability */
@@ -22165,6 +22179,151 @@ document.addEventListener('pointerdown', (e) => {
   </div>
 
 
+  <div id="funFactModal" class="ff-overlay" aria-hidden="true">
+    <div class="ff-wrap" role="dialog" aria-modal="true" aria-label="DİZGİ< notu">
+      <div id="ffText" class="ff-text"></div>
+      <div class="ff-hint" aria-hidden="true">oyuna başla</div>
+    </div>
+  </div>
+<script>
+  // Release Notes (one-time per version)
+  (function () {
+    const CURRENT_VERSION = (window.DIZGI_VERSION || window.CURRENT_VERSION || "1.03");
+    const VERSION_POPUP_STORAGE_KEY = (window.DIZGI_SEEN_VERSION_KEY || window.VERSION_POPUP_STORAGE_KEY || "dizgi_seen_version");
+
+    function showReleaseNotes() {
+      const modal = document.getElementById("releaseNotesModal");
+      if (!modal) return;
+      modal.setAttribute("aria-hidden", "false");
+      // mark global so other overlays don't stack
+      window.__DIZGI_OVERLAY_OPEN__ = true;
+    }
+
+    function hideReleaseNotes() {
+      const modal = document.getElementById("releaseNotesModal");
+      if (!modal) return;
+      modal.setAttribute("aria-hidden", "true");
+      window.__DIZGI_OVERLAY_OPEN__ = false;
+    }
+
+    function markSeen() {
+      try { localStorage.setItem(VERSION_POPUP_STORAGE_KEY, CURRENT_VERSION); } catch (_) {}
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const okBtn = document.getElementById("rnOkBtn");
+      const closeBtn = document.getElementById("rnCloseBtn");
+      const modal = document.getElementById("releaseNotesModal");
+
+      function closeAndRemember() {
+        markSeen();
+        hideReleaseNotes();
+      }
+
+      if (okBtn) okBtn.addEventListener("click", closeAndRemember);
+      if (closeBtn) closeBtn.addEventListener("click", closeAndRemember);
+
+      if (modal) {
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) closeAndRemember();
+        });
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          const m = document.getElementById("releaseNotesModal");
+          if (m && m.getAttribute("aria-hidden") === "false") closeAndRemember();
+        }
+      });
+
+      let seen = null;
+      try { seen = localStorage.getItem(VERSION_POPUP_STORAGE_KEY); } catch (_) {}
+      if (seen !== CURRENT_VERSION) {
+        showReleaseNotes();
+      }
+    });
+  })();
+</script>
+<script>
+  // Fun Fact / Tip / Özlü söz (≈20% chance on load) — legacy full-screen style
+  (function () {
+    const QUOTES_TR = [
+      "DİZGİ<",
+      "İpucu: Uzun kelime, daha fazla süre.",
+      "İpucu: Kısa kelime bazen en hızlı yoldur.",
+      "İpucu: Aynı harf her zaman engel değildir.",
+      "İpucu: Önce kolay kelimeyi al, sonra büyüt.",
+      "İpucu: Zamanı uzatmak için kelimeyi uzat.",
+      "İpucu: Tek hamlelik kelime, iyi başlangıçtır.",
+      "İpucu: Seçtiğin kelime kadar, seçmediklerin de önemlidir.",
+      "İpucu: Bir harfi boşa harcamak, bir saniyeyi boşa harcamaktır.",
+      "İpucu: Bazen en iyi hamle, sade olandır.",
+      "İpucu: Aynı harften iki tane varsa, plan yap.",
+      "İpucu: Kelimeyi büyütürken ritmi bozma.",
+      "İpucu: Yanlış yola girersen temizlemekten çekinme.",
+      "Eğlenceli bilgi: DİZGİ< kod bilmeden geliştirildi.",
+      "Eğlenceli bilgi: DİZGİ< 40.000+ sözcükle oynuyor.",
+      "Eğlenceli bilgi: Bu oyunda kelimeler “puan”dan önce gelir.",
+      "Eğlenceli bilgi: Burada hız kadar sezgi de kazanır.",
+      "Her kelime bir seçimdir.",
+      "Anlam bazen kısa yoldan gider.",
+      "Kelime, sessiz bir mekanizmadır.",
+      "Zihin, harflerle düşünür.",
+      "Bir kelime kurarsın; bir şey kurulur.",
+      "Dikkat, oyunun gerçek süresidir.",
+      "Harfler yer değiştirir; sen de.",
+      "Fazla düşünmek de bir hamledir.",
+      "Küçük bir kelime, büyük bir kapı açar.",
+      "“Dünyadaki bütün umut, hiç hesaba katılmayan insanlardadır.”\n(Ursula K. Le Guin)",
+      "“Yaktığın her mum, verir bir gölgeye doğum.”\n(Ursula K. Le Guin)",
+      "“Her şeyi anlamak, her şeyi affetmektir.”\n(Evelyn Waugh)",
+      "“İnsan isimleri unuttuğu gibi kelimeleri de unutur.\nKişinin kelime dağarcığı sürekli gübrelenmeye ihtiyaç duyar,\nyoksa ölür.”\n(Evelyn Waugh)"
+    ];
+
+    function showFunFact() {
+      const modal = document.getElementById("funFactModal");
+      const textEl = document.getElementById("ffText");
+      if (!modal || !textEl) return;
+
+      const pick = QUOTES_TR[Math.floor(Math.random() * QUOTES_TR.length)];
+      textEl.textContent = pick;
+
+      modal.setAttribute("aria-hidden", "false");
+      window.__DIZGI_OVERLAY_OPEN__ = true;
+    }
+
+    function hideFunFact() {
+      const modal = document.getElementById("funFactModal");
+      if (!modal) return;
+      modal.setAttribute("aria-hidden", "true");
+      window.__DIZGI_OVERLAY_OPEN__ = false;
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const modal = document.getElementById("funFactModal");
+
+      function close() { hideFunFact(); }
+
+      // Close on click anywhere
+      if (modal) modal.addEventListener("click", close);
+
+      // Close on any key
+      document.addEventListener("keydown", () => {
+        const m = document.getElementById("funFactModal");
+        if (m && m.getAttribute("aria-hidden") === "false") close();
+      });
+
+      // Give other overlays (release notes) a beat to claim the screen.
+      setTimeout(() => {
+        // If another overlay is open, do nothing this load.
+        if (window.__DIZGI_OVERLAY_OPEN__) return;
+
+        // Each page load: 20% chance.
+        if (Math.random() < 0.20) showFunFact();
+      }, 150);
+    });
+  })();
+</script>
 <!-- (cleanup) removed legacy rules/leaderboard script + overlay HTML -->
 <!-- leaderboard overlay -->
 <div id="leaderboard-overlay" class="hidden fixed inset-0 z-[950] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
