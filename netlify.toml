@@ -1,0 +1,6 @@
+[[redirects]]
+  from = "/*"
+  to = "https://dizgioyunu.com/:splat"
+  status = 301
+  force = true
+  conditions = { Host = ["dizgi-oyunu.netlify.app"] }
