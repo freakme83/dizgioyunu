@@ -19698,6 +19698,7 @@ kaim
 kaime
 kain
 kainat
+kaju
 kak
 kaka
 kakala
@@ -19813,6 +19814,7 @@ kaldırıma
 kaldırımı
 kale
 kalebent
+kaleci
 kalecik
 kalecime
 kalecisiz
@@ -29472,6 +29474,7 @@ panayır
 pancar
 panda
 pandantif
+pandemi
 pandomima
 pandül
 panel
@@ -29602,6 +29605,7 @@ parşömen
 pas
 pasaj
 pasak
+pasaklı
 pasaport
 pasavan
 pasif
@@ -32153,6 +32157,7 @@ sehvi
 sehvin
 sek
 seka
+sekans
 sekban
 sekendiz
 seki
@@ -40166,6 +40171,7 @@ yeteneğin
 yetenine
 yeter
 yeterince
+yeterli
 yeterlik
 yeterliğe
 yeterliği
