@@ -50,7 +50,7 @@
 <script>
   // App version + one-time popup storage key (kept on window to avoid const collisions)
   window.DIZGI_VERSION = "1.03";
-  window.DIZGI_SEEN_VERSION_KEY = "dizgi_seen_version";
+  window.DIZGI_SEEN_VERSION_KEY = "dizgi_seen_version_1_03_support";
   // Back-compat (some scripts may still reference these)
   window.CURRENT_VERSION = window.DIZGI_VERSION;
   window.VERSION_POPUP_STORAGE_KEY = window.DIZGI_SEEN_VERSION_KEY;
@@ -569,7 +569,13 @@ body{
 </button><div id="share-panel" class="hidden mt-6 w-full max-w-[520px] bg-black/40 border border-white/10 rounded-2xl p-4 text-left"><div class="text-white font-bold tracking-wider mb-2">SKORUNU PAYLAŞ</div><pre id="share-text-box" class="whitespace-pre-wrap text-slate-200 text-sm bg-black/30 border border-white/10 rounded-xl p-3 select-text"></pre><div class="mt-3 flex items-center justify-center gap-3 flex-wrap"><button id="copy-share-btn" type="button"
  class="border border-white/20 hover:border-white/40 bg-white/10 hover:bg-white/15 text-white px-6 py-3 rounded-2xl font-bold text-sm active:scale-95 transition-all uppercase tracking-wider">
  KOPYALA
- </button><div id="copy-hint" class="hidden text-emerald-300 text-xs font-bold tracking-wider">KOPYALANDI ✅</div></div></div><div class="mt-6 text-slate-500 text-xs leading-relaxed"><div>© 2026 DİZGİ&lt;. Tüm hakları saklıdır.</div><div>© 2026 DİZGİ&lt;. All rights reserved.</div><div><a href="mailto:dizgi.oyunu@gmail.com" class="underline hover:text-slate-300 transition-colors">Geri bildirim ve iletişim için: dizgi.oyunu@gmail.com</a></div></div><div id="rules-panel" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+ </button><div id="copy-hint" class="hidden text-emerald-300 text-xs font-bold tracking-wider">KOPYALANDI ✅</div></div></div><div class="mt-6 text-slate-500 text-xs leading-relaxed"><div>© 2026 DİZGİ&lt;. Tüm hakları saklıdır.</div><div>© 2026 DİZGİ&lt;. All rights reserved.</div><div><a href="mailto:dizgi.oyunu@gmail.com" class="underline hover:text-slate-300 transition-colors">Geri bildirim ve iletişim için: dizgi.oyunu@gmail.com</a></div></div>
+<div class="mt-4">
+  <a id="bmc-btn" href="https://buymeacoffee.com/dizgioyunu" data-bmc="1" data-bmc-placement="home_ui" target="_blank" rel="noopener noreferrer"
+     class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-[#4d3f2a]/70 bg-black/20 text-[#d6c3a3] font-bold tracking-wider hover:bg-black/30 transition text-[11px] uppercase">
+    ☕ Bir kahve ısmarla
+  </a>
+</div><div id="rules-panel" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
   <div class="w-full max-w-[520px] bg-black/60 border border-white/15 rounded-3xl p-5 text-slate-200 shadow-2xl">
     <div class="flex items-start justify-between gap-4">
       <h3 class="text-xl font-bold text-white tracking-wider">KURALLAR</h3>
@@ -2073,6 +2079,12 @@ document.addEventListener('pointerdown', (e) => {
       </div>
       
         <div class="rn-body">
+<div style="margin-bottom:10px;">
+  <b>DİZGİ&lt;</b>, tek başına geliştirilen, reklamsız ve tamamen ücretsiz bir kelime oyunudur.
+  Eğer oyun sana keyif verdiyse, alan adı / barındırma gibi masrafları karşılamama katkı olmak için bir kahve ısmarlayabilirsin: 
+  <a href="https://buymeacoffee.com/dizgioyunu" data-bmc="1" data-bmc-placement="release_notes" target="_blank" rel="noopener noreferrer" style="text-decoration:underline; color:#D6C89A;">buymeacoffee.com/dizgioyunu</a> ☕
+</div>
+
           <div>• <b>Zirvedekiler eklendi:</b> Kolay ve Klasik mod için skor listeleri artık ayrı ayrı görüntüleniyor.</div>
           <div>• <b>Harf sayısı 9’a çıktı:</b> Artık <b>9 harflik</b> kelimeler de girilebiliyor!</div>
           <div>• <b>Kolay mod dengelendi:</b> Kolay modda uzun kelime bonusları ve puan dengesi yeniden ayarlandı.</div>
@@ -2514,5 +2526,23 @@ document.addEventListener('pointerdown', (e) => {
 <!-- release: v7 stable -->
 <!-- preview-trigger: 2026-01-31 -->
 
+
+
+<script>
+(function(){
+  function safeGtag(){ return typeof window.gtag === "function"; }
+  document.addEventListener("click", function(e){
+    var a = e.target.closest && e.target.closest('a[data-bmc="1"]');
+    if (!a) return;
+    var placement = a.getAttribute("data-bmc-placement") || "unknown";
+    if (safeGtag()) {
+      window.gtag("event", "bmc_click", {
+        placement: placement,
+        link_url: a.href
+      });
+    }
+  }, { capture: true });
+})();
+</script>
 
 </body></html>
