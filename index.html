@@ -442,28 +442,30 @@ body{
 /* Release Notes (v1.01) */
 .rn-backdrop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;
   /* Keep the dialog inside mobile safe areas (iOS notch / home indicator) */
-  padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)) 16px;
+  padding:calc(24px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom)) 16px;
   background:rgba(0,0,0,.55);z-index:9999}
 .rn-backdrop[aria-hidden="false"]{display:flex}
 .rn-card{width:min(92vw,380px);
-  /* Prevent the close button from drifting outside the safe zone on long notes */
-  max-height:calc(100vh - (32px + env(safe-area-inset-top) + env(safe-area-inset-bottom)));
-  display:flex;flex-direction:column;
-  border-radius:18px;background:rgba(22,22,22,.92);border:1px solid rgba(255,255,255,.12);
+  /* iOS Safari: use dynamic viewport to prevent top/bottom browser chrome from covering content */
+  max-height:calc(100dvh - (48px + env(safe-area-inset-top) + env(safe-area-inset-bottom)));
+  display:flex;flex-direction:column;overflow:hidden;
+  border-radius:18px;background:rgba(22,22,22,.96);border:1px solid rgba(255,255,255,.12);
   box-shadow:0 12px 40px rgba(0,0,0,.45);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  padding:14px 14px 12px}
-.rn-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;
-  /* Keep close button reachable when notes scroll */
-  position:sticky;top:0;z-index:2;
-  background:rgba(22,22,22,.92);
-  padding-top:2px;
-}
+  padding:0}
+.rn-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  position:sticky;top:0;z-index:3;
+  background:rgba(22,22,22,.98);
+  padding:14px 14px 10px}
 .rn-title{font-weight:800;letter-spacing:.5px;color:#D6C89A}
 .rn-close{min-width:44px;min-height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.25);color:#fff;font-size:24px;line-height:1}
-.rn-body{color:rgba(255,255,255,.9);font-size:15px;line-height:1.35;
-  display:grid;gap:4px;margin:10px 0 12px;
-  /* scroll long version notes inside the card */
-  overflow:auto; -webkit-overflow-scrolling:touch; flex:1; padding-right:4px}
+.rn-body{color:rgba(255,255,255,.92);font-size:15px;line-height:1.35;
+  display:grid;gap:4px;
+  /* Critical for iOS flex + scroll: allow the body to shrink and become scrollable */
+  flex:1;min-height:0;
+  overflow:auto;-webkit-overflow-scrolling:touch;
+  padding:0 14px 14px}
+.rn-foot{flex:0 0 auto;background:rgba(22,22,22,.98);
+  padding:0 14px calc(14px + env(safe-area-inset-bottom))}
 .rn-ok{width:100%;min-height:44px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.28);color:#fff;font-weight:700}
 
 
@@ -2109,7 +2111,9 @@ document.addEventListener('pointerdown', (e) => {
           <div>• Birçok hata giderildi — ve elbette yenileri oluşturuldu.</div>
           <div style="margin-top:10px;"><b>Not:</b> DİZGİ&lt; hâlâ geliştirme aşamasındadır. Oyun dengesi ve sözlük güncellemeleri nedeniyle puan listeleri zaman zaman silinebilir veya yeniden oluşturulabilir. Bazı kelimeler geçici olarak listede yer almayabilir. Öneri ve geri bildirimleriniz için: <b>dizgi.oyunu@gmail.com</b>. Anlayışınız için teşekkürler.</div>
         </div>
-        <button id="rnOkBtn" class="rn-ok" type="button">Tamam</button>
+        <div class="rn-foot">
+          <button id="rnOkBtn" class="rn-ok" type="button">Tamam</button>
+        </div>
     </div>
   </div>
 
