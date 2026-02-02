@@ -770,6 +770,12 @@ function shuffleInPlace(arr){
         let wordUsageCount = {};
         let freeSpins = 0;
         let jokers = 0;
+let allKeysBuilt = false;
+        let allKeyButtons = [];
+        let lastAllKeysDisabled = null;
+
+        // Turkish uppercase alphabet used for Joker "all letters" keyboard (no Q, W, X)
+        const ALL_LETTERS = Array.from("ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ");
 // alias for legacy UI refs
 Object.defineProperty(window, 'jokerCount', { get: () => jokers, set: v => { jokers = v; } });
 
@@ -1517,21 +1523,34 @@ function backspace() {
 
             if (touchKeysAllWrapEl && touchKeysAllEl) {
                 const showAll = (typeof jokers !== 'undefined' && jokers > 0) || (typeof devAccept !== 'undefined' && devAccept);
+
                 if (showAll) {
                     touchKeysAllWrapEl.classList.remove('hidden');
-                    touchKeysAllEl.innerHTML = '';
-                    for (const ch of ALL_LETTERS) {
-                        const btn = document.createElement('button');
-                        btn.type = 'button';
-                        btn.className = 'touch-key';
-                        btn.disabled = disabledAll;
-                        btn.innerHTML = `<div class="text-lg">${ch}</div>`;
-                        btn.addEventListener('click', () => appendLetter(ch));
-                        touchKeysAllEl.appendChild(btn);
+
+                    // Build once, then only toggle disabled to avoid jank
+                    if (!allKeysBuilt) {
+                        touchKeysAllEl.innerHTML = '';
+                        allKeyButtons = [];
+                        for (const ch of ALL_LETTERS) {
+                            const btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className = 'touch-key';
+                            btn.innerHTML = `<div class="text-lg">${ch}</div>`;
+                            btn.addEventListener('click', () => appendLetter(ch));
+                            touchKeysAllEl.appendChild(btn);
+                            allKeyButtons.push(btn);
+                        }
+                        allKeysBuilt = true;
+                        lastAllKeysDisabled = null; // force first toggle
+                    }
+
+                    if (lastAllKeysDisabled !== disabledAll) {
+                        for (const btn of allKeyButtons) btn.disabled = disabledAll;
+                        lastAllKeysDisabled = disabledAll;
                     }
                 } else {
                     touchKeysAllWrapEl.classList.add('hidden');
-                    touchKeysAllEl.innerHTML = '';
+                    // Keep DOM built for next time; no need to clear.
                 }
             }
 
