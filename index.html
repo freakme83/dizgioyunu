@@ -550,11 +550,46 @@ body{
 /* UI: Joker bar kaldırıldı (glow yeterli) */
 #joker-bar{display:none !important;}
 
+
+
+/* =========================
+   Overlay footer spacing (home vs end)
+   - Home screen: more breathing room
+   - End screen: tighter to prevent overflow on mobile
+========================= */
+#game-overlay.state-home .footer-block{
+  margin-top: 2.5rem; /* like mt-10 */
+}
+@media (min-width: 640px){
+  #game-overlay.state-home .footer-block{
+    margin-top: 3rem; /* like sm:mt-12 */
+  }
+}
+#game-overlay.state-end .footer-block{
+  margin-top: 1.25rem; /* tighter on game over */
+}
+@media (min-width: 640px){
+  #game-overlay.state-end .footer-block{
+    margin-top: 1.5rem;
+  }
+}
+
+/* Share panel collapse */
+#share-panel.is-collapsed #share-body{ display:none; }
+#share-panel.is-collapsed #share-toggle-icon{ transform: rotate(-90deg); }
+#share-toggle-icon{ transition: transform .15s ease; }
 </style>
 </head><body class="h-[100dvh] w-full overflow-hidden m-0 p-0 flex items-center justify-center" x-apple-data-detectors="false"><div class="w-full h-[100dvh] max-w-xl glass p-4 sm:p-8 rounded-none sm:rounded-[3rem] shadow-2xl relative border-t border-white/10 flex flex-col overflow-hidden">
 <div class="hud mb-4 sm:mb-8"><div class="hud-box hud-right bg-black/40 px-4 sm:px-6 py-2 sm:py-3 rounded-2xl border border-white/5 flex flex-col items-center relative min-w-[118px]"><span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">SKOR</span><span id="score" class="text-3xl font-black text-emerald-400">0</span></div><div class="hud-center text-center"><h1 class="text-xl font-black text-blue-400 leading-none mb-1 italic">DİZGİ‹</h1><div id="dev-badge" class="hidden mt-2 text-[10px] font-black tracking-[0.25em] text-rose-300/90">
  DEV: KABUL AÇIK
- </div><div id="dev-wordcheck" class="hidden mt-2 text-[11px] font-bold tracking-wide"></div><div id="devEasyWord" class="hidden mt-1 text-[11px] font-bold tracking-wide text-amber-200/90"></div></div><div class="hud-box hud-left bg-black/40 px-4 sm:px-6 py-2 sm:py-3 rounded-2xl border border-white/5 flex flex-col items-center relative min-w-[118px]"><span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">SÜRE</span><span id="timer" class="text-3xl font-black text-white">75</span><div id="time-pop" class="hidden absolute -right-2 -top-2 px-2 py-1 rounded-full text-xs font-black shadow-lg text-emerald-300 bg-emerald-950/70 border border-emerald-400/20">+5</div><div id="time-bonus-pop" class="pointer-events-none absolute -right-2 -top-2 hidden text-emerald-300 font-black text-lg">+5</div><div id="time-bonus-toast" class="hidden mt-1 text-sm font-black text-sky-300 tracking-wider">+10 SN</div></div></div><div class="grid grid-cols-3 gap-3 bg-slate-950 p-4 rounded-[2rem] border-4 border-slate-800 shadow-inner mb-8 relative"><div class="absolute top-1/3 left-0 w-full h-[1px] bg-white/10 pointer-events-none z-10"></div><div class="absolute top-2/3 left-0 w-full h-[1px] bg-white/10 pointer-events-none z-10"></div><div class="reel-container rounded-2xl overflow-hidden shadow-lg"><div id="reel-0" class="reel"></div></div><div class="reel-container rounded-2xl overflow-hidden shadow-lg"><div id="reel-1" class="reel"></div></div><div class="reel-container rounded-2xl overflow-hidden shadow-lg"><div id="reel-2" class="reel"></div></div></div><div class="space-y-6"><div class="relative"><input id="word-input" type="text" placeholder="" maxlength="9" disabled
+ </div><div id="dev-wordcheck" class="hidden mt-2 text-[11px] font-bold tracking-wide"></div>
+<div id="dev-test-panel" class="hidden mt-2 p-2 rounded-xl bg-black/25 border border-white/10">
+  <div class="text-[10px] font-black tracking-[0.22em] text-slate-200/80 mb-1">DEV TEST</div>
+  <input id="dev-test-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"
+    class="w-full px-2 py-1 rounded-lg bg-black/30 border border-white/10 text-[12px] font-bold tracking-wide text-slate-100 placeholder:text-slate-400/70 focus:outline-none focus:ring-2 focus:ring-rose-400/40"
+    placeholder="kelime yaz + Enter (örn: topluk / topçu)" />
+  <div id="dev-test-result" class="mt-1 text-[12px] font-bold tracking-wide text-slate-300"></div>
+</div><div id="devEasyWord" class="hidden mt-1 text-[11px] font-bold tracking-wide text-amber-200/90"></div></div><div class="hud-box hud-left bg-black/40 px-4 sm:px-6 py-2 sm:py-3 rounded-2xl border border-white/5 flex flex-col items-center relative min-w-[118px]"><span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">SÜRE</span><span id="timer" class="text-3xl font-black text-white">75</span><div id="time-pop" class="hidden absolute -right-2 -top-2 px-2 py-1 rounded-full text-xs font-black shadow-lg text-emerald-300 bg-emerald-950/70 border border-emerald-400/20">+5</div><div id="time-bonus-pop" class="pointer-events-none absolute -right-2 -top-2 hidden text-emerald-300 font-black text-lg">+5</div><div id="time-bonus-toast" class="hidden mt-1 text-sm font-black text-sky-300 tracking-wider">+10 SN</div></div></div><div class="grid grid-cols-3 gap-3 bg-slate-950 p-4 rounded-[2rem] border-4 border-slate-800 shadow-inner mb-8 relative"><div class="absolute top-1/3 left-0 w-full h-[1px] bg-white/10 pointer-events-none z-10"></div><div class="absolute top-2/3 left-0 w-full h-[1px] bg-white/10 pointer-events-none z-10"></div><div class="reel-container rounded-2xl overflow-hidden shadow-lg"><div id="reel-0" class="reel"></div></div><div class="reel-container rounded-2xl overflow-hidden shadow-lg"><div id="reel-1" class="reel"></div></div><div class="reel-container rounded-2xl overflow-hidden shadow-lg"><div id="reel-2" class="reel"></div></div></div><div class="space-y-6"><div class="relative"><input id="word-input" type="text" placeholder="" maxlength="9" disabled
  class="w-full bg-slate-900 border-2 border-slate-700 rounded-3xl px-4 sm:px-6 py-4 sm:py-6 text-2xl sm:text-3xl font-black focus:outline-none focus:border-blue-500 transition-all uppercase tracking-[0.3em] text-center shadow-2xl"
  autocomplete="off"><div id="inline-hint" class="mt-2 text-center text-sm font-bold min-h-[1.25rem] text-[#D6C89A] opacity-0 transition-opacity"></div><div id="status-indicator" class="absolute right-6 top-1/2 -translate-y-1/2 hidden"><div class="animate-spin h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full"></div><div class="space-y-3"><div id="touch-keys" class="grid grid-cols-6 gap-2 sm:gap-3"></div><div id="touch-keys-all-wrap" class="hidden"><div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-2 text-center">Serbest Harfler (Joker/DEV)</div><div id="touch-keys-all" class="grid grid-cols-7 gap-2 sm:gap-3"></div></div><div class="grid grid-cols-3 gap-2 sm:gap-3"><button id="touch-backspace" type="button"
  class="bg-slate-800/80 hover:bg-slate-700/90 border border-white/10 rounded-2xl py-4 font-black tracking-wider uppercase text-xs">
@@ -567,7 +602,7 @@ body{
  Gönder
  </button></div></div></div></div><div class="flex flex-col gap-3"><div id="mobile-actions" class="mobile-only w-full flex gap-3"><button id="mobile-clear" type="button" class="btn-action flex-1 text-white/90 font-black py-4 rounded-2xl transition-all uppercase text-sm tracking-[0.2em] shadow-xl">TEMİZLE</button><button id="mobile-submit" type="button" class="btn-action flex-1 text-white font-black py-4 rounded-2xl transition-all uppercase text-sm tracking-[0.2em] shadow-xl">GÖNDER</button></div><button id="pass-btn" disabled
  class="btn-pass w-full text-white font-black py-5 rounded-2xl transition-all uppercase text-sm tracking-[0.2em] shadow-xl flex items-center justify-center gap-2"><span>TEKRAR ÇEVİR</span><span id="pass-badge" class="bg-black/20 px-2 py-1 rounded text-[10px]">-30 PUAN</span></button><div id="joker-bar" class="hidden bg-slate-900/50 p-4 rounded-2xl border border-slate-800 flex justify-between items-center px-6 relative min-w-0"><span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest flex-1 min-w-0 truncate">JOKER <span class="normal-case">(ekstra 1 harf kullanım hakkı)</span></span><span class="text-2xl sm:text-3xl font-black text-purple-300 flex items-center gap-2 flex-none"><span class="text-2xl sm:text-3xl">🃏</span><span id="joker-count">0</span><span id="joker-pop" class="hidden text-emerald-300 text-base sm:text-lg font-black ml-2">+1</span></span></div><div class="bg-slate-900/50 p-3 rounded-2xl border border-slate-800 flex justify-between items-center px-6 hidden"><span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Potansiyel Kazanç</span><span id="potential" class="text-xl font-black text-blue-400">0</span></div></div></div><div id="message" class="mt-2 hidden text-center text-sm font-bold min-h-[1.25rem] text-slate-400">
-</div><div id="game-overlay" class="absolute inset-0 z-50 rounded-[2.5rem] flex flex-col items-center justify-center p-8 text-center overlay"><h2 id="overlay-title" class="text-4xl font-black text-white mb-2">DİZGİ‹</h2><p id="overlay-desc" class="text-slate-400 mb-6 max-w-[520px]">Bir kelime türetme oyunu! Süre bitmeden elinden geleni yap.</p><div class="flex gap-3 flex-wrap justify-center">
+</div><div id="game-overlay" class="absolute inset-0 z-50 rounded-[2.5rem] flex flex-col items-center justify-center p-8 text-center overlay state-home"><h2 id="overlay-title" class="text-4xl font-black text-white mb-2">DİZGİ‹</h2><p id="overlay-desc" class="text-slate-400 mb-6 max-w-[520px]">Bir kelime türetme oyunu! Süre bitmeden elinden geleni yap.</p><div class="flex gap-3 flex-wrap justify-center">
   <button id="easy-btn"
     class="border border-white/20 hover:border-white/40 px-10 py-5 rounded-2xl font-bold text-lg active:scale-95 transition-all uppercase tracking-wider">
     KOLAY
@@ -585,10 +620,25 @@ body{
       <button id="rules-btn"
   class="mt-5 border border-[#D6C89A]/40 hover:border-[#D6C89A]/70 text-[#D6C89A] px-8 py-3 rounded-xl font-bold text-sm active:scale-95 transition-all uppercase tracking-wider">
   KURALLAR
-</button><div id="share-panel" class="hidden mt-6 w-full max-w-[520px] bg-black/40 border border-white/10 rounded-2xl p-4 text-left"><div class="text-white font-bold tracking-wider mb-2">SKORUNU PAYLAŞ</div><pre id="share-text-box" class="whitespace-pre-wrap text-slate-200 text-sm bg-black/30 border border-white/10 rounded-xl p-3 select-text"></pre><div class="mt-3 flex items-center justify-center gap-3 flex-wrap"><button id="copy-share-btn" type="button"
- class="border border-white/20 hover:border-white/40 bg-white/10 hover:bg-white/15 text-white px-6 py-3 rounded-2xl font-bold text-sm active:scale-95 transition-all uppercase tracking-wider">
- KOPYALA
- </button><div id="copy-hint" class="hidden text-emerald-300 text-xs font-bold tracking-wider">KOPYALANDI ✅</div></div></div><div class="mt-6 text-slate-500 text-xs leading-relaxed"><div>© 2026 DİZGİ&lt;. Tüm hakları saklıdır.</div><div>© 2026 DİZGİ&lt;. All rights reserved.</div><div><a href="mailto:dizgi.oyunu@gmail.com" class="underline hover:text-slate-300 transition-colors">Geri bildirim ve iletişim için: dizgi.oyunu@gmail.com</a></div></div>
+</button><div id="share-panel" class="hidden mt-6 w-full max-w-[520px] bg-black/40 border border-white/10 rounded-2xl p-4 text-left">
+  <button id="share-toggle" type="button" class="w-full flex items-center justify-between gap-3 text-left">
+    <span class="text-white font-bold tracking-wider">SKORUNU PAYLAŞ</span>
+    <span id="share-toggle-icon" class="text-slate-300 font-black tracking-wider">▼</span>
+  </button>
+
+  <div id="share-body" class="mt-3">
+    <pre id="share-text-box" class="whitespace-pre-wrap text-slate-200 text-sm bg-black/30 border border-white/10 rounded-xl p-3 select-text"></pre>
+    <div class="mt-3 flex items-center justify-center gap-3 flex-wrap">
+      <button id="copy-share-btn" type="button"
+        class="border border-white/20 hover:border-white/40 bg-white/10 hover:bg-white/15 text-white px-6 py-3 rounded-2xl font-bold text-sm active:scale-95 transition-all uppercase tracking-wider">
+        KOPYALA
+      </button>
+      <div id="copy-hint" class="hidden text-emerald-300 text-xs font-bold tracking-wider">KOPYALANDI ✅</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer-block text-slate-500 text-xs leading-relaxed"><div>© 2026 DİZGİ&lt;. Tüm hakları saklıdır.</div><div>© 2026 DİZGİ&lt;. All rights reserved.</div><div><a href="mailto:dizgi.oyunu@gmail.com" class="underline hover:text-slate-300 transition-colors">Geri bildirim ve iletişim için: dizgi.oyunu@gmail.com</a></div></div>
 <div class="mt-4">
   <a id="bmc-btn" href="https://buymeacoffee.com/dizgioyunu" data-bmc="1" data-bmc-placement="home_ui" target="_blank" rel="noopener noreferrer"
      class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-[#4d3f2a]/70 bg-black/20 text-[#d6c3a3] font-bold tracking-wider hover:bg-black/30 transition text-[11px] uppercase">
@@ -673,6 +723,127 @@ body{
             .replace(/[’']/g, "")
             .replace(/[^a-zçğıöşü]/g, "");
         }
+        // =========================
+        // PRODUCTIVE SUFFIX ACCEPT (vSuffix)
+        // - Allows certain derived words even if not explicitly in WORD_SET
+        // - Current enabled suffixes:
+        //   * -lIk: lık/lik/luk/lük  (e.g., kitaplık)
+        //   * -lI:  lı/li/lu/lü      (e.g., tuzlu, kitaplı)
+        //   * -sIz: sız/siz/suz/süz  (e.g., tuzsuz, kitapsız)
+        //   * -(c/ç)I: cı/ci/cu/cü and çı/çi/çu/çü (e.g., topçu)
+        // =========================
+        const VOICELESS_FINALS = new Set(["p","ç","t","k","f","h","s","ş"]);
+        const TR_VOWELS_LC = new Set(["a","e","ı","i","o","ö","u","ü"]);
+
+        function lastVowelLC(word){
+          for (let i = word.length - 1; i >= 0; i--){
+            const ch = word[i];
+            if (TR_VOWELS_LC.has(ch)) return ch;
+          }
+          return null;
+        }
+
+        function pickLIK(v){
+          if (v === "a" || v === "ı") return "lık";
+          if (v === "e" || v === "i") return "lik";
+          if (v === "o" || v === "u") return "luk";
+          if (v === "ö" || v === "ü") return "lük";
+          return null;
+        }
+
+        function pickCI(v){
+          if (v === "a" || v === "ı") return "cı";
+          if (v === "e" || v === "i") return "ci";
+          if (v === "o" || v === "u") return "cu";
+          if (v === "ö" || v === "ü") return "cü";
+          return null;
+        }
+
+
+        function pickLI(v){
+          if (v === "a" || v === "ı") return "lı";
+          if (v === "e" || v === "i") return "li";
+          if (v === "o" || v === "u") return "lu";
+          if (v === "ö" || v === "ü") return "lü";
+          return null;
+        }
+
+        function pickSIZ(v){
+          if (v === "a" || v === "ı") return "sız";
+          if (v === "e" || v === "i") return "siz";
+          if (v === "o" || v === "u") return "suz";
+          if (v === "ö" || v === "ü") return "süz";
+          return null;
+        }
+
+        function expectedAgentSuffix(base){
+          const v = lastVowelLC(base);
+          if (!v) return null;
+
+          const ci = pickCI(v);
+          if (!ci) return null;
+
+          const last = base[base.length - 1];
+          const useCedilla = VOICELESS_FINALS.has(last);
+          return useCedilla ? ("ç" + ci.slice(1)) : ci; // cı->çı, ci->çi, cu->çu, cü->çü
+        }
+
+        function expectedLIK(base){
+          const v = lastVowelLC(base);
+          return v ? pickLIK(v) : null;
+        }
+
+
+        function expectedLI(base){
+          const v = lastVowelLC(base);
+          return v ? pickLI(v) : null;
+        }
+
+        function expectedSIZ(base){
+          const v = lastVowelLC(base);
+          return v ? pickSIZ(v) : null;
+        }
+
+        // Returns: { ok:true, base:"...", suffix:"..." } or { ok:false }
+        function acceptsDerivedWord(keyLower){
+          if (!keyLower || keyLower.length < 3) return { ok:false };
+
+          // Try longer suffixes first
+          const candidates = ["sız","siz","suz","süz","lık","lik","luk","lük","lı","li","lu","lü","çı","çi","çu","çü","cı","ci","cu","cü"];
+
+          for (const suf of candidates){
+            if (!keyLower.endsWith(suf)) continue;
+            const base = keyLower.slice(0, -suf.length);
+
+            // Guard: keep roots meaningful
+            if (!base || base.length < 3) continue;
+
+            // Root must exist in dictionary
+            if (!WORD_SET || !WORD_SET.has(base)) continue;
+
+            // Validate suffix is the *correct* one for the base (vowel harmony + c/ç rule)
+            const isLIK = (suf === "lık" || suf === "lik" || suf === "luk" || suf === "lük");
+            const isLI  = (suf === "lı"  || suf === "li"  || suf === "lu"  || suf === "lü");
+            const isSIZ = (suf === "sız" || suf === "siz" || suf === "suz" || suf === "süz");
+
+            if (isLIK){
+              const exp = expectedLIK(base);
+              if (exp && exp === suf) return { ok:true, base, suffix:suf };
+            } else if (isLI){
+              const exp = expectedLI(base);
+              if (exp && exp === suf) return { ok:true, base, suffix:suf };
+            } else if (isSIZ){
+              const exp = expectedSIZ(base);
+              if (exp && exp === suf) return { ok:true, base, suffix:suf };
+            } else {
+              const exp = expectedAgentSuffix(base);
+              if (exp && exp === suf) return { ok:true, base, suffix:suf };
+            }
+          }
+
+          return { ok:false };
+        }
+
 
         function buildEasyCandidates() {
           // Easy mode candidates: 6–9 letters, max 3 vowels (so it can fit into 3-vowel / 6-consonant grid)
@@ -820,6 +991,28 @@ Object.defineProperty(window, 'jokerCount', { get: () => jokers, set: v => { jok
         const copyShareBtnEl = document.getElementById('copy-share-btn');
         const copyHintEl = document.getElementById('copy-hint');
 
+        const shareToggleEl = document.getElementById('share-toggle');
+        const shareToggleIconEl = document.getElementById('share-toggle-icon');
+        const shareBodyEl = document.getElementById('share-body');
+
+        function setShareCollapsed(collapsed) {
+            if (!sharePanelEl) return;
+            if (collapsed) {
+                sharePanelEl.classList.add('is-collapsed');
+                if (shareToggleIconEl) shareToggleIconEl.textContent = '▼';
+            } else {
+                sharePanelEl.classList.remove('is-collapsed');
+                if (shareToggleIconEl) shareToggleIconEl.textContent = '▼';
+            }
+        }
+
+        if (shareToggleEl && sharePanelEl) {
+            shareToggleEl.addEventListener('click', () => {
+                const collapsed = sharePanelEl.classList.contains('is-collapsed');
+                setShareCollapsed(!collapsed);
+            });
+        }
+
         function refreshShareText() {
             if (!shareTextBoxEl) return;
             const modeLabel = (typeof gameMode !== 'undefined' && gameMode === 'easy') ? 'kolay' : 'klasik';
@@ -872,7 +1065,93 @@ ${url}`;
         }
 
 
-        // Touch coarse detection (used for mobile keyboard behavior)
+        
+
+// =========================
+// Timer engine (anti-throttling / anti-background pause)
+// - setInterval/requestAnimationFrame can slow down or stop when the user scrolls the page,
+//   switches tab, opens overlays, or the OS puts the page in the background.
+// - This timer uses real elapsed time, so the countdown always reflects the actual passage of time.
+// =========================
+let __timer = { running: false, remainingMs: 0, lastNow: 0 };
+
+function __nowMs(){
+    try {
+        return (typeof performance !== 'undefined' && performance && typeof performance.now === 'function')
+            ? performance.now()
+            : Date.now();
+    } catch(_) { return Date.now(); }
+}
+
+function startGameTimer(initialSeconds){
+    stopGameTimer();
+    __timer.running = true;
+    __timer.remainingMs = Math.max(0, Math.round((Number(initialSeconds) || 0) * 1000));
+    __timer.lastNow = __nowMs();
+    // sync UI immediately
+    timeLeft = Math.ceil(__timer.remainingMs / 1000);
+    updateTimeUI();
+
+    timerInterval = setInterval(timerTick, 250);
+
+    // immediate tick (helps some mobile/Safari edge cases)
+    try { timerTick(); } catch(_) {}
+}
+
+function stopGameTimer(){
+    __timer.running = false;
+    if (timerInterval) { try { stopGameTimer();
+            } catch(e) {} }
+    timerInterval = null;
+}
+
+function addTimeSeconds(sec){
+    const s = Number(sec) || 0;
+    if (s <= 0) return;
+
+    if (__timer.running) {
+        __timer.remainingMs += Math.round(s * 1000);
+        // reset anchor so we don't "double subtract" a big dt right after a bonus
+        __timer.lastNow = __nowMs();
+        timeLeft = Math.ceil(__timer.remainingMs / 1000);
+    } else {
+        timeLeft += s;
+    }
+    updateTimeUI();
+}
+
+function timerTick(){
+    if (!gameActive || !__timer.running) return;
+
+    const now = __nowMs();
+    let dt = now - (__timer.lastNow || now);
+    if (!isFinite(dt) || dt < 0) dt = 0;
+
+    __timer.lastNow = now;
+    __timer.remainingMs -= dt;
+
+    if (__timer.remainingMs <= 0) {
+        __timer.remainingMs = 0;
+        timeLeft = 0;
+        updateTimeUI();
+        endGame();
+        return;
+    }
+
+    const newTL = Math.ceil(__timer.remainingMs / 1000);
+    if (newTL !== timeLeft) {
+        timeLeft = newTL;
+        updateTimeUI();
+    }
+}
+
+// Force a catch-up tick when the page comes back to foreground/focus
+try {
+    document.addEventListener('visibilitychange', () => { try { timerTick(); } catch(_) {} });
+    window.addEventListener('focus', () => { try { timerTick(); } catch(_) {} });
+    window.addEventListener('pageshow', () => { try { timerTick(); } catch(_) {} });
+} catch(_) {}
+// Touch coarse detection (used for mobile keyboard behavior)
         let isTouchCoarse = false;
         try {
             const hasTouch = (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) || ('ontouchstart' in window);
@@ -911,6 +1190,9 @@ ${url}`;
         const devBadgeEl = document.getElementById('dev-badge');
         
         const devWordEl = document.getElementById('dev-wordcheck');
+        const devTestPanelEl = document.getElementById('dev-test-panel');
+        const devTestInputEl = document.getElementById('dev-test-input');
+        const devTestResultEl = document.getElementById('dev-test-result');
 const gameOverlay = document.getElementById('game-overlay');
         const statusIndicator = document.getElementById('status-indicator');
 
@@ -1032,7 +1314,9 @@ const gameOverlay = document.getElementById('game-overlay');
         }
 
         async function startGame() {
-            if (sharePanelEl) { sharePanelEl.classList.add('hidden'); }
+            if (sharePanelEl) { sharePanelEl.classList.add('hidden'); setShareCollapsed(true); }
+            gameOverlay.classList.remove('state-end');
+            gameOverlay.classList.add('state-home');
             if (copyHintEl) { copyHintEl.classList.add('hidden'); }
             try { closeRulesPanel(); } catch (_) {}
 
@@ -1055,40 +1339,21 @@ const gameOverlay = document.getElementById('game-overlay');
             spin();
             renderTouchKeys();
             
-            if (timerInterval) { try { clearInterval(timerInterval); } catch(e) {} }
-            const __timerStart = Date.now();
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                updateTimeUI();
-                if(timeLeft <= 0) endGame();
-            }, 1000);
-
-            // Watchdog: rare Safari/local-file cases may prevent the first tick. If stuck, restart once.
-            setTimeout(() => {
-                if (!gameActive) return;
-                // if timer didn't tick after ~1.6s, restart interval
-                if ((Date.now() - __timerStart) > 1600 && (timeLeft === 90 || timeLeft === 60)) {
-                    try { clearInterval(timerInterval); } catch(e) {}
-                    timerInterval = setInterval(() => {
-                        timeLeft--;
-                        updateTimeUI();
-                        if (timeLeft <= 0) {
-                            endGame();
-                        }
-                    }, 1000);
-                }
-            }, 1700);
+            stopGameTimer();
+            startGameTimer(timeLeft);
 
             updateSubmitButtonsState();
         }
 
         function endGame() {
             try { closeRulesPanel(); } catch (_) {}
-            if (sharePanelEl) { sharePanelEl.classList.remove('hidden'); refreshShareText(); }
+            gameOverlay.classList.remove('state-home');
+            gameOverlay.classList.add('state-end');
+            if (sharePanelEl) { sharePanelEl.classList.remove('hidden'); setShareCollapsed(true); refreshShareText(); }
 
             document.getElementById('share-btn')?.classList.remove('hidden');
             gameActive = false;
-            clearInterval(timerInterval);
+            stopGameTimer();
             inputEl.disabled = true;
             passBtn.disabled = true;
                         updatePassButtonUI();
@@ -1300,14 +1565,22 @@ const gameOverlay = document.getElementById('game-overlay');
         }
 
 
-        function awardTimeOnly(len) {
-            
-            if (len === 4) { timeLeft += 4; showTimePop('+4', 'text-emerald-300'); }
-            else if (len === 5) { timeLeft += 8; showTimePop('+8', 'text-emerald-300'); }
-            else if (len === 6) { timeLeft += 15; showTimePop('+15', 'text-emerald-300'); }
-            else if (len === 7 || len === 8 || len === 9) { timeLeft += 20; showTimePop('+20', 'text-emerald-300'); }
-            timerEl.textContent = timeLeft;
-        }
+        
+function awardTimeOnly(len) {
+    const n = Number(len) || 0;
+    let bonus = 0;
+
+    if (n === 4) bonus = 4;
+    else if (n === 5) bonus = 8;
+    else if (n === 6) bonus = 15;
+    else if (n === 7 || n === 8 || n === 9) bonus = 20;
+
+    if (bonus > 0) {
+        addTimeSeconds(bonus);
+        showTimePop(`+${bonus}`, 'text-emerald-300');
+    }
+}
+
 
         function awardBonuses(wordLen, opts = {}) {
     const len = Number(wordLen) || 0;
@@ -1356,8 +1629,7 @@ const gameOverlay = document.getElementById('game-overlay');
     if (usedJoker) { passBonus = 0; jokerBonus = 0; }
 
     if (timeBonus > 0) {
-        timeLeft += timeBonus;
-        if (typeof updateTimeUI === "function") updateTimeUI();
+        addTimeSeconds(timeBonus);
     }
 
     if (gameMode === "classic") {
@@ -1641,11 +1913,10 @@ function calculateScore(word) {
             else if (wordLength === 7) bonus = 20;
 
             if (bonus > 0) {
-                timeLeft += bonus;
-                timerEl.textContent = timeLeft;
+                addTimeSeconds(bonus);
                 if (timeLeft > 10) timerEl.classList.remove('timer-low');
 
-                const label = `+${bonus} SN`;
+const label = `+${bonus} SN`;
 
                 
                 if (timeBonusToastEl) {
@@ -1713,15 +1984,21 @@ function calculateScore(word) {
                 return;
             }
 
-            // Dictionary check (devAccept bypass)
+            // Dictionary check (devAccept bypass) + productive suffix accept
+            // If not directly in WORD_SET, we allow a limited set of derived forms:
+            //   -lIk (lık/lik/luk/lük) and -(c/ç)I (cı/ci/cu/cü + çı/çi/çu/çü)
+            let __derivedInfo = null;
             if (!devAccept && !WORD_SET.has(key)) {
-                showFeedback(`"${w}" listede yok!`, "text-[var(--accent)]", "inline");
-                inputEl.value = "";
-                if (!isTouchCoarse) inputEl.focus();
-                return;
+                const d = acceptsDerivedWord(key);
+                if (!d.ok) {
+                    showFeedback(`"${w}" listede yok!`, "text-[var(--accent)]", "inline");
+                    inputEl.value = "";
+                    if (!isTouchCoarse) inputEl.focus();
+                    return;
+                }
+                __derivedInfo = d; // accepted via suffix rule
             }
-
-            // Accepted
+// Accepted
             showFeedback("", "", "inline"); // clear inline message
             inputEl.value = "";
 
@@ -1736,7 +2013,11 @@ if (newCount === 2) repeatFactor = 0.5;
 else if (newCount >= 3) repeatFactor = 0.25;
 
 const baseRaw = calculateScore(w);
-const base = Math.round(baseRaw * repeatFactor);
+let base = Math.round(baseRaw * repeatFactor);
+// Derived-word score penalty: only in classic mode
+if (gameMode === "classic" && __derivedInfo) {
+    base = Math.round(base * 0.8);
+}
 
 const win = addScore(base);
 awardBonuses(w.length, { usedJoker: usedDup });
@@ -1827,6 +2108,18 @@ awardBonuses(w.length, { usedJoker: usedDup });
                 if (devAccept) devWordEl.classList.remove('hidden');
                 else devWordEl.classList.add('hidden');
             }
+            if (devTestPanelEl) {
+                if (devAccept) devTestPanelEl.classList.remove('hidden');
+                else devTestPanelEl.classList.add('hidden');
+            }
+            if (!devAccept) {
+                if (devTestInputEl) devTestInputEl.value = '';
+                if (devTestResultEl) {
+                    devTestResultEl.textContent = '';
+                    devTestResultEl.classList.remove('text-emerald-300','text-rose-300','text-slate-300');
+                    devTestResultEl.classList.add('text-slate-300');
+                }
+            }
             const devEasyEl = document.getElementById('devEasyWord');
             if (devEasyEl) {
                 if (devAccept && gameMode === 'easy') devEasyEl.classList.remove('hidden');
@@ -1834,6 +2127,9 @@ awardBonuses(w.length, { usedJoker: usedDup });
             }
             updateDevWordCheck();
             updateDevEasyWord();
+            if (devAccept && devTestInputEl) {
+                setTimeout(() => { try { devTestInputEl.focus(); } catch(e){} }, 0);
+            }
         }
 
         function updateDevWordCheck() {
@@ -1850,11 +2146,65 @@ awardBonuses(w.length, { usedJoker: usedDup });
                 return;
             }
             const norm = raw.toLocaleLowerCase('tr-TR');
-            const ok = WORD_SET.has(norm);
-            devWordEl.textContent = `"${raw.toLocaleUpperCase('tr-TR')}" ` + (ok ? '✓ listede' : '✗ listede yok');
+            const direct = WORD_SET.has(norm);
+            const d = direct ? null : acceptsDerivedWord(norm);
+            const ok = direct || (d && d.ok);
+
+            devWordEl.textContent = `"${raw.toLocaleUpperCase('tr-TR')}" ` + (
+                direct ? '✓ listede' :
+                (ok ? (`✓ türetim (${(d && d.base) ? d.base : '?'}+${(d && d.suffix) ? d.suffix : '?'})`) : '✗ listede yok')
+            );
             devWordEl.classList.remove('text-emerald-300','text-rose-300','text-slate-300');
             devWordEl.classList.add(ok ? 'text-emerald-300' : 'text-rose-300');
             devWordEl.classList.remove('hidden');
+        }
+
+        
+        function renderDevTestResult(raw) {
+            if (!devTestResultEl) return;
+            const r = (raw || '').trim();
+            if (!r) {
+                devTestResultEl.textContent = '';
+                devTestResultEl.classList.remove('text-emerald-300','text-rose-300','text-slate-300');
+                devTestResultEl.classList.add('text-slate-300');
+                return;
+            }
+            const norm = r.toLocaleLowerCase('tr-TR');
+            const direct = WORD_SET.has(norm);
+            const d = direct ? null : acceptsDerivedWord(norm);
+            const ok = direct || (d && d.ok);
+
+            let msg = `"${r.toLocaleUpperCase('tr-TR')}" ` + (
+                direct ? '✓ listede' :
+                (ok ? (`✓ türetim (${(d && d.base) ? d.base : '?'}+${(d && d.suffix) ? d.suffix : '?'})`) : '✗ listede yok')
+            );
+
+            // Extra hint for common confusion in dev mode
+            if (!direct && !ok && d && d.reason) {
+                msg += ` • ${d.reason}`;
+            }
+
+            devTestResultEl.textContent = msg;
+            devTestResultEl.classList.remove('text-emerald-300','text-rose-300','text-slate-300');
+            devTestResultEl.classList.add(ok ? 'text-emerald-300' : 'text-rose-300');
+        }
+
+        // Dev test input: press Enter to validate without affecting gameplay.
+        if (devTestInputEl) {
+            devTestInputEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    renderDevTestResult(devTestInputEl.value);
+                } else if (e.key === 'Escape') {
+                    devTestInputEl.value = '';
+                    renderDevTestResult('');
+                }
+            });
+            devTestInputEl.addEventListener('input', () => {
+                // Live preview while typing (only when dev is open)
+                if (devAccept) renderDevTestResult(devTestInputEl.value);
+            });
         }
 
         function updateJokerUI() {
@@ -2093,24 +2443,33 @@ document.addEventListener('pointerdown', (e) => {
   <div id="releaseNotesModal" class="rn-backdrop" aria-hidden="true">
     <div class="rn-card" role="dialog" aria-modal="true" aria-labelledby="rnTitle">
       <div class="rn-head">
-        <div id="rnTitle" class="rn-title">DİZGİ&lt; v1.03 – Güncelleme Notları</div>
+        <div id="rnTitle" class="rn-title">DİZGİ v1.04 – Güncelleme Notları</div>
         <button id="rnCloseBtn" class="rn-close" type="button" aria-label="Kapat">×</button>
       </div>
       
         <div class="rn-body">
 <div style="margin-bottom:10px;">
-  <b>DİZGİ&lt;</b>, tek başına geliştirilen, reklamsız ve tamamen ücretsiz bir kelime oyunudur.
-  Eğer oyun sana keyif verdiyse, alan adı / barındırma gibi masrafları karşılamama katkı olmak için bir kahve ısmarlayabilirsin: 
-  <a href="https://buymeacoffee.com/dizgioyunu" data-bmc="1" data-bmc-placement="release_notes" target="_blank" rel="noopener noreferrer" style="text-decoration:underline; color:#D6C89A;">buymeacoffee.com/dizgioyunu</a> ☕
+  <b>DİZGİ</b>, tek kişi tarafından geliştirilen, reklamsız ve tamamen ücretsiz bir kelime oyunudur.<br>
+  Eğer oyun sana keyif verdiyse, barındırma ve geliştirme masraflarına katkı vermek için bir kahve ısmarlayabilirsin:<br>
+  <a href="https://buymeacoffee.com/dizgioyunu" data-bmc="1" data-bmc-placement="release_notes" target="_blank" rel="noopener noreferrer" style="text-decoration:underline; color:#D6C89A;">buymeacoffee.com/dizgioyunu</a>
 </div>
 
-          <div>• <b>Zirvedekiler eklendi:</b> Kolay ve Klasik mod için skor listeleri artık ayrı ayrı görüntüleniyor.</div>
-          <div>• <b>Harf sayısı 9’a çıktı:</b> Artık <b>9 harflik</b> kelimeler de girilebiliyor!</div>
-          <div>• <b>Kolay mod dengelendi:</b> Kolay modda uzun kelime bonusları ve puan dengesi yeniden ayarlandı.</div>
-          <div>• <b>Kelime listesi genişletildi:</b> Yeni kelimeler eklendi, sözlük güncellendi.</div>
-          <div>• Birçok hata giderildi — ve elbette yenileri oluşturuldu.</div>
-          <div style="margin-top:10px;"><b>Not:</b> DİZGİ&lt; hâlâ geliştirme aşamasındadır. Oyun dengesi ve sözlük güncellemeleri nedeniyle puan listeleri zaman zaman silinebilir veya yeniden oluşturulabilir. Bazı kelimeler geçici olarak listede yer almayabilir. Öneri ve geri bildirimleriniz için: <b>dizgi.oyunu@gmail.com</b>. Anlayışınız için teşekkürler.</div>
-        </div>
+<div style="margin-top:6px; font-weight:700;">Bu sürümle gelenler:</div>
+<div>• Süre mekanizması tamamen düzeltildi ve yenilendi.</div>
+<div>• Kelime listesi genişletildi: Yeni kelimeler eklendi, sözlük güncellendi.</div>
+<div>• Yapım eki kontrolü iyileştirildi: Yapım ekleriyle türetilmiş bazı kelimelerin yanlış kabul edilmesi sorunu büyük ölçüde giderildi.</div>
+<div>• Çeşitli küçük hatalar düzeltildi ve genel kararlılık artırıldı.</div>
+
+<div style="margin-top:10px;">
+  <b>Not:</b><br>
+  DİZGİ hâlâ aktif geliştirme aşamasındadır. Bazı kelimeler geçici olarak listede yer almayabilir.
+</div>
+
+<div style="margin-top:10px;">
+  <b>Geri bildirim ve önerileriniz için:</b><br>
+  <a href="mailto:dizgioyunu@gmail.com" style="text-decoration:underline; color:#D6C89A;">dizgioyunu@gmail.com</a>
+</div>
+</div>
         <div class="rn-foot">
           <button id="rnOkBtn" class="rn-ok" type="button">Tamam</button>
         </div>
@@ -2127,7 +2486,7 @@ document.addEventListener('pointerdown', (e) => {
 <script>
   // Release Notes (one-time per version)
   (function () {
-    const CURRENT_VERSION = (window.DIZGI_VERSION || window.CURRENT_VERSION || "1.03");
+    const CURRENT_VERSION = (window.DIZGI_VERSION || window.CURRENT_VERSION || "1.04");
     const VERSION_POPUP_STORAGE_KEY = (window.DIZGI_SEEN_VERSION_KEY || window.VERSION_POPUP_STORAGE_KEY || "dizgi_seen_version");
 
     function showReleaseNotes() {
