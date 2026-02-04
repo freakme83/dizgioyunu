@@ -554,7 +554,14 @@ body{
 </head><body class="h-[100dvh] w-full overflow-hidden m-0 p-0 flex items-center justify-center" x-apple-data-detectors="false"><div class="w-full h-[100dvh] max-w-xl glass p-4 sm:p-8 rounded-none sm:rounded-[3rem] shadow-2xl relative border-t border-white/10 flex flex-col overflow-hidden">
 <div class="hud mb-4 sm:mb-8"><div class="hud-box hud-right bg-black/40 px-4 sm:px-6 py-2 sm:py-3 rounded-2xl border border-white/5 flex flex-col items-center relative min-w-[118px]"><span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">SKOR</span><span id="score" class="text-3xl font-black text-emerald-400">0</span></div><div class="hud-center text-center"><h1 class="text-xl font-black text-blue-400 leading-none mb-1 italic">DİZGİ‹</h1><div id="dev-badge" class="hidden mt-2 text-[10px] font-black tracking-[0.25em] text-rose-300/90">
  DEV: KABUL AÇIK
- </div><div id="dev-wordcheck" class="hidden mt-2 text-[11px] font-bold tracking-wide"></div><div id="devEasyWord" class="hidden mt-1 text-[11px] font-bold tracking-wide text-amber-200/90"></div></div><div class="hud-box hud-left bg-black/40 px-4 sm:px-6 py-2 sm:py-3 rounded-2xl border border-white/5 flex flex-col items-center relative min-w-[118px]"><span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">SÜRE</span><span id="timer" class="text-3xl font-black text-white">75</span><div id="time-pop" class="hidden absolute -right-2 -top-2 px-2 py-1 rounded-full text-xs font-black shadow-lg text-emerald-300 bg-emerald-950/70 border border-emerald-400/20">+5</div><div id="time-bonus-pop" class="pointer-events-none absolute -right-2 -top-2 hidden text-emerald-300 font-black text-lg">+5</div><div id="time-bonus-toast" class="hidden mt-1 text-sm font-black text-sky-300 tracking-wider">+10 SN</div></div></div><div class="grid grid-cols-3 gap-3 bg-slate-950 p-4 rounded-[2rem] border-4 border-slate-800 shadow-inner mb-8 relative"><div class="absolute top-1/3 left-0 w-full h-[1px] bg-white/10 pointer-events-none z-10"></div><div class="absolute top-2/3 left-0 w-full h-[1px] bg-white/10 pointer-events-none z-10"></div><div class="reel-container rounded-2xl overflow-hidden shadow-lg"><div id="reel-0" class="reel"></div></div><div class="reel-container rounded-2xl overflow-hidden shadow-lg"><div id="reel-1" class="reel"></div></div><div class="reel-container rounded-2xl overflow-hidden shadow-lg"><div id="reel-2" class="reel"></div></div></div><div class="space-y-6"><div class="relative"><input id="word-input" type="text" placeholder="" maxlength="9" disabled
+ </div><div id="dev-wordcheck" class="hidden mt-2 text-[11px] font-bold tracking-wide"></div>
+<div id="dev-test-panel" class="hidden mt-2 p-2 rounded-xl bg-black/25 border border-white/10">
+  <div class="text-[10px] font-black tracking-[0.22em] text-slate-200/80 mb-1">DEV TEST</div>
+  <input id="dev-test-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"
+    class="w-full px-2 py-1 rounded-lg bg-black/30 border border-white/10 text-[12px] font-bold tracking-wide text-slate-100 placeholder:text-slate-400/70 focus:outline-none focus:ring-2 focus:ring-rose-400/40"
+    placeholder="kelime yaz + Enter (örn: topluk / topçu)" />
+  <div id="dev-test-result" class="mt-1 text-[12px] font-bold tracking-wide text-slate-300"></div>
+</div><div id="devEasyWord" class="hidden mt-1 text-[11px] font-bold tracking-wide text-amber-200/90"></div></div><div class="hud-box hud-left bg-black/40 px-4 sm:px-6 py-2 sm:py-3 rounded-2xl border border-white/5 flex flex-col items-center relative min-w-[118px]"><span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">SÜRE</span><span id="timer" class="text-3xl font-black text-white">75</span><div id="time-pop" class="hidden absolute -right-2 -top-2 px-2 py-1 rounded-full text-xs font-black shadow-lg text-emerald-300 bg-emerald-950/70 border border-emerald-400/20">+5</div><div id="time-bonus-pop" class="pointer-events-none absolute -right-2 -top-2 hidden text-emerald-300 font-black text-lg">+5</div><div id="time-bonus-toast" class="hidden mt-1 text-sm font-black text-sky-300 tracking-wider">+10 SN</div></div></div><div class="grid grid-cols-3 gap-3 bg-slate-950 p-4 rounded-[2rem] border-4 border-slate-800 shadow-inner mb-8 relative"><div class="absolute top-1/3 left-0 w-full h-[1px] bg-white/10 pointer-events-none z-10"></div><div class="absolute top-2/3 left-0 w-full h-[1px] bg-white/10 pointer-events-none z-10"></div><div class="reel-container rounded-2xl overflow-hidden shadow-lg"><div id="reel-0" class="reel"></div></div><div class="reel-container rounded-2xl overflow-hidden shadow-lg"><div id="reel-1" class="reel"></div></div><div class="reel-container rounded-2xl overflow-hidden shadow-lg"><div id="reel-2" class="reel"></div></div></div><div class="space-y-6"><div class="relative"><input id="word-input" type="text" placeholder="" maxlength="9" disabled
  class="w-full bg-slate-900 border-2 border-slate-700 rounded-3xl px-4 sm:px-6 py-4 sm:py-6 text-2xl sm:text-3xl font-black focus:outline-none focus:border-blue-500 transition-all uppercase tracking-[0.3em] text-center shadow-2xl"
  autocomplete="off"><div id="inline-hint" class="mt-2 text-center text-sm font-bold min-h-[1.25rem] text-[#D6C89A] opacity-0 transition-opacity"></div><div id="status-indicator" class="absolute right-6 top-1/2 -translate-y-1/2 hidden"><div class="animate-spin h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full"></div><div class="space-y-3"><div id="touch-keys" class="grid grid-cols-6 gap-2 sm:gap-3"></div><div id="touch-keys-all-wrap" class="hidden"><div class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-2 text-center">Serbest Harfler (Joker/DEV)</div><div id="touch-keys-all" class="grid grid-cols-7 gap-2 sm:gap-3"></div></div><div class="grid grid-cols-3 gap-2 sm:gap-3"><button id="touch-backspace" type="button"
  class="bg-slate-800/80 hover:bg-slate-700/90 border border-white/10 rounded-2xl py-4 font-black tracking-wider uppercase text-xs">
@@ -673,6 +680,87 @@ body{
             .replace(/[’']/g, "")
             .replace(/[^a-zçğıöşü]/g, "");
         }
+        // =========================
+        // PRODUCTIVE SUFFIX ACCEPT (vSuffix)
+        // - Allows certain derived words even if not explicitly in WORD_SET
+        // - Current enabled suffixes:
+        //   * -lIk: lık/lik/luk/lük  (e.g., kitaplık)
+        //   * -(c/ç)I: cı/ci/cu/cü and çı/çi/çu/çü (e.g., topçu)
+        // =========================
+        const VOICELESS_FINALS = new Set(["p","ç","t","k","f","h","s","ş"]);
+        const TR_VOWELS_LC = new Set(["a","e","ı","i","o","ö","u","ü"]);
+
+        function lastVowelLC(word){
+          for (let i = word.length - 1; i >= 0; i--){
+            const ch = word[i];
+            if (TR_VOWELS_LC.has(ch)) return ch;
+          }
+          return null;
+        }
+
+        function pickLIK(v){
+          if (v === "a" || v === "ı") return "lık";
+          if (v === "e" || v === "i") return "lik";
+          if (v === "o" || v === "u") return "luk";
+          if (v === "ö" || v === "ü") return "lük";
+          return null;
+        }
+
+        function pickCI(v){
+          if (v === "a" || v === "ı") return "cı";
+          if (v === "e" || v === "i") return "ci";
+          if (v === "o" || v === "u") return "cu";
+          if (v === "ö" || v === "ü") return "cü";
+          return null;
+        }
+
+        function expectedAgentSuffix(base){
+          const v = lastVowelLC(base);
+          if (!v) return null;
+
+          const ci = pickCI(v);
+          if (!ci) return null;
+
+          const last = base[base.length - 1];
+          const useCedilla = VOICELESS_FINALS.has(last);
+          return useCedilla ? ("ç" + ci.slice(1)) : ci; // cı->çı, ci->çi, cu->çu, cü->çü
+        }
+
+        function expectedLIK(base){
+          const v = lastVowelLC(base);
+          return v ? pickLIK(v) : null;
+        }
+
+        // Returns: { ok:true, base:"...", suffix:"..." } or { ok:false }
+        function acceptsDerivedWord(keyLower){
+          if (!keyLower || keyLower.length < 3) return { ok:false };
+
+          // Try longer suffixes first
+          const candidates = ["lık","lik","luk","lük","çı","çi","çu","çü","cı","ci","cu","cü"];
+
+          for (const suf of candidates){
+            if (!keyLower.endsWith(suf)) continue;
+            const base = keyLower.slice(0, -suf.length);
+
+            // Guard: keep roots meaningful
+            if (!base || base.length < 3) continue;
+
+            // Root must exist in dictionary
+            if (!WORD_SET || !WORD_SET.has(base)) continue;
+
+            // Validate suffix is the *correct* one for the base (vowel harmony + c/ç rule)
+            if (suf.length === 3) {
+              const exp = expectedLIK(base);
+              if (exp && exp === suf) return { ok:true, base, suffix:suf };
+            } else {
+              const exp = expectedAgentSuffix(base);
+              if (exp && exp === suf) return { ok:true, base, suffix:suf };
+            }
+          }
+
+          return { ok:false };
+        }
+
 
         function buildEasyCandidates() {
           // Easy mode candidates: 6–9 letters, max 3 vowels (so it can fit into 3-vowel / 6-consonant grid)
@@ -911,6 +999,9 @@ ${url}`;
         const devBadgeEl = document.getElementById('dev-badge');
         
         const devWordEl = document.getElementById('dev-wordcheck');
+        const devTestPanelEl = document.getElementById('dev-test-panel');
+        const devTestInputEl = document.getElementById('dev-test-input');
+        const devTestResultEl = document.getElementById('dev-test-result');
 const gameOverlay = document.getElementById('game-overlay');
         const statusIndicator = document.getElementById('status-indicator');
 
@@ -1713,15 +1804,21 @@ function calculateScore(word) {
                 return;
             }
 
-            // Dictionary check (devAccept bypass)
+            // Dictionary check (devAccept bypass) + productive suffix accept
+            // If not directly in WORD_SET, we allow a limited set of derived forms:
+            //   -lIk (lık/lik/luk/lük) and -(c/ç)I (cı/ci/cu/cü + çı/çi/çu/çü)
+            let __derivedInfo = null;
             if (!devAccept && !WORD_SET.has(key)) {
-                showFeedback(`"${w}" listede yok!`, "text-[var(--accent)]", "inline");
-                inputEl.value = "";
-                if (!isTouchCoarse) inputEl.focus();
-                return;
+                const d = acceptsDerivedWord(key);
+                if (!d.ok) {
+                    showFeedback(`"${w}" listede yok!`, "text-[var(--accent)]", "inline");
+                    inputEl.value = "";
+                    if (!isTouchCoarse) inputEl.focus();
+                    return;
+                }
+                __derivedInfo = d; // accepted via suffix rule
             }
-
-            // Accepted
+// Accepted
             showFeedback("", "", "inline"); // clear inline message
             inputEl.value = "";
 
@@ -1827,6 +1924,18 @@ awardBonuses(w.length, { usedJoker: usedDup });
                 if (devAccept) devWordEl.classList.remove('hidden');
                 else devWordEl.classList.add('hidden');
             }
+            if (devTestPanelEl) {
+                if (devAccept) devTestPanelEl.classList.remove('hidden');
+                else devTestPanelEl.classList.add('hidden');
+            }
+            if (!devAccept) {
+                if (devTestInputEl) devTestInputEl.value = '';
+                if (devTestResultEl) {
+                    devTestResultEl.textContent = '';
+                    devTestResultEl.classList.remove('text-emerald-300','text-rose-300','text-slate-300');
+                    devTestResultEl.classList.add('text-slate-300');
+                }
+            }
             const devEasyEl = document.getElementById('devEasyWord');
             if (devEasyEl) {
                 if (devAccept && gameMode === 'easy') devEasyEl.classList.remove('hidden');
@@ -1834,6 +1943,9 @@ awardBonuses(w.length, { usedJoker: usedDup });
             }
             updateDevWordCheck();
             updateDevEasyWord();
+            if (devAccept && devTestInputEl) {
+                setTimeout(() => { try { devTestInputEl.focus(); } catch(e){} }, 0);
+            }
         }
 
         function updateDevWordCheck() {
@@ -1850,11 +1962,65 @@ awardBonuses(w.length, { usedJoker: usedDup });
                 return;
             }
             const norm = raw.toLocaleLowerCase('tr-TR');
-            const ok = WORD_SET.has(norm);
-            devWordEl.textContent = `"${raw.toLocaleUpperCase('tr-TR')}" ` + (ok ? '✓ listede' : '✗ listede yok');
+            const direct = WORD_SET.has(norm);
+            const d = direct ? null : acceptsDerivedWord(norm);
+            const ok = direct || (d && d.ok);
+
+            devWordEl.textContent = `"${raw.toLocaleUpperCase('tr-TR')}" ` + (
+                direct ? '✓ listede' :
+                (ok ? (`✓ türetim (${(d && d.base) ? d.base : '?'}+${(d && d.suffix) ? d.suffix : '?'})`) : '✗ listede yok')
+            );
             devWordEl.classList.remove('text-emerald-300','text-rose-300','text-slate-300');
             devWordEl.classList.add(ok ? 'text-emerald-300' : 'text-rose-300');
             devWordEl.classList.remove('hidden');
+        }
+
+        
+        function renderDevTestResult(raw) {
+            if (!devTestResultEl) return;
+            const r = (raw || '').trim();
+            if (!r) {
+                devTestResultEl.textContent = '';
+                devTestResultEl.classList.remove('text-emerald-300','text-rose-300','text-slate-300');
+                devTestResultEl.classList.add('text-slate-300');
+                return;
+            }
+            const norm = r.toLocaleLowerCase('tr-TR');
+            const direct = WORD_SET.has(norm);
+            const d = direct ? null : acceptsDerivedWord(norm);
+            const ok = direct || (d && d.ok);
+
+            let msg = `"${r.toLocaleUpperCase('tr-TR')}" ` + (
+                direct ? '✓ listede' :
+                (ok ? (`✓ türetim (${(d && d.base) ? d.base : '?'}+${(d && d.suffix) ? d.suffix : '?'})`) : '✗ listede yok')
+            );
+
+            // Extra hint for common confusion in dev mode
+            if (!direct && !ok && d && d.reason) {
+                msg += ` • ${d.reason}`;
+            }
+
+            devTestResultEl.textContent = msg;
+            devTestResultEl.classList.remove('text-emerald-300','text-rose-300','text-slate-300');
+            devTestResultEl.classList.add(ok ? 'text-emerald-300' : 'text-rose-300');
+        }
+
+        // Dev test input: press Enter to validate without affecting gameplay.
+        if (devTestInputEl) {
+            devTestInputEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    renderDevTestResult(devTestInputEl.value);
+                } else if (e.key === 'Escape') {
+                    devTestInputEl.value = '';
+                    renderDevTestResult('');
+                }
+            });
+            devTestInputEl.addEventListener('input', () => {
+                // Live preview while typing (only when dev is open)
+                if (devAccept) renderDevTestResult(devTestInputEl.value);
+            });
         }
 
         function updateJokerUI() {
