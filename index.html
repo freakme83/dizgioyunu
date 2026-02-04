@@ -685,6 +685,8 @@ body{
         // - Allows certain derived words even if not explicitly in WORD_SET
         // - Current enabled suffixes:
         //   * -lIk: lık/lik/luk/lük  (e.g., kitaplık)
+        //   * -lI:  lı/li/lu/lü      (e.g., tuzlu, kitaplı)
+        //   * -sIz: sız/siz/suz/süz  (e.g., tuzsuz, kitapsız)
         //   * -(c/ç)I: cı/ci/cu/cü and çı/çi/çu/çü (e.g., topçu)
         // =========================
         const VOICELESS_FINALS = new Set(["p","ç","t","k","f","h","s","ş"]);
@@ -714,6 +716,23 @@ body{
           return null;
         }
 
+
+        function pickLI(v){
+          if (v === "a" || v === "ı") return "lı";
+          if (v === "e" || v === "i") return "li";
+          if (v === "o" || v === "u") return "lu";
+          if (v === "ö" || v === "ü") return "lü";
+          return null;
+        }
+
+        function pickSIZ(v){
+          if (v === "a" || v === "ı") return "sız";
+          if (v === "e" || v === "i") return "siz";
+          if (v === "o" || v === "u") return "suz";
+          if (v === "ö" || v === "ü") return "süz";
+          return null;
+        }
+
         function expectedAgentSuffix(base){
           const v = lastVowelLC(base);
           if (!v) return null;
@@ -731,12 +750,23 @@ body{
           return v ? pickLIK(v) : null;
         }
 
+
+        function expectedLI(base){
+          const v = lastVowelLC(base);
+          return v ? pickLI(v) : null;
+        }
+
+        function expectedSIZ(base){
+          const v = lastVowelLC(base);
+          return v ? pickSIZ(v) : null;
+        }
+
         // Returns: { ok:true, base:"...", suffix:"..." } or { ok:false }
         function acceptsDerivedWord(keyLower){
           if (!keyLower || keyLower.length < 3) return { ok:false };
 
           // Try longer suffixes first
-          const candidates = ["lık","lik","luk","lük","çı","çi","çu","çü","cı","ci","cu","cü"];
+          const candidates = ["sız","siz","suz","süz","lık","lik","luk","lük","lı","li","lu","lü","çı","çi","çu","çü","cı","ci","cu","cü"];
 
           for (const suf of candidates){
             if (!keyLower.endsWith(suf)) continue;
@@ -749,8 +779,18 @@ body{
             if (!WORD_SET || !WORD_SET.has(base)) continue;
 
             // Validate suffix is the *correct* one for the base (vowel harmony + c/ç rule)
-            if (suf.length === 3) {
+            const isLIK = (suf === "lık" || suf === "lik" || suf === "luk" || suf === "lük");
+            const isLI  = (suf === "lı"  || suf === "li"  || suf === "lu"  || suf === "lü");
+            const isSIZ = (suf === "sız" || suf === "siz" || suf === "suz" || suf === "süz");
+
+            if (isLIK){
               const exp = expectedLIK(base);
+              if (exp && exp === suf) return { ok:true, base, suffix:suf };
+            } else if (isLI){
+              const exp = expectedLI(base);
+              if (exp && exp === suf) return { ok:true, base, suffix:suf };
+            } else if (isSIZ){
+              const exp = expectedSIZ(base);
               if (exp && exp === suf) return { ok:true, base, suffix:suf };
             } else {
               const exp = expectedAgentSuffix(base);
