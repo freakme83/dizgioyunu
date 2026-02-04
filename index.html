@@ -1065,7 +1065,93 @@ ${url}`;
         }
 
 
-        // Touch coarse detection (used for mobile keyboard behavior)
+        
+
+// =========================
+// Timer engine (anti-throttling / anti-background pause)
+// - setInterval/requestAnimationFrame can slow down or stop when the user scrolls the page,
+//   switches tab, opens overlays, or the OS puts the page in the background.
+// - This timer uses real elapsed time, so the countdown always reflects the actual passage of time.
+// =========================
+let __timer = { running: false, remainingMs: 0, lastNow: 0 };
+
+function __nowMs(){
+    try {
+        return (typeof performance !== 'undefined' && performance && typeof performance.now === 'function')
+            ? performance.now()
+            : Date.now();
+    } catch(_) { return Date.now(); }
+}
+
+function startGameTimer(initialSeconds){
+    stopGameTimer();
+    __timer.running = true;
+    __timer.remainingMs = Math.max(0, Math.round((Number(initialSeconds) || 0) * 1000));
+    __timer.lastNow = __nowMs();
+    // sync UI immediately
+    timeLeft = Math.ceil(__timer.remainingMs / 1000);
+    updateTimeUI();
+
+    timerInterval = setInterval(timerTick, 250);
+
+    // immediate tick (helps some mobile/Safari edge cases)
+    try { timerTick(); } catch(_) {}
+}
+
+function stopGameTimer(){
+    __timer.running = false;
+    if (timerInterval) { try { stopGameTimer();
+            } catch(e) {} }
+    timerInterval = null;
+}
+
+function addTimeSeconds(sec){
+    const s = Number(sec) || 0;
+    if (s <= 0) return;
+
+    if (__timer.running) {
+        __timer.remainingMs += Math.round(s * 1000);
+        // reset anchor so we don't "double subtract" a big dt right after a bonus
+        __timer.lastNow = __nowMs();
+        timeLeft = Math.ceil(__timer.remainingMs / 1000);
+    } else {
+        timeLeft += s;
+    }
+    updateTimeUI();
+}
+
+function timerTick(){
+    if (!gameActive || !__timer.running) return;
+
+    const now = __nowMs();
+    let dt = now - (__timer.lastNow || now);
+    if (!isFinite(dt) || dt < 0) dt = 0;
+
+    __timer.lastNow = now;
+    __timer.remainingMs -= dt;
+
+    if (__timer.remainingMs <= 0) {
+        __timer.remainingMs = 0;
+        timeLeft = 0;
+        updateTimeUI();
+        endGame();
+        return;
+    }
+
+    const newTL = Math.ceil(__timer.remainingMs / 1000);
+    if (newTL !== timeLeft) {
+        timeLeft = newTL;
+        updateTimeUI();
+    }
+}
+
+// Force a catch-up tick when the page comes back to foreground/focus
+try {
+    document.addEventListener('visibilitychange', () => { try { timerTick(); } catch(_) {} });
+    window.addEventListener('focus', () => { try { timerTick(); } catch(_) {} });
+    window.addEventListener('pageshow', () => { try { timerTick(); } catch(_) {} });
+} catch(_) {}
+// Touch coarse detection (used for mobile keyboard behavior)
         let isTouchCoarse = false;
         try {
             const hasTouch = (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) || ('ontouchstart' in window);
@@ -1253,29 +1339,8 @@ const gameOverlay = document.getElementById('game-overlay');
             spin();
             renderTouchKeys();
             
-            if (timerInterval) { try { clearInterval(timerInterval); } catch(e) {} }
-            const __timerStart = Date.now();
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                updateTimeUI();
-                if(timeLeft <= 0) endGame();
-            }, 1000);
-
-            // Watchdog: rare Safari/local-file cases may prevent the first tick. If stuck, restart once.
-            setTimeout(() => {
-                if (!gameActive) return;
-                // if timer didn't tick after ~1.6s, restart interval
-                if ((Date.now() - __timerStart) > 1600 && (timeLeft === 90 || timeLeft === 60)) {
-                    try { clearInterval(timerInterval); } catch(e) {}
-                    timerInterval = setInterval(() => {
-                        timeLeft--;
-                        updateTimeUI();
-                        if (timeLeft <= 0) {
-                            endGame();
-                        }
-                    }, 1000);
-                }
-            }, 1700);
+            stopGameTimer();
+            startGameTimer(timeLeft);
 
             updateSubmitButtonsState();
         }
@@ -1288,7 +1353,7 @@ const gameOverlay = document.getElementById('game-overlay');
 
             document.getElementById('share-btn')?.classList.remove('hidden');
             gameActive = false;
-            clearInterval(timerInterval);
+            stopGameTimer();
             inputEl.disabled = true;
             passBtn.disabled = true;
                         updatePassButtonUI();
@@ -1500,14 +1565,22 @@ const gameOverlay = document.getElementById('game-overlay');
         }
 
 
-        function awardTimeOnly(len) {
-            
-            if (len === 4) { timeLeft += 4; showTimePop('+4', 'text-emerald-300'); }
-            else if (len === 5) { timeLeft += 8; showTimePop('+8', 'text-emerald-300'); }
-            else if (len === 6) { timeLeft += 15; showTimePop('+15', 'text-emerald-300'); }
-            else if (len === 7 || len === 8 || len === 9) { timeLeft += 20; showTimePop('+20', 'text-emerald-300'); }
-            timerEl.textContent = timeLeft;
-        }
+        
+function awardTimeOnly(len) {
+    const n = Number(len) || 0;
+    let bonus = 0;
+
+    if (n === 4) bonus = 4;
+    else if (n === 5) bonus = 8;
+    else if (n === 6) bonus = 15;
+    else if (n === 7 || n === 8 || n === 9) bonus = 20;
+
+    if (bonus > 0) {
+        addTimeSeconds(bonus);
+        showTimePop(`+${bonus}`, 'text-emerald-300');
+    }
+}
+
 
         function awardBonuses(wordLen, opts = {}) {
     const len = Number(wordLen) || 0;
@@ -1556,8 +1629,7 @@ const gameOverlay = document.getElementById('game-overlay');
     if (usedJoker) { passBonus = 0; jokerBonus = 0; }
 
     if (timeBonus > 0) {
-        timeLeft += timeBonus;
-        if (typeof updateTimeUI === "function") updateTimeUI();
+        addTimeSeconds(timeBonus);
     }
 
     if (gameMode === "classic") {
@@ -1841,11 +1913,10 @@ function calculateScore(word) {
             else if (wordLength === 7) bonus = 20;
 
             if (bonus > 0) {
-                timeLeft += bonus;
-                timerEl.textContent = timeLeft;
+                addTimeSeconds(bonus);
                 if (timeLeft > 10) timerEl.classList.remove('timer-low');
 
-                const label = `+${bonus} SN`;
+const label = `+${bonus} SN`;
 
                 
                 if (timeBonusToastEl) {
@@ -2372,25 +2443,33 @@ document.addEventListener('pointerdown', (e) => {
   <div id="releaseNotesModal" class="rn-backdrop" aria-hidden="true">
     <div class="rn-card" role="dialog" aria-modal="true" aria-labelledby="rnTitle">
       <div class="rn-head">
-        <div id="rnTitle" class="rn-title">DİZGİ&lt; v1.04 – Güncelleme Notları</div>
+        <div id="rnTitle" class="rn-title">DİZGİ v1.04 – Güncelleme Notları</div>
         <button id="rnCloseBtn" class="rn-close" type="button" aria-label="Kapat">×</button>
       </div>
       
         <div class="rn-body">
 <div style="margin-bottom:10px;">
-  <b>DİZGİ&lt;</b>, tek başına geliştirilen, reklamsız ve tamamen ücretsiz bir kelime oyunudur.
-  Eğer oyun sana keyif verdiyse, alan adı / barındırma gibi masrafları karşılamama katkı olmak için bir kahve ısmarlayabilirsin: 
-  <a href="https://buymeacoffee.com/dizgioyunu" data-bmc="1" data-bmc-placement="release_notes" target="_blank" rel="noopener noreferrer" style="text-decoration:underline; color:#D6C89A;">buymeacoffee.com/dizgioyunu</a> ☕
+  <b>DİZGİ</b>, tek kişi tarafından geliştirilen, reklamsız ve tamamen ücretsiz bir kelime oyunudur.<br>
+  Eğer oyun sana keyif verdiyse, barındırma ve geliştirme masraflarına katkı vermek için bir kahve ısmarlayabilirsin:<br>
+  <a href="https://buymeacoffee.com/dizgioyunu" data-bmc="1" data-bmc-placement="release_notes" target="_blank" rel="noopener noreferrer" style="text-decoration:underline; color:#D6C89A;">buymeacoffee.com/dizgioyunu</a>
 </div>
 
-          <div>• <b>Zirvedekiler eklendi:</b> Kolay ve Klasik mod için skor listeleri artık ayrı ayrı görüntüleniyor.</div>
-          <div>• <b>Harf sayısı 9’a çıktı:</b> Artık <b>9 harflik</b> kelimeler de girilebiliyor!</div>
-          <div>• <b>Kolay mod dengelendi:</b> Kolay modda uzun kelime bonusları ve puan dengesi yeniden ayarlandı.</div>
-          <div>• <b>Kelime listesi genişletildi:</b> Yeni kelimeler eklendi, sözlük güncellendi.</div>
-          <div>• <b>Yapım ekleri düzeltildi:</b> Yapım ekleriyle türetilmiş sözcüklerin kabul edilmemesi sorunu büyük ölçüde düzeltildi <b>(ufak bir bedel karşılığında)</b>.</div>
-          <div>• Birçok hata giderildi — ve elbette yenileri oluşturuldu.</div>
-          <div style="margin-top:10px;"><b>Not:</b> DİZGİ&lt; hâlâ geliştirme aşamasındadır. Oyun dengesi ve sözlük güncellemeleri nedeniyle puan listeleri zaman zaman silinebilir veya yeniden oluşturulabilir. Bazı kelimeler geçici olarak listede yer almayabilir. Öneri ve geri bildirimleriniz için: <b>dizgi.oyunu@gmail.com</b>. Anlayışınız için teşekkürler.</div>
-        </div>
+<div style="margin-top:6px; font-weight:700;">Bu sürümle gelenler:</div>
+<div>• Süre mekanizması tamamen düzeltildi ve yenilendi.</div>
+<div>• Kelime listesi genişletildi: Yeni kelimeler eklendi, sözlük güncellendi.</div>
+<div>• Yapım eki kontrolü iyileştirildi: Yapım ekleriyle türetilmiş bazı kelimelerin yanlış kabul edilmesi sorunu büyük ölçüde giderildi.</div>
+<div>• Çeşitli küçük hatalar düzeltildi ve genel kararlılık artırıldı.</div>
+
+<div style="margin-top:10px;">
+  <b>Not:</b><br>
+  DİZGİ hâlâ aktif geliştirme aşamasındadır. Bazı kelimeler geçici olarak listede yer almayabilir.
+</div>
+
+<div style="margin-top:10px;">
+  <b>Geri bildirim ve önerileriniz için:</b><br>
+  <a href="mailto:dizgioyunu@gmail.com" style="text-decoration:underline; color:#D6C89A;">dizgioyunu@gmail.com</a>
+</div>
+</div>
         <div class="rn-foot">
           <button id="rnOkBtn" class="rn-ok" type="button">Tamam</button>
         </div>
