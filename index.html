@@ -595,7 +595,7 @@ body{
 </button><div id="share-panel" class="hidden mt-6 w-full max-w-[520px] bg-black/40 border border-white/10 rounded-2xl p-4 text-left"><div class="text-white font-bold tracking-wider mb-2">SKORUNU PAYLAŞ</div><pre id="share-text-box" class="whitespace-pre-wrap text-slate-200 text-sm bg-black/30 border border-white/10 rounded-xl p-3 select-text"></pre><div class="mt-3 flex items-center justify-center gap-3 flex-wrap"><button id="copy-share-btn" type="button"
  class="border border-white/20 hover:border-white/40 bg-white/10 hover:bg-white/15 text-white px-6 py-3 rounded-2xl font-bold text-sm active:scale-95 transition-all uppercase tracking-wider">
  KOPYALA
- </button><div id="copy-hint" class="hidden text-emerald-300 text-xs font-bold tracking-wider">KOPYALANDI ✅</div></div></div><div class="mt-6 text-slate-500 text-xs leading-relaxed"><div>© 2026 DİZGİ&lt;. Tüm hakları saklıdır.</div><div>© 2026 DİZGİ&lt;. All rights reserved.</div><div><a href="mailto:dizgi.oyunu@gmail.com" class="underline hover:text-slate-300 transition-colors">Geri bildirim ve iletişim için: dizgi.oyunu@gmail.com</a></div></div>
+ </button><div id="copy-hint" class="hidden text-emerald-300 text-xs font-bold tracking-wider">KOPYALANDI ✅</div></div></div><div class="mt-10 sm:mt-12 text-slate-500 text-xs leading-relaxed"><div>© 2026 DİZGİ&lt;. Tüm hakları saklıdır.</div><div>© 2026 DİZGİ&lt;. All rights reserved.</div><div><a href="mailto:dizgi.oyunu@gmail.com" class="underline hover:text-slate-300 transition-colors">Geri bildirim ve iletişim için: dizgi.oyunu@gmail.com</a></div></div>
 <div class="mt-4">
   <a id="bmc-btn" href="https://buymeacoffee.com/dizgioyunu" data-bmc="1" data-bmc-placement="home_ui" target="_blank" rel="noopener noreferrer"
      class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-[#4d3f2a]/70 bg-black/20 text-[#d6c3a3] font-bold tracking-wider hover:bg-black/30 transition text-[11px] uppercase">
@@ -2303,7 +2303,7 @@ document.addEventListener('pointerdown', (e) => {
   <div id="releaseNotesModal" class="rn-backdrop" aria-hidden="true">
     <div class="rn-card" role="dialog" aria-modal="true" aria-labelledby="rnTitle">
       <div class="rn-head">
-        <div id="rnTitle" class="rn-title">DİZGİ&lt; v1.03 – Güncelleme Notları</div>
+        <div id="rnTitle" class="rn-title">DİZGİ&lt; v1.04 – Güncelleme Notları</div>
         <button id="rnCloseBtn" class="rn-close" type="button" aria-label="Kapat">×</button>
       </div>
       
@@ -2318,6 +2318,7 @@ document.addEventListener('pointerdown', (e) => {
           <div>• <b>Harf sayısı 9’a çıktı:</b> Artık <b>9 harflik</b> kelimeler de girilebiliyor!</div>
           <div>• <b>Kolay mod dengelendi:</b> Kolay modda uzun kelime bonusları ve puan dengesi yeniden ayarlandı.</div>
           <div>• <b>Kelime listesi genişletildi:</b> Yeni kelimeler eklendi, sözlük güncellendi.</div>
+          <div>• <b>Yapım ekleri düzeltildi:</b> Yapım ekleriyle türetilmiş sözcüklerin kabul edilmemesi sorunu büyük ölçüde düzeltildi <b>(ufak bir bedel karşılığında)</b>.</div>
           <div>• Birçok hata giderildi — ve elbette yenileri oluşturuldu.</div>
           <div style="margin-top:10px;"><b>Not:</b> DİZGİ&lt; hâlâ geliştirme aşamasındadır. Oyun dengesi ve sözlük güncellemeleri nedeniyle puan listeleri zaman zaman silinebilir veya yeniden oluşturulabilir. Bazı kelimeler geçici olarak listede yer almayabilir. Öneri ve geri bildirimleriniz için: <b>dizgi.oyunu@gmail.com</b>. Anlayışınız için teşekkürler.</div>
         </div>
@@ -2337,7 +2338,7 @@ document.addEventListener('pointerdown', (e) => {
 <script>
   // Release Notes (one-time per version)
   (function () {
-    const CURRENT_VERSION = (window.DIZGI_VERSION || window.CURRENT_VERSION || "1.03");
+    const CURRENT_VERSION = (window.DIZGI_VERSION || window.CURRENT_VERSION || "1.04");
     const VERSION_POPUP_STORAGE_KEY = (window.DIZGI_SEEN_VERSION_KEY || window.VERSION_POPUP_STORAGE_KEY || "dizgi_seen_version");
 
     function showReleaseNotes() {
