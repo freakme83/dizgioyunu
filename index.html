@@ -1873,7 +1873,11 @@ if (newCount === 2) repeatFactor = 0.5;
 else if (newCount >= 3) repeatFactor = 0.25;
 
 const baseRaw = calculateScore(w);
-const base = Math.round(baseRaw * repeatFactor);
+let base = Math.round(baseRaw * repeatFactor);
+// Derived-word score penalty: only in classic mode
+if (gameMode === "classic" && __derivedInfo) {
+    base = Math.round(base * 0.8);
+}
 
 const win = addScore(base);
 awardBonuses(w.length, { usedJoker: usedDup });
