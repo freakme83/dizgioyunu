@@ -550,6 +550,34 @@ body{
 /* UI: Joker bar kaldırıldı (glow yeterli) */
 #joker-bar{display:none !important;}
 
+
+
+/* =========================
+   Overlay footer spacing (home vs end)
+   - Home screen: more breathing room
+   - End screen: tighter to prevent overflow on mobile
+========================= */
+#game-overlay.state-home .footer-block{
+  margin-top: 2.5rem; /* like mt-10 */
+}
+@media (min-width: 640px){
+  #game-overlay.state-home .footer-block{
+    margin-top: 3rem; /* like sm:mt-12 */
+  }
+}
+#game-overlay.state-end .footer-block{
+  margin-top: 1.25rem; /* tighter on game over */
+}
+@media (min-width: 640px){
+  #game-overlay.state-end .footer-block{
+    margin-top: 1.5rem;
+  }
+}
+
+/* Share panel collapse */
+#share-panel.is-collapsed #share-body{ display:none; }
+#share-panel.is-collapsed #share-toggle-icon{ transform: rotate(-90deg); }
+#share-toggle-icon{ transition: transform .15s ease; }
 </style>
 </head><body class="h-[100dvh] w-full overflow-hidden m-0 p-0 flex items-center justify-center" x-apple-data-detectors="false"><div class="w-full h-[100dvh] max-w-xl glass p-4 sm:p-8 rounded-none sm:rounded-[3rem] shadow-2xl relative border-t border-white/10 flex flex-col overflow-hidden">
 <div class="hud mb-4 sm:mb-8"><div class="hud-box hud-right bg-black/40 px-4 sm:px-6 py-2 sm:py-3 rounded-2xl border border-white/5 flex flex-col items-center relative min-w-[118px]"><span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">SKOR</span><span id="score" class="text-3xl font-black text-emerald-400">0</span></div><div class="hud-center text-center"><h1 class="text-xl font-black text-blue-400 leading-none mb-1 italic">DİZGİ‹</h1><div id="dev-badge" class="hidden mt-2 text-[10px] font-black tracking-[0.25em] text-rose-300/90">
@@ -574,7 +602,7 @@ body{
  Gönder
  </button></div></div></div></div><div class="flex flex-col gap-3"><div id="mobile-actions" class="mobile-only w-full flex gap-3"><button id="mobile-clear" type="button" class="btn-action flex-1 text-white/90 font-black py-4 rounded-2xl transition-all uppercase text-sm tracking-[0.2em] shadow-xl">TEMİZLE</button><button id="mobile-submit" type="button" class="btn-action flex-1 text-white font-black py-4 rounded-2xl transition-all uppercase text-sm tracking-[0.2em] shadow-xl">GÖNDER</button></div><button id="pass-btn" disabled
  class="btn-pass w-full text-white font-black py-5 rounded-2xl transition-all uppercase text-sm tracking-[0.2em] shadow-xl flex items-center justify-center gap-2"><span>TEKRAR ÇEVİR</span><span id="pass-badge" class="bg-black/20 px-2 py-1 rounded text-[10px]">-30 PUAN</span></button><div id="joker-bar" class="hidden bg-slate-900/50 p-4 rounded-2xl border border-slate-800 flex justify-between items-center px-6 relative min-w-0"><span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest flex-1 min-w-0 truncate">JOKER <span class="normal-case">(ekstra 1 harf kullanım hakkı)</span></span><span class="text-2xl sm:text-3xl font-black text-purple-300 flex items-center gap-2 flex-none"><span class="text-2xl sm:text-3xl">🃏</span><span id="joker-count">0</span><span id="joker-pop" class="hidden text-emerald-300 text-base sm:text-lg font-black ml-2">+1</span></span></div><div class="bg-slate-900/50 p-3 rounded-2xl border border-slate-800 flex justify-between items-center px-6 hidden"><span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Potansiyel Kazanç</span><span id="potential" class="text-xl font-black text-blue-400">0</span></div></div></div><div id="message" class="mt-2 hidden text-center text-sm font-bold min-h-[1.25rem] text-slate-400">
-</div><div id="game-overlay" class="absolute inset-0 z-50 rounded-[2.5rem] flex flex-col items-center justify-center p-8 text-center overlay"><h2 id="overlay-title" class="text-4xl font-black text-white mb-2">DİZGİ‹</h2><p id="overlay-desc" class="text-slate-400 mb-6 max-w-[520px]">Bir kelime türetme oyunu! Süre bitmeden elinden geleni yap.</p><div class="flex gap-3 flex-wrap justify-center">
+</div><div id="game-overlay" class="absolute inset-0 z-50 rounded-[2.5rem] flex flex-col items-center justify-center p-8 text-center overlay state-home"><h2 id="overlay-title" class="text-4xl font-black text-white mb-2">DİZGİ‹</h2><p id="overlay-desc" class="text-slate-400 mb-6 max-w-[520px]">Bir kelime türetme oyunu! Süre bitmeden elinden geleni yap.</p><div class="flex gap-3 flex-wrap justify-center">
   <button id="easy-btn"
     class="border border-white/20 hover:border-white/40 px-10 py-5 rounded-2xl font-bold text-lg active:scale-95 transition-all uppercase tracking-wider">
     KOLAY
@@ -592,10 +620,25 @@ body{
       <button id="rules-btn"
   class="mt-5 border border-[#D6C89A]/40 hover:border-[#D6C89A]/70 text-[#D6C89A] px-8 py-3 rounded-xl font-bold text-sm active:scale-95 transition-all uppercase tracking-wider">
   KURALLAR
-</button><div id="share-panel" class="hidden mt-6 w-full max-w-[520px] bg-black/40 border border-white/10 rounded-2xl p-4 text-left"><div class="text-white font-bold tracking-wider mb-2">SKORUNU PAYLAŞ</div><pre id="share-text-box" class="whitespace-pre-wrap text-slate-200 text-sm bg-black/30 border border-white/10 rounded-xl p-3 select-text"></pre><div class="mt-3 flex items-center justify-center gap-3 flex-wrap"><button id="copy-share-btn" type="button"
- class="border border-white/20 hover:border-white/40 bg-white/10 hover:bg-white/15 text-white px-6 py-3 rounded-2xl font-bold text-sm active:scale-95 transition-all uppercase tracking-wider">
- KOPYALA
- </button><div id="copy-hint" class="hidden text-emerald-300 text-xs font-bold tracking-wider">KOPYALANDI ✅</div></div></div><div class="mt-10 sm:mt-12 text-slate-500 text-xs leading-relaxed"><div>© 2026 DİZGİ&lt;. Tüm hakları saklıdır.</div><div>© 2026 DİZGİ&lt;. All rights reserved.</div><div><a href="mailto:dizgi.oyunu@gmail.com" class="underline hover:text-slate-300 transition-colors">Geri bildirim ve iletişim için: dizgi.oyunu@gmail.com</a></div></div>
+</button><div id="share-panel" class="hidden mt-6 w-full max-w-[520px] bg-black/40 border border-white/10 rounded-2xl p-4 text-left">
+  <button id="share-toggle" type="button" class="w-full flex items-center justify-between gap-3 text-left">
+    <span class="text-white font-bold tracking-wider">SKORUNU PAYLAŞ</span>
+    <span id="share-toggle-icon" class="text-slate-300 font-black tracking-wider">▼</span>
+  </button>
+
+  <div id="share-body" class="mt-3">
+    <pre id="share-text-box" class="whitespace-pre-wrap text-slate-200 text-sm bg-black/30 border border-white/10 rounded-xl p-3 select-text"></pre>
+    <div class="mt-3 flex items-center justify-center gap-3 flex-wrap">
+      <button id="copy-share-btn" type="button"
+        class="border border-white/20 hover:border-white/40 bg-white/10 hover:bg-white/15 text-white px-6 py-3 rounded-2xl font-bold text-sm active:scale-95 transition-all uppercase tracking-wider">
+        KOPYALA
+      </button>
+      <div id="copy-hint" class="hidden text-emerald-300 text-xs font-bold tracking-wider">KOPYALANDI ✅</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer-block text-slate-500 text-xs leading-relaxed"><div>© 2026 DİZGİ&lt;. Tüm hakları saklıdır.</div><div>© 2026 DİZGİ&lt;. All rights reserved.</div><div><a href="mailto:dizgi.oyunu@gmail.com" class="underline hover:text-slate-300 transition-colors">Geri bildirim ve iletişim için: dizgi.oyunu@gmail.com</a></div></div>
 <div class="mt-4">
   <a id="bmc-btn" href="https://buymeacoffee.com/dizgioyunu" data-bmc="1" data-bmc-placement="home_ui" target="_blank" rel="noopener noreferrer"
      class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-[#4d3f2a]/70 bg-black/20 text-[#d6c3a3] font-bold tracking-wider hover:bg-black/30 transition text-[11px] uppercase">
@@ -948,6 +991,28 @@ Object.defineProperty(window, 'jokerCount', { get: () => jokers, set: v => { jok
         const copyShareBtnEl = document.getElementById('copy-share-btn');
         const copyHintEl = document.getElementById('copy-hint');
 
+        const shareToggleEl = document.getElementById('share-toggle');
+        const shareToggleIconEl = document.getElementById('share-toggle-icon');
+        const shareBodyEl = document.getElementById('share-body');
+
+        function setShareCollapsed(collapsed) {
+            if (!sharePanelEl) return;
+            if (collapsed) {
+                sharePanelEl.classList.add('is-collapsed');
+                if (shareToggleIconEl) shareToggleIconEl.textContent = '▼';
+            } else {
+                sharePanelEl.classList.remove('is-collapsed');
+                if (shareToggleIconEl) shareToggleIconEl.textContent = '▼';
+            }
+        }
+
+        if (shareToggleEl && sharePanelEl) {
+            shareToggleEl.addEventListener('click', () => {
+                const collapsed = sharePanelEl.classList.contains('is-collapsed');
+                setShareCollapsed(!collapsed);
+            });
+        }
+
         function refreshShareText() {
             if (!shareTextBoxEl) return;
             const modeLabel = (typeof gameMode !== 'undefined' && gameMode === 'easy') ? 'kolay' : 'klasik';
@@ -1163,7 +1228,9 @@ const gameOverlay = document.getElementById('game-overlay');
         }
 
         async function startGame() {
-            if (sharePanelEl) { sharePanelEl.classList.add('hidden'); }
+            if (sharePanelEl) { sharePanelEl.classList.add('hidden'); setShareCollapsed(true); }
+            gameOverlay.classList.remove('state-end');
+            gameOverlay.classList.add('state-home');
             if (copyHintEl) { copyHintEl.classList.add('hidden'); }
             try { closeRulesPanel(); } catch (_) {}
 
@@ -1215,7 +1282,9 @@ const gameOverlay = document.getElementById('game-overlay');
 
         function endGame() {
             try { closeRulesPanel(); } catch (_) {}
-            if (sharePanelEl) { sharePanelEl.classList.remove('hidden'); refreshShareText(); }
+            gameOverlay.classList.remove('state-home');
+            gameOverlay.classList.add('state-end');
+            if (sharePanelEl) { sharePanelEl.classList.remove('hidden'); setShareCollapsed(true); refreshShareText(); }
 
             document.getElementById('share-btn')?.classList.remove('hidden');
             gameActive = false;
