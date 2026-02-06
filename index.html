@@ -961,7 +961,8 @@ function shuffleInPlace(arr){
         let isSpinning = false;
         let timerInterval = null;
         let currentLetters = [];
-        let selectedSymbols = []; // tracks exact reel tiles tapped for current input
+        let selectedSymbols = []; // tracks exact reel tile ids tapped for current input
+        let symbolIdCounter = 0;
 
         let wordUsageCount = {};
         let freeSpins = 0;
@@ -1240,6 +1241,7 @@ const gameOverlay = document.getElementById('game-overlay');
             const char = forcedChar ? forcedChar : charList[Math.floor(Math.random() * charList.length)];
             const div = document.createElement('div');
             div.className = 'symbol';
+            div.dataset.symbolId = String(symbolIdCounter++);
             div.textContent = char;
             reel.appendChild(div);
             return char;
@@ -1645,8 +1647,12 @@ function awardTimeOnly(len) {
 }
 
 
-function setInputValue(val) {
+function setInputValue(val, opts = {}) {
+            const preserveSelection = !!opts.preserveSelection;
             inputEl.value = (val || '').toLocaleUpperCase('tr-TR').replace(/[^ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ]/g, '');
+            if (!preserveSelection && Array.isArray(selectedSymbols)) {
+                selectedSymbols.length = 0;
+            }
             {
                 const wlen = inputEl.value.length;
                 const pts = (wlen >= 3) ? calculateScore(inputEl.value) : 0;
@@ -1714,14 +1720,17 @@ function appendLetter(ch, sourceSym = null) {
     // not the left-most matching letter.
     if (Array.isArray(selectedSymbols)) {
         if (sourceSym && sourceSym.classList && sourceSym.classList.contains('active-letter')) {
-            selectedSymbols.push(sourceSym);
+            const symbolId = sourceSym.dataset ? sourceSym.dataset.symbolId : null;
+            if (symbolId) {
+                selectedSymbols.push(symbolId);
+            }
         } else {
             // Unknown source (e.g., touch keyboard / physical keyboard) → disable exact-tile mapping for this word.
             selectedSymbols.length = 0;
         }
     }
 
-    setInputValue(next);
+    setInputValue(next, { preserveSelection: true });
 
     // Joker/potential logic (if present elsewhere) should be derived on submit,
     // but we keep a safe no-op hook to avoid runtime errors.
@@ -1738,7 +1747,7 @@ function backspace() {
             if (Array.isArray(selectedSymbols) && selectedSymbols.length) {
                 selectedSymbols.pop();
             }
-            setInputValue(cur.slice(0, -1));
+            setInputValue(cur.slice(0, -1), { preserveSelection: true });
             recomputePendingJoker();
         }
 
@@ -1749,7 +1758,7 @@ function backspace() {
         function clearInput() {
             if (inputEl.disabled) return;
             if (Array.isArray(selectedSymbols)) selectedSymbols.length = 0;
-            setInputValue('');
+            setInputValue('', { preserveSelection: true });
             recomputePendingJoker();
         }
 
@@ -1872,13 +1881,20 @@ function backspace() {
             const wantLen = cur.length;
 
             // Exact tile mapping path (reel taps)
-            if (Array.isArray(selectedSymbols) &&
-                selectedSymbols.length === wantLen &&
-                selectedSymbols.every(el => el && el.classList && el.classList.contains('active-letter'))) {
-                for (const el of selectedSymbols) {
-                    el.classList.add('used-letter');
+            if (Array.isArray(selectedSymbols) && selectedSymbols.length === wantLen) {
+                const symbolMap = new Map();
+                const activeSymbols = Array.from(document.querySelectorAll('.symbol.active-letter'));
+                for (const el of activeSymbols) {
+                    const id = el.dataset ? el.dataset.symbolId : null;
+                    if (id) symbolMap.set(id, el);
                 }
-                return;
+                const resolved = selectedSymbols.map((id) => symbolMap.get(id)).filter(Boolean);
+                if (resolved.length === wantLen) {
+                    for (const el of resolved) {
+                        el.classList.add('used-letter');
+                    }
+                    return;
+                }
             }
 
             // Fallback path: deterministic (DOM order), consume counts.
@@ -2282,7 +2298,7 @@ function updateDevEasyWord() {
 
         inputEl.addEventListener('input', (e) => {
             
-            setInputValue(e.target.value || '');
+            setInputValue(e.target.value || '', { preserveSelection: false });
         });
 
         
