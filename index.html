@@ -383,7 +383,7 @@
 
         
         .overlay{
-            background: var(--nyt-overlay) !important;
+            background: var(--nyt-bg) !important;
             backdrop-filter: none !important;
         }
 
@@ -641,7 +641,7 @@ body{
         }
 
         body[data-theme="light"] #rules-panel > div{
-            background: rgba(255,255,255,0.9) !important;
+            background: #f8f5ef !important;
             border-color: var(--nyt-border) !important;
             color: var(--nyt-text) !important;
         }
@@ -651,12 +651,13 @@ body{
         }
 
         body[data-theme="light"] #rules-panel{
-            background: rgba(0,0,0,0.2) !important;
+            background: var(--nyt-bg) !important;
+            backdrop-filter: none !important;
         }
 
         body[data-theme="light"] #leaderboard-overlay{
-            background: rgba(247, 244, 238, 0.8) !important;
-            backdrop-filter: blur(6px);
+            background: var(--nyt-bg) !important;
+            backdrop-filter: none !important;
         }
         body[data-theme="light"] #leaderboard-overlay .leaderboard-card{
             background: #f8f5ef;
@@ -718,8 +719,17 @@ body{
             color: #5c5143;
         }
         body[data-theme="dark"] #leaderboard-overlay{
-            background: rgba(0,0,0,0.7) !important;
-            backdrop-filter: blur(6px);
+            background: var(--nyt-bg) !important;
+            backdrop-filter: none !important;
+        }
+        body[data-theme="dark"] #rules-panel > div{
+            background: #0f0f0f !important;
+            border-color: var(--nyt-border) !important;
+            color: var(--nyt-text) !important;
+        }
+        body[data-theme="dark"] #rules-panel{
+            background: var(--nyt-bg) !important;
+            backdrop-filter: none !important;
         }
         body[data-theme="dark"] #leaderboard-overlay .leaderboard-card{
             background: rgba(15,15,15,0.95);
