@@ -653,6 +653,67 @@ body{
         body[data-theme="light"] #rules-panel{
             background: rgba(0,0,0,0.2) !important;
         }
+
+        #leaderboard-overlay{
+            background: var(--nyt-overlay) !important;
+        }
+        #leaderboard-overlay .leaderboard-card{
+            background: var(--nyt-panel);
+            border-color: var(--nyt-border);
+            color: var(--nyt-text);
+        }
+        #leaderboard-overlay .leaderboard-header{
+            border-color: var(--nyt-border);
+        }
+        #leaderboard-title{
+            color: var(--nyt-text);
+        }
+        #leaderboard-close{
+            color: var(--nyt-muted);
+            border-color: var(--nyt-border);
+            background: transparent;
+        }
+        #leaderboard-tabs{
+            border-color: var(--nyt-border);
+            background: transparent;
+        }
+        .leaderboard-tab{
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            color: var(--nyt-muted);
+            border: 1px solid transparent;
+            background: transparent;
+        }
+        .leaderboard-tab-active{
+            color: var(--nyt-text);
+            border-color: var(--nyt-border);
+            background: var(--nyt-panel-button-bg);
+        }
+        .leaderboard-row{
+            border: 1px solid var(--nyt-border);
+            background: rgba(0,0,0,0.18);
+        }
+        body[data-theme="light"] .leaderboard-row{
+            background: rgba(0,0,0,0.04);
+        }
+        .leaderboard-rank{
+            color: var(--nyt-accent);
+            font-weight: 700;
+        }
+        .leaderboard-name{
+            color: var(--nyt-text);
+        }
+        .leaderboard-score{
+            color: var(--nyt-text);
+            font-weight: 800;
+        }
+        #leaderboard-loading,
+        #leaderboard-empty{
+            color: var(--nyt-muted);
+        }
         /* Optic centering for glyphs */
         .symbol{ display:flex; align-items:center; justify-content:center; line-height: 1; }
         .symbol .glyph{ position: relative; top: 0.02em; }
@@ -2838,27 +2899,27 @@ document.addEventListener('pointerdown', (e) => {
 <!-- (cleanup) removed legacy rules/leaderboard script + overlay HTML -->
 <!-- leaderboard overlay -->
 <div id="leaderboard-overlay" class="hidden fixed inset-0 z-[950] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-  <div class="w-full max-w-md max-h-[80vh] rounded-2xl border border-[#4d3f2a] bg-[#0f0f0f]/95 shadow-2xl overflow-hidden flex flex-col">
-    <div class="px-5 py-4 border-b border-[#2a2116] flex items-center justify-between">
-      <div class="text-[#d6c3a3] font-extrabold tracking-widest">ZİRVEDEKİLER</div>
-      <button id="leaderboard-close" class="text-[#d6c3a3]/70 hover:text-[#d6c3a3] px-3 py-1 rounded-lg border border-[#4d3f2a]/60">
+  <div class="leaderboard-card w-full max-w-md max-h-[80vh] rounded-2xl border border-[#4d3f2a] bg-[#0f0f0f]/95 shadow-2xl overflow-hidden flex flex-col">
+    <div class="leaderboard-header px-5 py-4 border-b border-[#2a2116] flex items-center justify-between">
+      <div id="leaderboard-title" class="text-[#d6c3a3] font-extrabold tracking-widest">ZİRVEDEKİLER</div>
+      <button id="leaderboard-close" class="px-3 py-1 rounded-lg border border-[#4d3f2a]/60">
         Kapat
       </button>
     </div>
 
     <div class="px-5 pt-4 pb-0">
-      <div class="inline-flex rounded-xl border border-[#4d3f2a]/60 bg-black/20 p-1 gap-1">
-        <button id="leaderboard-tab-classic" class="px-3 py-1.5 rounded-lg text-sm font-bold tracking-wide text-[#d6c3a3] bg-[#1a140c] border border-[#4d3f2a]/60">
+      <div id="leaderboard-tabs" class="inline-flex rounded-xl border border-[#4d3f2a]/60 bg-black/20 p-1 gap-1">
+        <button id="leaderboard-tab-classic" class="leaderboard-tab">
           Klasik
         </button>
-        <button id="leaderboard-tab-easy" class="px-3 py-1.5 rounded-lg text-sm font-bold tracking-wide text-white/80 hover:text-white border border-transparent">
+        <button id="leaderboard-tab-easy" class="leaderboard-tab">
           Kolay
         </button>
       </div>
     </div>
 
     <div class="p-5 flex-1 overflow-hidden flex flex-col">
-      <div id="leaderboard-loading" class="text-[#d6c3a3]/70 text-sm">Yükleniyor…</div>
+      <div id="leaderboard-loading" class="text-sm">Yükleniyor…</div>
 
       <!-- Classic -->
       <ol id="leaderboard-list-classic" class="hidden mt-3 space-y-2 flex-1 overflow-y-auto pr-1 max-h-[420px]"></ol>
@@ -2866,7 +2927,7 @@ document.addEventListener('pointerdown', (e) => {
       <!-- Easy -->
       <ol id="leaderboard-list-easy" class="hidden mt-3 space-y-2 flex-1 overflow-y-auto pr-1 max-h-[420px]"></ol>
 
-      <div id="leaderboard-empty" class="hidden text-[#d6c3a3]/70 text-sm">Henüz skor yok.</div>
+      <div id="leaderboard-empty" class="hidden text-sm">Henüz skor yok.</div>
     </div>
   </div>
 </div>
@@ -2915,11 +2976,11 @@ document.addEventListener('pointerdown', (e) => {
     if(!tabClassic || !tabEasy) return;
 
     if(activeMode === 'classic'){
-      tabClassic.className = "px-3 py-1.5 rounded-lg text-sm font-bold tracking-wide text-[#d6c3a3] bg-[#1a140c] border border-[#4d3f2a]/60";
-      tabEasy.className    = "px-3 py-1.5 rounded-lg text-sm font-bold tracking-wide text-white/80 hover:text-white border border-transparent";
+      tabClassic.className = "leaderboard-tab leaderboard-tab-active";
+      tabEasy.className    = "leaderboard-tab";
     } else {
-      tabEasy.className    = "px-3 py-1.5 rounded-lg text-sm font-bold tracking-wide text-white bg-white/10 border border-white/20";
-      tabClassic.className = "px-3 py-1.5 rounded-lg text-sm font-bold tracking-wide text-[#d6c3a3]/70 hover:text-[#d6c3a3] border border-transparent";
+      tabEasy.className    = "leaderboard-tab leaderboard-tab-active";
+      tabClassic.className = "leaderboard-tab";
     }
   }
 
@@ -2948,35 +3009,19 @@ document.addEventListener('pointerdown', (e) => {
       return;
     }
 
-    if(mode === 'classic'){
-      listEl.innerHTML = rows.map(function(r, i){
-        var name = (r && (r.name ?? r.playerName) ? (r.name ?? r.playerName) : 'Anonim').toString();
-        var score = Number(r && r.score ? r.score : 0) || 0;
-        return (
-          '<li class="flex items-center justify-between gap-3 px-3 py-2 rounded-xl border border-[#4d3f2a]/60 bg-black/20">' +
-            '<div class="min-w-0">' +
-              '<span class="font-bold text-[#d6c3a3]">' + (i+1) + '.</span>' +
-              '<span class="text-[#d6c3a3] truncate ml-2">' + escapeHtml(name) + '</span>' +
-            '</div>' +
-            '<div class="text-[#d6c3a3] font-extrabold tabular-nums">' + score + '</div>' +
-          '</li>'
-        );
-      }).join('');
-    } else {
-      listEl.innerHTML = rows.map(function(r, i){
-        var name = (r && (r.name ?? r.playerName) ? (r.name ?? r.playerName) : 'Anonim').toString();
-        var score = Number(r && r.score ? r.score : 0) || 0;
-        return (
-          '<li class="flex items-center justify-between gap-3 px-3 py-2 rounded-xl border border-white/20 bg-white/5">' +
-            '<div class="min-w-0">' +
-              '<span class="font-bold text-white/90">' + (i+1) + '.</span>' +
-              '<span class="text-white truncate ml-2">' + escapeHtml(name) + '</span>' +
-            '</div>' +
-            '<div class="text-white font-extrabold tabular-nums">' + score + '</div>' +
-          '</li>'
-        );
-      }).join('');
-    }
+    listEl.innerHTML = rows.map(function(r, i){
+      var name = (r && (r.name ?? r.playerName) ? (r.name ?? r.playerName) : 'Anonim').toString();
+      var score = Number(r && r.score ? r.score : 0) || 0;
+      return (
+        '<li class="leaderboard-row flex items-center justify-between gap-3 px-3 py-2 rounded-xl">' +
+          '<div class="min-w-0">' +
+            '<span class="leaderboard-rank">' + (i+1) + '.</span>' +
+            '<span class="leaderboard-name truncate ml-2">' + escapeHtml(name) + '</span>' +
+          '</div>' +
+          '<div class="leaderboard-score tabular-nums">' + score + '</div>' +
+        '</li>'
+      );
+    }).join('');
   }
 
   async function loadAndRender(mode, force){
