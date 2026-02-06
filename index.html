@@ -220,8 +220,36 @@
             --nyt-border: #2A2A2A;
             --nyt-text: #F5F5F5;
             --nyt-muted: #9A9A9A;
-            --nyt-accent: #D6C89A; 
+            --nyt-accent: #D6C89A;
             --nyt-error: #B85C5C;
+            --nyt-overlay: rgba(11,11,11,0.94);
+            --nyt-panel: rgba(22,22,22,0.96);
+            --nyt-panel-border: rgba(255,255,255,0.12);
+            --nyt-panel-header: rgba(22,22,22,0.98);
+            --nyt-panel-text: rgba(255,255,255,0.92);
+            --nyt-panel-button-bg: rgba(0,0,0,0.28);
+            --nyt-panel-button-border: rgba(255,255,255,0.14);
+            --nyt-action-bg: rgba(255,255,255,0.08);
+            --nyt-action-border: rgba(255,255,255,0.14);
+        }
+
+        body[data-theme="light"]{
+            --nyt-bg: #f6f3ed;
+            --nyt-tile: #fdf9f2;
+            --nyt-border: #d7cec3;
+            --nyt-text: #0b0b0b;
+            --nyt-muted: #6b5f52;
+            --nyt-accent: #8a7a5e;
+            --nyt-error: #b85c5c;
+            --nyt-overlay: rgba(246,243,237,0.92);
+            --nyt-panel: rgba(255,255,255,0.96);
+            --nyt-panel-border: rgba(0,0,0,0.08);
+            --nyt-panel-header: rgba(255,255,255,0.98);
+            --nyt-panel-text: rgba(11,11,11,0.9);
+            --nyt-panel-button-bg: rgba(0,0,0,0.06);
+            --nyt-panel-button-border: rgba(0,0,0,0.12);
+            --nyt-action-bg: rgba(0,0,0,0.05);
+            --nyt-action-border: rgba(0,0,0,0.12);
         }
 
         body{
@@ -324,7 +352,7 @@
 
         
         .overlay{
-            background: rgba(11,11,11,0.94) !important;
+            background: var(--nyt-overlay) !important;
             backdrop-filter: none !important;
         }
 
@@ -424,8 +452,8 @@ body{
 .btn-action{
   min-height:44px;
   touch-action:manipulation;
-  background:rgba(255,255,255,.08);
-  border:1px solid rgba(255,255,255,.14);
+  background:var(--nyt-action-bg);
+  border:1px solid var(--nyt-action-border);
   box-shadow:0 12px 28px rgba(0,0,0,.35);
 }
 .btn-action:active{transform:scale(.98)}
@@ -449,24 +477,24 @@ body{
   /* iOS Safari: use dynamic viewport to prevent top/bottom browser chrome from covering content */
   max-height:calc(100dvh - (48px + env(safe-area-inset-top) + env(safe-area-inset-bottom)));
   display:flex;flex-direction:column;overflow:hidden;
-  border-radius:18px;background:rgba(22,22,22,.96);border:1px solid rgba(255,255,255,.12);
+  border-radius:18px;background:var(--nyt-panel);border:1px solid var(--nyt-panel-border);
   box-shadow:0 12px 40px rgba(0,0,0,.45);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   padding:0}
 .rn-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
   position:sticky;top:0;z-index:3;
-  background:rgba(22,22,22,.98);
+  background:var(--nyt-panel-header);
   padding:14px 14px 10px}
 .rn-title{font-weight:800;letter-spacing:.5px;color:#D6C89A}
-.rn-close{min-width:44px;min-height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.25);color:#fff;font-size:24px;line-height:1}
-.rn-body{color:rgba(255,255,255,.92);font-size:15px;line-height:1.35;
+.rn-close{min-width:44px;min-height:44px;border-radius:12px;border:1px solid var(--nyt-panel-button-border);background:var(--nyt-panel-button-bg);color:var(--nyt-text);font-size:24px;line-height:1}
+.rn-body{color:var(--nyt-panel-text);font-size:15px;line-height:1.35;
   display:grid;gap:4px;
   /* Critical for iOS flex + scroll: allow the body to shrink and become scrollable */
   flex:1;min-height:0;
   overflow:auto;-webkit-overflow-scrolling:touch;
   padding:0 14px 14px}
-.rn-foot{flex:0 0 auto;background:rgba(22,22,22,.98);
+.rn-foot{flex:0 0 auto;background:var(--nyt-panel-header);
   padding:0 14px calc(14px + env(safe-area-inset-bottom))}
-.rn-ok{width:100%;min-height:44px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.28);color:#fff;font-weight:700}
+.rn-ok{width:100%;min-height:44px;border-radius:14px;border:1px solid var(--nyt-panel-button-border);background:var(--nyt-panel-button-bg);color:var(--nyt-text);font-weight:700}
 
 
 .ff-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#000;z-index:9998}
@@ -510,6 +538,79 @@ body{
             z-index: 30;
         }
         .rules-btn:active{ transform: scale(0.98); }
+        .theme-btn{
+            position:absolute;
+            top: 14px;
+            left: 14px;
+            width: 36px;
+            height: 36px;
+            border-radius: 14px;
+            border: 1px solid var(--nyt-border);
+            background: rgba(0,0,0,0.35);
+            color: var(--nyt-text);
+            font-weight: 900;
+            line-height: 1;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            z-index: 30;
+        }
+        .theme-btn:active{ transform: scale(0.98); }
+
+        body[data-theme="light"] .theme-btn{
+            background: rgba(0,0,0,0.06);
+        }
+
+        body[data-theme="light"] .text-white{
+            color: var(--nyt-text) !important;
+        }
+        body[data-theme="light"] .text-slate-200,
+        body[data-theme="light"] .text-slate-300{
+            color: var(--nyt-muted) !important;
+        }
+
+        body[data-theme="light"] .border-white\/10,
+        body[data-theme="light"] .border-white\/15,
+        body[data-theme="light"] .border-white\/20,
+        body[data-theme="light"] .border-white\/40{
+            border-color: var(--nyt-border) !important;
+        }
+
+        body[data-theme="light"] .bg-black\/20,
+        body[data-theme="light"] .bg-black\/25,
+        body[data-theme="light"] .bg-black\/30,
+        body[data-theme="light"] .bg-black\/40,
+        body[data-theme="light"] .bg-black\/60,
+        body[data-theme="light"] .bg-black\/70{
+            background: rgba(0,0,0,0.04) !important;
+        }
+
+        body[data-theme="light"] #leaderboard-btn,
+        body[data-theme="light"] #rules-btn,
+        body[data-theme="light"] #bmc-btn{
+            background: rgba(255,255,255,0.7) !important;
+            border-color: var(--nyt-border) !important;
+            color: var(--nyt-text) !important;
+        }
+
+        body[data-theme="light"] #share-panel{
+            background: rgba(255,255,255,0.75) !important;
+            border-color: var(--nyt-border) !important;
+        }
+
+        body[data-theme="light"] #rules-panel > div{
+            background: rgba(255,255,255,0.9) !important;
+            border-color: var(--nyt-border) !important;
+            color: var(--nyt-text) !important;
+        }
+
+        body[data-theme="light"] #rules-panel h3{
+            color: var(--nyt-text) !important;
+        }
+
+        body[data-theme="light"] #rules-panel{
+            background: rgba(0,0,0,0.2) !important;
+        }
         /* Optic centering for glyphs */
         .symbol{ display:flex; align-items:center; justify-content:center; line-height: 1; }
         .symbol .glyph{ position: relative; top: 0.02em; }
@@ -580,6 +681,7 @@ body{
 #share-toggle-icon{ transition: transform .15s ease; }
 </style>
 </head><body class="h-[100dvh] w-full overflow-hidden m-0 p-0 flex items-center justify-center" x-apple-data-detectors="false"><div class="w-full h-[100dvh] max-w-xl glass p-4 sm:p-8 rounded-none sm:rounded-[3rem] shadow-2xl relative border-t border-white/10 flex flex-col overflow-hidden">
+<button id="theme-toggle" type="button" class="theme-btn" aria-label="Tema değiştir" title="Tema değiştir">🌙</button>
 <div class="hud mb-4 sm:mb-8"><div class="hud-box hud-right bg-black/40 px-4 sm:px-6 py-2 sm:py-3 rounded-2xl border border-white/5 flex flex-col items-center relative min-w-[118px]"><span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">SKOR</span><span id="score" class="text-3xl font-black text-emerald-400">0</span></div><div class="hud-center text-center"><h1 class="text-xl font-black text-blue-400 leading-none mb-1 italic">DİZGİ‹</h1><div id="dev-badge" class="hidden mt-2 text-[10px] font-black tracking-[0.25em] text-rose-300/90">
  DEV: KABUL AÇIK
  </div><div id="dev-wordcheck" class="hidden mt-2 text-[11px] font-bold tracking-wide"></div>
@@ -2406,6 +2508,60 @@ document.addEventListener('pointerdown', (e) => {
                 }
             }
         });
+
+
+        const THEME_STORAGE_KEY = "dizgi_theme_preference";
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeMeta = document.querySelector('meta[name="theme-color"]');
+        const themeMedia = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+        function getSystemTheme() {
+            return themeMedia && themeMedia.matches ? 'dark' : 'light';
+        }
+
+        function setTheme(theme, persist = false) {
+            const nextTheme = theme === 'light' ? 'light' : 'dark';
+            document.body.dataset.theme = nextTheme;
+            if (themeToggle) {
+                themeToggle.textContent = nextTheme === 'dark' ? '☀️' : '🌙';
+            }
+            if (themeMeta) {
+                themeMeta.setAttribute('content', nextTheme === 'dark' ? '#0b0b0f' : '#f6f3ed');
+            }
+            if (persist) {
+                try { localStorage.setItem(THEME_STORAGE_KEY, nextTheme); } catch (_) {}
+            }
+        }
+
+        function initTheme() {
+            let storedTheme = null;
+            try { storedTheme = localStorage.getItem(THEME_STORAGE_KEY); } catch (_) {}
+            if (storedTheme) {
+                setTheme(storedTheme);
+            } else {
+                setTheme(getSystemTheme());
+            }
+        }
+
+        initTheme();
+
+        if (themeMedia) {
+            themeMedia.addEventListener('change', () => {
+                let storedTheme = null;
+                try { storedTheme = localStorage.getItem(THEME_STORAGE_KEY); } catch (_) {}
+                if (!storedTheme) {
+                    setTheme(getSystemTheme());
+                }
+            });
+        }
+
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = document.body.dataset.theme || getSystemTheme();
+                const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                setTheme(nextTheme, true);
+            });
+        }
 
 
         
