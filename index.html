@@ -134,8 +134,7 @@
         
         /* Used letter highlight (matches title color: Tailwind text-blue-400 ~ #60A5FA) */
         .used-letter{
-            box-shadow: 0 0 0 2px var(--nyt-accent) inset, 0 0 12px rgba(214,200,154,0.40);
-            border-radius: 10px;
+            outline: none !important;
         }
         .touch-key.used-now{
             box-shadow: 0 0 0 2px var(--nyt-accent) inset, 0 0 10px rgba(214,200,154,0.30);
@@ -220,8 +219,38 @@
             --nyt-border: #2A2A2A;
             --nyt-text: #F5F5F5;
             --nyt-muted: #9A9A9A;
-            --nyt-accent: #D6C89A; 
+            --nyt-accent: #D6C89A;
             --nyt-error: #B85C5C;
+            --nyt-tile-active: #151515;
+            --nyt-overlay: rgba(11,11,11,0.94);
+            --nyt-panel: rgba(22,22,22,0.96);
+            --nyt-panel-border: rgba(255,255,255,0.12);
+            --nyt-panel-header: rgba(22,22,22,0.98);
+            --nyt-panel-text: rgba(255,255,255,0.92);
+            --nyt-panel-button-bg: rgba(0,0,0,0.28);
+            --nyt-panel-button-border: rgba(255,255,255,0.14);
+            --nyt-action-bg: rgba(255,255,255,0.08);
+            --nyt-action-border: rgba(255,255,255,0.14);
+        }
+
+        body[data-theme="light"]{
+            --nyt-bg: #f7f4ee;
+            --nyt-tile: #e7dfd3;
+            --nyt-border: #d7cec3;
+            --nyt-text: #0b0b0b;
+            --nyt-muted: #6b5f52;
+            --nyt-accent: #8a7a5e;
+            --nyt-error: #b85c5c;
+            --nyt-tile-active: #e0d5c7;
+            --nyt-overlay: rgba(246,243,237,0.92);
+            --nyt-panel: rgba(248,244,237,0.96);
+            --nyt-panel-border: rgba(0,0,0,0.08);
+            --nyt-panel-header: rgba(255,255,255,0.98);
+            --nyt-panel-text: rgba(11,11,11,0.9);
+            --nyt-panel-button-bg: rgba(0,0,0,0.06);
+            --nyt-panel-button-border: rgba(0,0,0,0.12);
+            --nyt-action-bg: rgba(0,0,0,0.05);
+            --nyt-action-border: rgba(0,0,0,0.12);
         }
 
         body{
@@ -235,6 +264,10 @@
             backdrop-filter: none !important;
             border: 1px solid var(--nyt-border) !important;
             box-shadow: none !important;
+        }
+
+        body[data-theme="light"] .glass{
+            background: rgba(255,255,255,0.4) !important;
         }
 
         
@@ -273,13 +306,39 @@
             border-radius: 4px !important;
             font-weight: 700 !important;
             text-shadow: none !important;
+            transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background-color 160ms ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+        }
+        .symbol.used-letter::before{
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            box-sizing: border-box;
+            border: 3px solid var(--nyt-accent);
+            pointer-events: none;
         }
         #reel-0 .symbol{
             background: var(--nyt-tile) !important;
         }
+        #reel-0 .symbol.active-letter{
+            background: var(--nyt-tile-active) !important;
+        }
         .symbol.active-letter{
             color: var(--nyt-text) !important;
-            background: #151515 !important;
+            background: var(--nyt-tile-active) !important;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.12), 0 6px 12px rgba(0,0,0,0.08);
+            transform: scale(1.02);
+        }
+
+        .symbol:active{
+            transform: scale(0.98);
+        }
+
+        @media (hover:hover) and (pointer:fine){
+            .symbol:hover{
+                box-shadow: 0 0 0 1px rgba(0,0,0,0.12), 0 6px 12px rgba(0,0,0,0.10);
+            }
         }
 
         
@@ -324,7 +383,7 @@
 
         
         .overlay{
-            background: rgba(11,11,11,0.94) !important;
+            background: var(--nyt-bg) !important;
             backdrop-filter: none !important;
         }
 
@@ -350,6 +409,10 @@
         .touch-key{
             background: var(--nyt-tile) !important;
             border-color: var(--nyt-border) !important;
+            transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+        }
+        .touch-key:active{
+            transform: scale(0.98);
         }
 
     
@@ -424,8 +487,8 @@ body{
 .btn-action{
   min-height:44px;
   touch-action:manipulation;
-  background:rgba(255,255,255,.08);
-  border:1px solid rgba(255,255,255,.14);
+  background:var(--nyt-action-bg);
+  border:1px solid var(--nyt-action-border);
   box-shadow:0 12px 28px rgba(0,0,0,.35);
 }
 .btn-action:active{transform:scale(.98)}
@@ -449,24 +512,24 @@ body{
   /* iOS Safari: use dynamic viewport to prevent top/bottom browser chrome from covering content */
   max-height:calc(100dvh - (48px + env(safe-area-inset-top) + env(safe-area-inset-bottom)));
   display:flex;flex-direction:column;overflow:hidden;
-  border-radius:18px;background:rgba(22,22,22,.96);border:1px solid rgba(255,255,255,.12);
+  border-radius:18px;background:var(--nyt-panel);border:1px solid var(--nyt-panel-border);
   box-shadow:0 12px 40px rgba(0,0,0,.45);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   padding:0}
 .rn-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
   position:sticky;top:0;z-index:3;
-  background:rgba(22,22,22,.98);
+  background:var(--nyt-panel-header);
   padding:14px 14px 10px}
 .rn-title{font-weight:800;letter-spacing:.5px;color:#D6C89A}
-.rn-close{min-width:44px;min-height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.25);color:#fff;font-size:24px;line-height:1}
-.rn-body{color:rgba(255,255,255,.92);font-size:15px;line-height:1.35;
+.rn-close{min-width:44px;min-height:44px;border-radius:12px;border:1px solid var(--nyt-panel-button-border);background:var(--nyt-panel-button-bg);color:var(--nyt-text);font-size:24px;line-height:1}
+.rn-body{color:var(--nyt-panel-text);font-size:15px;line-height:1.35;
   display:grid;gap:4px;
   /* Critical for iOS flex + scroll: allow the body to shrink and become scrollable */
   flex:1;min-height:0;
   overflow:auto;-webkit-overflow-scrolling:touch;
   padding:0 14px 14px}
-.rn-foot{flex:0 0 auto;background:rgba(22,22,22,.98);
+.rn-foot{flex:0 0 auto;background:var(--nyt-panel-header);
   padding:0 14px calc(14px + env(safe-area-inset-bottom))}
-.rn-ok{width:100%;min-height:44px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.28);color:#fff;font-weight:700}
+.rn-ok{width:100%;min-height:44px;border-radius:14px;border:1px solid var(--nyt-panel-button-border);background:var(--nyt-panel-button-bg);color:var(--nyt-text);font-weight:700}
 
 
 .ff-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#000;z-index:9998}
@@ -487,10 +550,11 @@ body{
             grid-template-columns: 1fr auto 1fr;
             align-items:center;
             gap: .75rem;
+            width: 100%;
         }
-        .hud-left{ justify-self:start; }
+        .hud-left{ justify-self:center; }
         .hud-center{ justify-self:center; }
-        .hud-right{ justify-self:end; }
+        .hud-right{ justify-self:center; }
         .hud-box{ min-width: 118px; width:118px; }
         .rules-btn{
             position:absolute;
@@ -510,6 +574,239 @@ body{
             z-index: 30;
         }
         .rules-btn:active{ transform: scale(0.98); }
+        .theme-btn{
+            position:absolute;
+            top: 14px;
+            left: 14px;
+            width: 36px;
+            height: 36px;
+            border-radius: 14px;
+            border: 1px solid var(--nyt-border);
+            background: rgba(0,0,0,0.35);
+            color: var(--nyt-text);
+            font-weight: 900;
+            line-height: 1;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            z-index: 30;
+        }
+        .theme-btn:active{ transform: scale(0.98); }
+
+        body[data-theme="light"] .theme-btn{
+            background: rgba(0,0,0,0.06);
+        }
+
+        body[data-theme="light"] .text-white{
+            color: var(--nyt-text) !important;
+        }
+        body[data-theme="light"] .text-slate-200,
+        body[data-theme="light"] .text-slate-300{
+            color: var(--nyt-muted) !important;
+        }
+
+        body[data-theme="light"] .btn-pass-free{
+            background: #f3eee6 !important;
+            border: 1px solid var(--nyt-border) !important;
+            color: var(--nyt-text) !important;
+            box-shadow: none !important;
+        }
+        body[data-theme="light"] .btn-pass-free:hover:not(:disabled){
+            background: #ede6dc !important;
+            border-color: var(--nyt-accent) !important;
+            transform: none !important;
+            filter: none !important;
+        }
+        body[data-theme="light"] .btn-pass-free:active:not(:disabled){
+            transform: none !important;
+        }
+
+        body[data-theme="light"] .border-white\/10,
+        body[data-theme="light"] .border-white\/15,
+        body[data-theme="light"] .border-white\/20,
+        body[data-theme="light"] .border-white\/40{
+            border-color: var(--nyt-border) !important;
+        }
+
+        body[data-theme="light"] .bg-black\/20,
+        body[data-theme="light"] .bg-black\/25,
+        body[data-theme="light"] .bg-black\/30,
+        body[data-theme="light"] .bg-black\/40,
+        body[data-theme="light"] .bg-black\/60,
+        body[data-theme="light"] .bg-black\/70{
+            background: rgba(0,0,0,0.04) !important;
+        }
+
+        body[data-theme="light"] #leaderboard-btn,
+        body[data-theme="light"] #rules-btn,
+        body[data-theme="light"] #bmc-btn{
+            background: rgba(255,255,255,0.7) !important;
+            border-color: var(--nyt-border) !important;
+            color: var(--nyt-text) !important;
+        }
+
+        body[data-theme="light"] #touch-submit,
+        body[data-theme="light"] #mobile-submit{
+            background: var(--nyt-accent) !important;
+            border-color: var(--nyt-accent) !important;
+            color: #fff !important;
+        }
+
+        body[data-theme="light"] #share-panel{
+            background: rgba(255,255,255,0.75) !important;
+            border-color: var(--nyt-border) !important;
+        }
+
+        body[data-theme="light"] #rules-panel > div{
+            background: #f8f5ef !important;
+            border-color: var(--nyt-border) !important;
+            color: var(--nyt-text) !important;
+        }
+
+        body[data-theme="light"] #rules-panel h3{
+            color: var(--nyt-text) !important;
+        }
+
+        body[data-theme="light"] #rules-panel{
+            background: var(--nyt-bg) !important;
+            backdrop-filter: none !important;
+        }
+
+        body[data-theme="light"] #leaderboard-overlay{
+            background: var(--nyt-bg) !important;
+            backdrop-filter: none !important;
+        }
+        body[data-theme="light"] #leaderboard-overlay .leaderboard-card{
+            background: #f8f5ef;
+            border-color: #ddd3c7;
+            color: #1a1a1a;
+            box-shadow: 0 12px 30px rgba(20, 14, 8, 0.12);
+        }
+        body[data-theme="light"] #leaderboard-overlay .leaderboard-header{
+            border-color: #e2d9cc;
+        }
+        body[data-theme="light"] #leaderboard-title{
+            color: #2a231b;
+        }
+        body[data-theme="light"] #leaderboard-close{
+            color: #4f4437;
+            border-color: #d6cbbd;
+            background: #f3eee6;
+        }
+        body[data-theme="light"] #leaderboard-tabs{
+            border-color: #e0d5c8;
+            background: #f5f1ea;
+        }
+        body[data-theme="light"] .leaderboard-tab{
+            padding: 0.375rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            color: #5c5143;
+            border: 1px solid transparent;
+            background: transparent;
+        }
+        body[data-theme="light"] .leaderboard-tab-active{
+            color: #2b241c;
+            border-color: #d6cbbd;
+            background: #e9e1d6;
+        }
+        body[data-theme="light"] .leaderboard-row{
+            border: 1px solid #ddd3c7;
+            background: #f7f2eb;
+            transition: background 140ms ease;
+        }
+        body[data-theme="light"] .leaderboard-row:hover{
+            background: #eee5d9;
+        }
+        body[data-theme="light"] .leaderboard-rank{
+            color: #6b5b45;
+            font-weight: 700;
+        }
+        body[data-theme="light"] .leaderboard-name{
+            color: #1f1b16;
+        }
+        body[data-theme="light"] .leaderboard-score{
+            color: #1f1b16;
+            font-weight: 800;
+        }
+        body[data-theme="light"] #leaderboard-loading,
+        body[data-theme="light"] #leaderboard-empty{
+            color: #5c5143;
+        }
+        body[data-theme="dark"] #leaderboard-overlay{
+            background: var(--nyt-bg) !important;
+            backdrop-filter: none !important;
+        }
+        body[data-theme="dark"] #rules-panel > div{
+            background: #0f0f0f !important;
+            border-color: var(--nyt-border) !important;
+            color: var(--nyt-text) !important;
+        }
+        body[data-theme="dark"] #rules-panel{
+            background: var(--nyt-bg) !important;
+            backdrop-filter: none !important;
+        }
+        body[data-theme="dark"] #leaderboard-overlay .leaderboard-card{
+            background: rgba(15,15,15,0.95);
+            border-color: rgba(77,63,42,0.9);
+            color: #d6c3a3;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+        }
+        body[data-theme="dark"] #leaderboard-overlay .leaderboard-header{
+            border-color: rgba(42,33,22,0.9);
+        }
+        body[data-theme="dark"] #leaderboard-title{
+            color: #d6c3a3;
+        }
+        body[data-theme="dark"] #leaderboard-close{
+            color: rgba(214,195,163,0.7);
+            border-color: rgba(77,63,42,0.6);
+            background: rgba(0,0,0,0.2);
+        }
+        body[data-theme="dark"] #leaderboard-tabs{
+            border-color: rgba(77,63,42,0.6);
+            background: rgba(0,0,0,0.2);
+        }
+        body[data-theme="dark"] .leaderboard-tab{
+            padding: 0.375rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            color: rgba(214,195,163,0.75);
+            border: 1px solid transparent;
+            background: transparent;
+        }
+        body[data-theme="dark"] .leaderboard-tab-active{
+            color: #d6c3a3;
+            border-color: rgba(77,63,42,0.6);
+            background: rgba(26,20,12,0.8);
+        }
+        body[data-theme="dark"] .leaderboard-row{
+            border: 1px solid rgba(77,63,42,0.6);
+            background: rgba(0,0,0,0.2);
+            transition: background 140ms ease;
+        }
+        body[data-theme="dark"] .leaderboard-row:hover{
+            background: rgba(0,0,0,0.3);
+        }
+        body[data-theme="dark"] .leaderboard-rank{
+            color: #d6c3a3;
+            font-weight: 700;
+        }
+        body[data-theme="dark"] .leaderboard-name{
+            color: #d6c3a3;
+        }
+        body[data-theme="dark"] .leaderboard-score{
+            color: #d6c3a3;
+            font-weight: 800;
+        }
+        body[data-theme="dark"] #leaderboard-loading,
+        body[data-theme="dark"] #leaderboard-empty{
+            color: rgba(214,195,163,0.75);
+        }
         /* Optic centering for glyphs */
         .symbol{ display:flex; align-items:center; justify-content:center; line-height: 1; }
         .symbol .glyph{ position: relative; top: 0.02em; }
@@ -537,6 +834,11 @@ body{
         }
         body.has-joker .symbol::after{
             opacity: 1;
+        }
+        body[data-theme="light"].has-joker .symbol::after{
+            opacity: 0;
+            background: none;
+            box-shadow: none;
         }
 
         @keyframes jokerPulse {
@@ -602,7 +904,7 @@ body{
  Gönder
  </button></div></div></div></div><div class="flex flex-col gap-3"><div id="mobile-actions" class="mobile-only w-full flex gap-3"><button id="mobile-clear" type="button" class="btn-action flex-1 text-white/90 font-black py-4 rounded-2xl transition-all uppercase text-sm tracking-[0.2em] shadow-xl">TEMİZLE</button><button id="mobile-submit" type="button" class="btn-action flex-1 text-white font-black py-4 rounded-2xl transition-all uppercase text-sm tracking-[0.2em] shadow-xl">GÖNDER</button></div><button id="pass-btn" disabled
  class="btn-pass w-full text-white font-black py-5 rounded-2xl transition-all uppercase text-sm tracking-[0.2em] shadow-xl flex items-center justify-center gap-2"><span>TEKRAR ÇEVİR</span><span id="pass-badge" class="bg-black/20 px-2 py-1 rounded text-[10px]">-30 PUAN</span></button><div id="joker-bar" class="hidden bg-slate-900/50 p-4 rounded-2xl border border-slate-800 flex justify-between items-center px-6 relative min-w-0"><span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest flex-1 min-w-0 truncate">JOKER <span class="normal-case">(ekstra 1 harf kullanım hakkı)</span></span><span class="text-2xl sm:text-3xl font-black text-purple-300 flex items-center gap-2 flex-none"><span class="text-2xl sm:text-3xl">🃏</span><span id="joker-count">0</span><span id="joker-pop" class="hidden text-emerald-300 text-base sm:text-lg font-black ml-2">+1</span></span></div><div class="bg-slate-900/50 p-3 rounded-2xl border border-slate-800 flex justify-between items-center px-6 hidden"><span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Potansiyel Kazanç</span><span id="potential" class="text-xl font-black text-blue-400">0</span></div></div></div><div id="message" class="mt-2 hidden text-center text-sm font-bold min-h-[1.25rem] text-slate-400">
-</div><div id="game-overlay" class="absolute inset-0 z-50 rounded-[2.5rem] flex flex-col items-center justify-center p-8 text-center overlay state-home"><h2 id="overlay-title" class="text-4xl font-black text-white mb-2">DİZGİ‹</h2><p id="overlay-desc" class="text-slate-400 mb-6 max-w-[520px]">Bir kelime türetme oyunu! Süre bitmeden elinden geleni yap.</p><div class="flex gap-3 flex-wrap justify-center">
+</div><div id="game-overlay" class="absolute inset-0 z-50 rounded-[2.5rem] flex flex-col items-center justify-center p-8 text-center overlay state-home"><button id="theme-toggle" type="button" class="theme-btn" aria-label="Tema değiştir" title="Tema değiştir">🌙</button><h2 id="overlay-title" class="text-4xl font-black text-white mb-2">DİZGİ‹</h2><p id="overlay-desc" class="text-slate-400 mb-6 max-w-[520px]">Bir kelime türetme oyunu! Süre bitmeden elinden geleni yap.</p><div class="flex gap-3 flex-wrap justify-center">
   <button id="easy-btn"
     class="border border-white/20 hover:border-white/40 px-10 py-5 rounded-2xl font-bold text-lg active:scale-95 transition-all uppercase tracking-wider">
     KOLAY
@@ -2408,6 +2710,60 @@ document.addEventListener('pointerdown', (e) => {
         });
 
 
+        const THEME_STORAGE_KEY = "dizgi_theme_preference";
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeMeta = document.querySelector('meta[name="theme-color"]');
+        const themeMedia = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+        function getSystemTheme() {
+            return themeMedia && themeMedia.matches ? 'dark' : 'light';
+        }
+
+        function setTheme(theme, persist = false) {
+            const nextTheme = theme === 'light' ? 'light' : 'dark';
+            document.body.dataset.theme = nextTheme;
+            if (themeToggle) {
+                themeToggle.textContent = nextTheme === 'dark' ? '☀️' : '🌙';
+            }
+            if (themeMeta) {
+                themeMeta.setAttribute('content', nextTheme === 'dark' ? '#0b0b0f' : '#f6f3ed');
+            }
+            if (persist) {
+                try { localStorage.setItem(THEME_STORAGE_KEY, nextTheme); } catch (_) {}
+            }
+        }
+
+        function initTheme() {
+            let storedTheme = null;
+            try { storedTheme = localStorage.getItem(THEME_STORAGE_KEY); } catch (_) {}
+            if (storedTheme) {
+                setTheme(storedTheme);
+            } else {
+                setTheme(getSystemTheme());
+            }
+        }
+
+        initTheme();
+
+        if (themeMedia) {
+            themeMedia.addEventListener('change', () => {
+                let storedTheme = null;
+                try { storedTheme = localStorage.getItem(THEME_STORAGE_KEY); } catch (_) {}
+                if (!storedTheme) {
+                    setTheme(getSystemTheme());
+                }
+            });
+        }
+
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = document.body.dataset.theme || getSystemTheme();
+                const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                setTheme(nextTheme, true);
+            });
+        }
+
+
         
         const rulesBtn = document.getElementById('rules-btn');
         const rulesPanel = document.getElementById('rules-panel');
@@ -2641,27 +2997,27 @@ document.addEventListener('pointerdown', (e) => {
 <!-- (cleanup) removed legacy rules/leaderboard script + overlay HTML -->
 <!-- leaderboard overlay -->
 <div id="leaderboard-overlay" class="hidden fixed inset-0 z-[950] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-  <div class="w-full max-w-md max-h-[80vh] rounded-2xl border border-[#4d3f2a] bg-[#0f0f0f]/95 shadow-2xl overflow-hidden flex flex-col">
-    <div class="px-5 py-4 border-b border-[#2a2116] flex items-center justify-between">
-      <div class="text-[#d6c3a3] font-extrabold tracking-widest">ZİRVEDEKİLER</div>
-      <button id="leaderboard-close" class="text-[#d6c3a3]/70 hover:text-[#d6c3a3] px-3 py-1 rounded-lg border border-[#4d3f2a]/60">
+  <div class="leaderboard-card w-full max-w-md max-h-[80vh] rounded-2xl border shadow-2xl overflow-hidden flex flex-col">
+    <div class="leaderboard-header px-5 py-4 border-b flex items-center justify-between">
+      <div id="leaderboard-title" class="font-extrabold tracking-widest">ZİRVEDEKİLER</div>
+      <button id="leaderboard-close" class="px-3 py-1 rounded-lg border">
         Kapat
       </button>
     </div>
 
     <div class="px-5 pt-4 pb-0">
-      <div class="inline-flex rounded-xl border border-[#4d3f2a]/60 bg-black/20 p-1 gap-1">
-        <button id="leaderboard-tab-classic" class="px-3 py-1.5 rounded-lg text-sm font-bold tracking-wide text-[#d6c3a3] bg-[#1a140c] border border-[#4d3f2a]/60">
+      <div id="leaderboard-tabs" class="inline-flex rounded-xl border p-1 gap-1">
+        <button id="leaderboard-tab-classic" class="leaderboard-tab">
           Klasik
         </button>
-        <button id="leaderboard-tab-easy" class="px-3 py-1.5 rounded-lg text-sm font-bold tracking-wide text-white/80 hover:text-white border border-transparent">
+        <button id="leaderboard-tab-easy" class="leaderboard-tab">
           Kolay
         </button>
       </div>
     </div>
 
     <div class="p-5 flex-1 overflow-hidden flex flex-col">
-      <div id="leaderboard-loading" class="text-[#d6c3a3]/70 text-sm">Yükleniyor…</div>
+      <div id="leaderboard-loading" class="text-sm">Yükleniyor…</div>
 
       <!-- Classic -->
       <ol id="leaderboard-list-classic" class="hidden mt-3 space-y-2 flex-1 overflow-y-auto pr-1 max-h-[420px]"></ol>
@@ -2669,7 +3025,7 @@ document.addEventListener('pointerdown', (e) => {
       <!-- Easy -->
       <ol id="leaderboard-list-easy" class="hidden mt-3 space-y-2 flex-1 overflow-y-auto pr-1 max-h-[420px]"></ol>
 
-      <div id="leaderboard-empty" class="hidden text-[#d6c3a3]/70 text-sm">Henüz skor yok.</div>
+      <div id="leaderboard-empty" class="hidden text-sm">Henüz skor yok.</div>
     </div>
   </div>
 </div>
@@ -2718,11 +3074,11 @@ document.addEventListener('pointerdown', (e) => {
     if(!tabClassic || !tabEasy) return;
 
     if(activeMode === 'classic'){
-      tabClassic.className = "px-3 py-1.5 rounded-lg text-sm font-bold tracking-wide text-[#d6c3a3] bg-[#1a140c] border border-[#4d3f2a]/60";
-      tabEasy.className    = "px-3 py-1.5 rounded-lg text-sm font-bold tracking-wide text-white/80 hover:text-white border border-transparent";
+      tabClassic.className = "leaderboard-tab leaderboard-tab-active";
+      tabEasy.className    = "leaderboard-tab";
     } else {
-      tabEasy.className    = "px-3 py-1.5 rounded-lg text-sm font-bold tracking-wide text-white bg-white/10 border border-white/20";
-      tabClassic.className = "px-3 py-1.5 rounded-lg text-sm font-bold tracking-wide text-[#d6c3a3]/70 hover:text-[#d6c3a3] border border-transparent";
+      tabEasy.className    = "leaderboard-tab leaderboard-tab-active";
+      tabClassic.className = "leaderboard-tab";
     }
   }
 
@@ -2751,35 +3107,19 @@ document.addEventListener('pointerdown', (e) => {
       return;
     }
 
-    if(mode === 'classic'){
-      listEl.innerHTML = rows.map(function(r, i){
-        var name = (r && (r.name ?? r.playerName) ? (r.name ?? r.playerName) : 'Anonim').toString();
-        var score = Number(r && r.score ? r.score : 0) || 0;
-        return (
-          '<li class="flex items-center justify-between gap-3 px-3 py-2 rounded-xl border border-[#4d3f2a]/60 bg-black/20">' +
-            '<div class="min-w-0">' +
-              '<span class="font-bold text-[#d6c3a3]">' + (i+1) + '.</span>' +
-              '<span class="text-[#d6c3a3] truncate ml-2">' + escapeHtml(name) + '</span>' +
-            '</div>' +
-            '<div class="text-[#d6c3a3] font-extrabold tabular-nums">' + score + '</div>' +
-          '</li>'
-        );
-      }).join('');
-    } else {
-      listEl.innerHTML = rows.map(function(r, i){
-        var name = (r && (r.name ?? r.playerName) ? (r.name ?? r.playerName) : 'Anonim').toString();
-        var score = Number(r && r.score ? r.score : 0) || 0;
-        return (
-          '<li class="flex items-center justify-between gap-3 px-3 py-2 rounded-xl border border-white/20 bg-white/5">' +
-            '<div class="min-w-0">' +
-              '<span class="font-bold text-white/90">' + (i+1) + '.</span>' +
-              '<span class="text-white truncate ml-2">' + escapeHtml(name) + '</span>' +
-            '</div>' +
-            '<div class="text-white font-extrabold tabular-nums">' + score + '</div>' +
-          '</li>'
-        );
-      }).join('');
-    }
+    listEl.innerHTML = rows.map(function(r, i){
+      var name = (r && (r.name ?? r.playerName) ? (r.name ?? r.playerName) : 'Anonim').toString();
+      var score = Number(r && r.score ? r.score : 0) || 0;
+      return (
+        '<li class="leaderboard-row flex items-center justify-between gap-3 px-3 py-2 rounded-xl">' +
+          '<div class="min-w-0">' +
+            '<span class="leaderboard-rank">' + (i+1) + '.</span>' +
+            '<span class="leaderboard-name truncate ml-2">' + escapeHtml(name) + '</span>' +
+          '</div>' +
+          '<div class="leaderboard-score tabular-nums">' + score + '</div>' +
+        '</li>'
+      );
+    }).join('');
   }
 
   async function loadAndRender(mode, force){
@@ -2938,6 +3278,30 @@ document.addEventListener('pointerdown', (e) => {
       });
     }
   }, { capture: true });
+})();
+</script>
+
+<script>
+(function(){
+  var host = window.location && window.location.hostname ? window.location.hostname : "";
+  var isProd = (host === "dizgioyunu.com" || host.endsWith(".dizgioyunu.com"));
+  function loadScript(src){
+    try{
+      var s = document.createElement("script");
+      s.src = src;
+      s.async = true;
+      s.defer = true;
+      s.onerror = function(){};
+      document.head.appendChild(s);
+    }catch(_){}
+  }
+  if(!isProd) return;
+  if (window.SEGMENT_WRITE_KEY) {
+    loadScript("https://cdn.segment.com/analytics.js/v1/" + window.SEGMENT_WRITE_KEY + "/analytics.min.js");
+  }
+  if (window.BUGSNAG_API_KEY) {
+    loadScript("https://d2wy8f7a9ursnm.cloudfront.net/v7/bugsnag.min.js");
+  }
 })();
 </script>
 
