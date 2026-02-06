@@ -654,32 +654,32 @@ body{
             background: rgba(0,0,0,0.2) !important;
         }
 
-        #leaderboard-overlay{
+        body[data-theme="light"] #leaderboard-overlay{
             background: rgba(247, 244, 238, 0.8) !important;
             backdrop-filter: blur(6px);
         }
-        #leaderboard-overlay .leaderboard-card{
+        body[data-theme="light"] #leaderboard-overlay .leaderboard-card{
             background: #f8f5ef;
             border-color: #ddd3c7;
             color: #1a1a1a;
             box-shadow: 0 12px 30px rgba(20, 14, 8, 0.12);
         }
-        #leaderboard-overlay .leaderboard-header{
+        body[data-theme="light"] #leaderboard-overlay .leaderboard-header{
             border-color: #e2d9cc;
         }
-        #leaderboard-title{
+        body[data-theme="light"] #leaderboard-title{
             color: #2a231b;
         }
-        #leaderboard-close{
+        body[data-theme="light"] #leaderboard-close{
             color: #4f4437;
             border-color: #d6cbbd;
             background: #f3eee6;
         }
-        #leaderboard-tabs{
+        body[data-theme="light"] #leaderboard-tabs{
             border-color: #e0d5c8;
             background: #f5f1ea;
         }
-        .leaderboard-tab{
+        body[data-theme="light"] .leaderboard-tab{
             padding: 0.375rem 0.75rem;
             border-radius: 999px;
             font-size: 0.875rem;
@@ -689,33 +689,96 @@ body{
             border: 1px solid transparent;
             background: transparent;
         }
-        .leaderboard-tab-active{
+        body[data-theme="light"] .leaderboard-tab-active{
             color: #2b241c;
             border-color: #d6cbbd;
             background: #e9e1d6;
         }
-        .leaderboard-row{
+        body[data-theme="light"] .leaderboard-row{
             border: 1px solid #ddd3c7;
             background: #f7f2eb;
             transition: background 140ms ease;
         }
-        .leaderboard-row:hover{
+        body[data-theme="light"] .leaderboard-row:hover{
             background: #eee5d9;
         }
-        .leaderboard-rank{
+        body[data-theme="light"] .leaderboard-rank{
             color: #6b5b45;
             font-weight: 700;
         }
-        .leaderboard-name{
+        body[data-theme="light"] .leaderboard-name{
             color: #1f1b16;
         }
-        .leaderboard-score{
+        body[data-theme="light"] .leaderboard-score{
             color: #1f1b16;
             font-weight: 800;
         }
-        #leaderboard-loading,
-        #leaderboard-empty{
+        body[data-theme="light"] #leaderboard-loading,
+        body[data-theme="light"] #leaderboard-empty{
             color: #5c5143;
+        }
+        body[data-theme="dark"] #leaderboard-overlay{
+            background: rgba(0,0,0,0.7) !important;
+            backdrop-filter: blur(6px);
+        }
+        body[data-theme="dark"] #leaderboard-overlay .leaderboard-card{
+            background: rgba(15,15,15,0.95);
+            border-color: rgba(77,63,42,0.9);
+            color: #d6c3a3;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+        }
+        body[data-theme="dark"] #leaderboard-overlay .leaderboard-header{
+            border-color: rgba(42,33,22,0.9);
+        }
+        body[data-theme="dark"] #leaderboard-title{
+            color: #d6c3a3;
+        }
+        body[data-theme="dark"] #leaderboard-close{
+            color: rgba(214,195,163,0.7);
+            border-color: rgba(77,63,42,0.6);
+            background: rgba(0,0,0,0.2);
+        }
+        body[data-theme="dark"] #leaderboard-tabs{
+            border-color: rgba(77,63,42,0.6);
+            background: rgba(0,0,0,0.2);
+        }
+        body[data-theme="dark"] .leaderboard-tab{
+            padding: 0.375rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            color: rgba(214,195,163,0.75);
+            border: 1px solid transparent;
+            background: transparent;
+        }
+        body[data-theme="dark"] .leaderboard-tab-active{
+            color: #d6c3a3;
+            border-color: rgba(77,63,42,0.6);
+            background: rgba(26,20,12,0.8);
+        }
+        body[data-theme="dark"] .leaderboard-row{
+            border: 1px solid rgba(77,63,42,0.6);
+            background: rgba(0,0,0,0.2);
+            transition: background 140ms ease;
+        }
+        body[data-theme="dark"] .leaderboard-row:hover{
+            background: rgba(0,0,0,0.3);
+        }
+        body[data-theme="dark"] .leaderboard-rank{
+            color: #d6c3a3;
+            font-weight: 700;
+        }
+        body[data-theme="dark"] .leaderboard-name{
+            color: #d6c3a3;
+        }
+        body[data-theme="dark"] .leaderboard-score{
+            color: #d6c3a3;
+            font-weight: 800;
+        }
+        body[data-theme="dark"] #leaderboard-loading,
+        body[data-theme="dark"] #leaderboard-empty{
+            color: rgba(214,195,163,0.75);
         }
         /* Optic centering for glyphs */
         .symbol{ display:flex; align-items:center; justify-content:center; line-height: 1; }
