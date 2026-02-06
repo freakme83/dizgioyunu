@@ -2008,7 +2008,7 @@ const label = `+${bonus} SN`;
                 const d = acceptsDerivedWord(key);
                 if (!d.ok) {
                     showFeedback(`"${w}" listede yok!`, "text-[var(--accent)]", "inline");
-                    inputEl.value = "";
+                    setInputValue('', { preserveSelection: false });
                     if (!isTouchCoarse) inputEl.focus();
                     return;
                 }
