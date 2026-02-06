@@ -134,9 +134,7 @@
         
         /* Used letter highlight (matches title color: Tailwind text-blue-400 ~ #60A5FA) */
         .used-letter{
-            outline: 3px solid var(--nyt-accent) !important;
-            outline-offset: -3px;
-            border-radius: 4px;
+            outline: none !important;
         }
         .touch-key.used-now{
             box-shadow: 0 0 0 2px var(--nyt-accent) inset, 0 0 10px rgba(214,200,154,0.30);
@@ -310,6 +308,14 @@
             text-shadow: none !important;
             transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background-color 160ms ease;
             box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+        }
+        .symbol.used-letter::before{
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            box-shadow: 0 0 0 3px var(--nyt-accent) inset;
+            pointer-events: none;
         }
         #reel-0 .symbol{
             background: var(--nyt-tile) !important;
