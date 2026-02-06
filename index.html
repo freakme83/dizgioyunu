@@ -604,6 +604,22 @@ body{
             color: var(--nyt-muted) !important;
         }
 
+        body[data-theme="light"] .btn-pass-free{
+            background: #f3eee6 !important;
+            border: 1px solid var(--nyt-border) !important;
+            color: var(--nyt-text) !important;
+            box-shadow: none !important;
+        }
+        body[data-theme="light"] .btn-pass-free:hover:not(:disabled){
+            background: #ede6dc !important;
+            border-color: var(--nyt-accent) !important;
+            transform: none !important;
+            filter: none !important;
+        }
+        body[data-theme="light"] .btn-pass-free:active:not(:disabled){
+            transform: none !important;
+        }
+
         body[data-theme="light"] .border-white\/10,
         body[data-theme="light"] .border-white\/15,
         body[data-theme="light"] .border-white\/20,
@@ -817,6 +833,11 @@ body{
         }
         body.has-joker .symbol::after{
             opacity: 1;
+        }
+        body[data-theme="light"].has-joker .symbol::after{
+            opacity: 0;
+            background: none;
+            box-shadow: none;
         }
 
         @keyframes jokerPulse {
