@@ -235,16 +235,16 @@
         }
 
         body[data-theme="light"]{
-            --nyt-bg: #f6f3ed;
-            --nyt-tile: #fdf9f2;
+            --nyt-bg: #f7f4ee;
+            --nyt-tile: #e7dfd3;
             --nyt-border: #d7cec3;
             --nyt-text: #0b0b0b;
             --nyt-muted: #6b5f52;
             --nyt-accent: #8a7a5e;
             --nyt-error: #b85c5c;
-            --nyt-tile-active: #efe7db;
+            --nyt-tile-active: #e0d5c7;
             --nyt-overlay: rgba(246,243,237,0.92);
-            --nyt-panel: rgba(255,255,255,0.96);
+            --nyt-panel: rgba(248,244,237,0.96);
             --nyt-panel-border: rgba(0,0,0,0.08);
             --nyt-panel-header: rgba(255,255,255,0.98);
             --nyt-panel-text: rgba(11,11,11,0.9);
@@ -265,6 +265,10 @@
             backdrop-filter: none !important;
             border: 1px solid var(--nyt-border) !important;
             box-shadow: none !important;
+        }
+
+        body[data-theme="light"] .glass{
+            background: rgba(255,255,255,0.4) !important;
         }
 
         
@@ -303,6 +307,8 @@
             border-radius: 4px !important;
             font-weight: 700 !important;
             text-shadow: none !important;
+            transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background-color 160ms ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
         }
         #reel-0 .symbol{
             background: var(--nyt-tile) !important;
@@ -313,6 +319,18 @@
         .symbol.active-letter{
             color: var(--nyt-text) !important;
             background: var(--nyt-tile-active) !important;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.12), 0 6px 12px rgba(0,0,0,0.08);
+            transform: scale(1.02);
+        }
+
+        .symbol:active{
+            transform: scale(0.98);
+        }
+
+        @media (hover:hover) and (pointer:fine){
+            .symbol:hover{
+                box-shadow: 0 0 0 1px rgba(0,0,0,0.12), 0 6px 12px rgba(0,0,0,0.10);
+            }
         }
 
         
@@ -383,6 +401,10 @@
         .touch-key{
             background: var(--nyt-tile) !important;
             border-color: var(--nyt-border) !important;
+            transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+        }
+        .touch-key:active{
+            transform: scale(0.98);
         }
 
     
@@ -596,6 +618,13 @@ body{
             background: rgba(255,255,255,0.7) !important;
             border-color: var(--nyt-border) !important;
             color: var(--nyt-text) !important;
+        }
+
+        body[data-theme="light"] #touch-submit,
+        body[data-theme="light"] #mobile-submit{
+            background: var(--nyt-accent) !important;
+            border-color: var(--nyt-accent) !important;
+            color: #fff !important;
         }
 
         body[data-theme="light"] #share-panel{
