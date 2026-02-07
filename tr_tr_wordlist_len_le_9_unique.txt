@@ -152,7 +152,6 @@ acıyorsan
 acıyorsun
 acıyorum
 acıyoruz
-ad
 ada
 adaba
 adabı
@@ -297,7 +296,6 @@ adıyaman
 aerobik
 aerobiği
 aerobiğin
-af
 afacan
 afak
 afaki
@@ -406,7 +404,6 @@ agreman
 agresif
 agu
 agula
-ah
 aha
 ahad
 ahali
@@ -545,7 +542,6 @@ ajitatör
 ajite
 ajlan
 ajur
-ak
 aka
 akabe
 akabinde
@@ -903,7 +899,6 @@ akşamüstü
 akşehir
 akşit
 akşın
-al
 ala
 alaaddin
 alabacak
@@ -1634,7 +1629,6 @@ amuda
 amudi
 amut
 amyant
-an
 ana
 anaca
 anacı
@@ -1980,7 +1974,6 @@ anız
 anıştır
 aort
 aoç
-ap
 apacı
 apak
 apalak
@@ -2022,7 +2015,6 @@ aptal
 apukurya
 apış
 apışık
-ar
 ara
 araba
 araban
@@ -2385,7 +2377,6 @@ arşiv
 arşivle
 arşın
 arşınla
-as
 asa
 asaba
 asabi
@@ -2597,7 +2588,6 @@ asım
 asıma
 asıntı
 asır
-at
 ata
 atabek
 atabey
@@ -2840,7 +2830,6 @@ atıştırın
 atıştığım
 atışırsın
 aut
-av
 avadanlık
 aval
 avam
@@ -2948,7 +2937,6 @@ avuçla
 avuçluyor
 avvad
 avşar
-ay
 aya
 ayaba
 ayak
@@ -3322,7 +3310,6 @@ ayşen
 ayşenur
 ayşin
 ayşıl
-az
 aza
 azab
 azaba
@@ -3480,7 +3467,6 @@ azığından
 azığını
 azığının
 azığıyla
-aç
 açacak
 açacağa
 açacağı
@@ -3642,8 +3628,6 @@ açığıyla
 açığıymış
 açığıysa
 açığız
-aü
-ağ
 ağa
 ağababa
 ağabey
@@ -3802,9 +3786,7 @@ ağırşağı
 ağıt
 ağız
 ağızla
-aı
 aıds
-aş
 aşama
 aşan
 aşar
@@ -4779,7 +4761,6 @@ bbc
 bcg
 bddk
 bdt
-be
 bebe
 bebek
 beberuhi
@@ -5861,7 +5842,6 @@ blucin
 blum
 bluz
 blöf
-bm
 boa
 bobin
 bobinaj
@@ -6208,7 +6188,6 @@ bröve
 brüksel
 brülör
 brüt
-bu
 buat
 buca
 bucak
@@ -6874,7 +6853,6 @@ böğür
 böğürtlen
 böğürtü
 böğürtülü
-bü
 bücür
 bücüş
 büfe
@@ -7250,7 +7228,6 @@ cazip
 cazır
 cazırtı
 cağ
-cd
 cebbar
 cebe
 cebeci
@@ -7690,7 +7667,6 @@ cizvit
 cizye
 ciğer
 ciğerpare
-cm
 cmuk
 cokey
 comecon
@@ -7740,7 +7716,6 @@ cömerdim
 cömerdiz
 cömert
 cönk
-cü
 cübbe
 cübeyr
 cüce
@@ -7827,7 +7802,6 @@ cızır
 cızırda
 cızırtı
 d
-da
 dadacı
 dadaist
 dadaizm
@@ -8139,7 +8113,6 @@ dağıtım
 dağıtığı
 ddt
 ddy
-de
 debboy
 debdebe
 debelen
@@ -9414,11 +9387,7 @@ dişle
 dişlek
 dişliyor
 dişçimin
-dk
-dl
-dm
 dmo
-do
 dobra
 dodurga
 dogma
@@ -11177,7 +11146,6 @@ egzersiz
 egzotik
 egzotizm
 egzoz
-eh
 ehad
 ehem
 ehemmi
@@ -11223,7 +11191,6 @@ ehvenişer
 ejder
 ejderha
 ejektör
-ek
 ekabir
 ekalliyet
 ekber
@@ -11405,7 +11372,6 @@ ekvator
 eküri
 ekşi
 ekşiyor
-el
 ela
 elaman
 elan
@@ -11518,7 +11484,6 @@ elyaf
 elyesa
 elzem
 elçi
-em
 eman
 emanet
 emaneten
@@ -11660,7 +11625,6 @@ emziği
 emziğin
 emziğini
 emziğiyle
-en
 enam
 enayi
 enbiya
@@ -11780,7 +11744,6 @@ epiğin
 epope
 epri
 epsilon
-er
 eracar
 erakalın
 eralp
@@ -12176,7 +12139,6 @@ eröz
 erşad
 erşahin
 erşan
-es
 esad
 esans
 esaret
@@ -12299,7 +12261,6 @@ esvabının
 esvabıyla
 esvap
 esved
-et
 etaba
 etabı
 etabıdır
@@ -12444,7 +12405,6 @@ etüdünün
 etüdüyle
 etüt
 etüv
-ev
 evaze
 evcan
 evcara
@@ -12583,7 +12543,6 @@ evvelkine
 evvelkini
 evvelsi
 evç
-ey
 eyalet
 eyer
 eyerle
@@ -12606,7 +12565,6 @@ eyvan
 eyyam
 eyüb
 eyüp
-ez
 eza
 ezan
 ezani
@@ -12647,8 +12605,6 @@ eziğimiz
 eziğiyiz
 ezkaza
 ezra
-eü
-eğ
 eğe
 eğele
 eğelence
@@ -12741,7 +12697,6 @@ eğreti
 eğri
 eğril
 eğsi
-eş
 eşanlı
 eşarba
 eşarbı
@@ -12848,7 +12803,6 @@ eşofman
 eşraf
 eşref
 eşya
-fa
 faal
 faaliyet
 fabl
@@ -13958,8 +13912,6 @@ gazoz
 gazve
 gazzal
 gazzali
-gb
-gd
 gebe
 geber
 gebeş
@@ -15349,7 +15301,6 @@ göğüs
 göğüsle
 göğüsün
 göğüz
-gü
 gübre
 gübrele
 güce
@@ -15868,7 +15819,6 @@ gıyabında
 gıyap
 gıyas
 gıybet
-ha
 habanera
 habaset
 habbe
@@ -16841,7 +16791,6 @@ haşyet
 haşıl
 haşılla
 haşır
-he
 heba
 hebenneka
 heccav
@@ -17187,8 +17136,6 @@ hiçyılmaz
 hiş
 hişam
 hişt
-hl
-hm
 hobi
 hoca
 hocalar
@@ -17271,7 +17218,6 @@ hoşt
 hoşten
 hoşur
 hristiyan
-hu
 hubeyb
 hububat
 hucuma
@@ -17378,7 +17324,6 @@ höyüğüne
 höyüğünü
 höyüğünün
 höşmerim
-hü
 hüccet
 hücre
 hücum
@@ -17494,7 +17439,6 @@ hüznüyle
 hüzzam
 hüzün
 hüzünlen
-hı
 hıdiv
 hıdrellez
 hıdır
@@ -17901,7 +17845,6 @@ iktisadın
 iktisap
 iktisat
 iktiza
-il
 ilaca
 ilacı
 ilacıdır
@@ -18120,7 +18063,6 @@ iltizami
 ilyas
 ilzam
 ilçe
-im
 ima
 imad
 imadeddin
@@ -18193,7 +18135,6 @@ imtizaç
 imza
 imzala
 imzalıyor
-in
 inada
 inadı
 inadıdır
@@ -18498,7 +18439,6 @@ inşadın
 inşallah
 inşat
 inşirah
-ip
 ipar
 ipek
 ipeka
@@ -18638,7 +18578,6 @@ irşadına
 irşadında
 irşadıyla
 irşat
-is
 isa
 isabet
 isaf
@@ -18908,7 +18847,6 @@ isveççe
 isviçre
 isyan
 isyankar
-it
 ita
 itaat
 itaatkar
@@ -18991,7 +18929,6 @@ ittihat
 ittihaz
 ittisal
 itü
-iv
 ivar
 ivaz
 ivecen
@@ -19016,7 +18953,6 @@ iyodür
 iyon
 iyonik
 iyot
-iz
 izabe
 izafe
 izafet
@@ -19138,7 +19074,6 @@ izotop
 izzet
 izzettin
 izzi
-iç
 içbükey
 içecek
 içecekte
@@ -19219,8 +19154,6 @@ içtinap
 içyağ
 içyağı
 içöz
-iü
-iğ
 iğbirar
 iğde
 iğdemir
@@ -19237,7 +19170,6 @@ iğrencin
 iğrenti
 iğrenç
 iğreti
-iş
 işaret
 işaretle
 işba
@@ -19460,7 +19392,6 @@ jüpon
 jüri
 jüt
 k
-ka
 kaan
 kab
 kaba
@@ -21244,9 +21175,7 @@ kaşığında
 kaşığını
 kaşığının
 kaşığıyla
-kb
 kbb
-kd
 kde
 kdv
 kebaba
@@ -21689,10 +21618,8 @@ keşkül
 keşmekeş
 keşmir
 keşşaf
-kg
 kgb
 khk
-ki
 kibar
 kibariye
 kibir
@@ -21988,7 +21915,6 @@ kloroz
 klorür
 klozet
 kloş
-km
 koalisyon
 kobalt
 kobay
@@ -24225,7 +24151,6 @@ kışlıyor
 kışrında
 kışın
 l
-la
 labada
 labirent
 laborant
@@ -24422,7 +24347,6 @@ lağvını
 lağvının
 lağım
 lağıv
-le
 leal
 lebalep
 lebib
@@ -25954,7 +25878,6 @@ meşruti
 meşveret
 mgk
 mhp
-mi
 miada
 miadı
 miadın
@@ -26223,11 +26146,9 @@ mizaç
 mizaçgir
 miço
 miğfer
-mk
 mke
 mks
 mkyk
-mm
 mobil
 mobilet
 mobilya
@@ -26330,7 +26251,6 @@ mpm
 msb
 msü
 mta
-mu
 muaccel
 muadele
 muadelet
@@ -26736,7 +26656,6 @@ muşçasına
 myk
 möble
 mösyö
-mü
 mübadele
 mübadil
 mübahase
@@ -27213,7 +27132,6 @@ müşteki
 müşterek
 müştereği
 müşteri
-mı
 mıh
 mıhla
 mıhlıyor
@@ -27262,7 +27180,6 @@ mızıldan
 mızırdan
 mışmış
 mışıl
-na
 naat
 naaş
 nabekar
@@ -27562,7 +27479,6 @@ naşi
 naşid
 naşide
 naşir
-ne
 nebahat
 nebat
 nebatat
@@ -27885,7 +27801,6 @@ neşter
 neşterle
 neşve
 neşvünema
-ni
 nice
 nicel
 nicele
@@ -28104,7 +28019,6 @@ nöron
 nötr
 nötrle
 nötron
-nü
 nüans
 nübüvvet
 nüfus
@@ -28164,7 +28078,6 @@ ocağınız
 ocağınıza
 ocağınızı
 ocağıyla
-od
 oda
 odabaşı
 odacınıza
@@ -28199,7 +28112,6 @@ odman
 odtü
 odun
 oecd
-of
 ofis
 ofla
 oflas
@@ -28211,11 +28123,9 @@ ofsayt
 ofset
 ogan
 ogün
-oh
 oha
 ohm
 oje
-ok
 okaliptüs
 okan
 okandan
@@ -28426,7 +28336,6 @@ okşan
 okşuyor
 okşuyordu
 okşuyorum
-ol
 olabilesi
 olabilsen
 olaca
@@ -28787,7 +28696,6 @@ oluşuysa
 oluşuğu
 oluşuğun
 oluşuşum
-om
 oma
 omay
 omaç
@@ -28837,7 +28745,6 @@ omzunuzda
 omzunuzu
 omzunuzun
 omzuyla
-on
 ona
 onanizm
 onar
@@ -29080,7 +28987,6 @@ osuruğu
 osuruğumu
 osuruğuna
 osuruğunu
-ot
 ota
 otacı
 otala
@@ -29172,7 +29078,6 @@ otuzuncu
 otçul
 otçulu
 otçulun
-ov
 ova
 ovacık
 oval
@@ -29189,7 +29094,6 @@ ovuşturdu
 ovuşturun
 ovuşturup
 ovuşturur
-oy
 oya
 oyal
 oyala
@@ -29942,7 +29846,6 @@ peşrevlen
 peştamal
 peştu
 peştuca
-pi
 pide
 pigment
 pijama
@@ -30120,7 +30023,6 @@ plüralist
 plüralizm
 plüton
 plütonyum
-po
 poaş
 podyum
 pof
@@ -30691,8 +30593,6 @@ raşid
 raşide
 raşitik
 raşitizm
-rc
-re
 reaksiyon
 reaktör
 realist
@@ -31157,7 +31057,6 @@ rıza
 rızk
 rızkullah
 rızık
-sa
 saad
 saadeddin
 saadet
@@ -32719,7 +32618,6 @@ seğir
 seğirt
 seğmen
 sfenks
-si
 sibak
 sibel
 sicil
@@ -33059,7 +32957,6 @@ slovence
 slovenya
 smaç
 smokin
-sn
 snop
 soba
 sobe
@@ -33536,7 +33433,6 @@ stres
 striptiz
 strüktür
 stüdyo
-su
 suad
 sual
 sualp
@@ -33917,7 +33813,6 @@ söğüdün
 söğüt
 söğütçük
 söğüş
-sü
 sübjektif
 süblime
 sübut
@@ -34480,7 +34375,6 @@ sığırcığı
 sığış
 sığışılan
 t
-ta
 taaccüp
 taaddüt
 taaffün
@@ -36295,7 +36189,6 @@ tgs
 tha
 thk
 thy
-ti
 tibet
 tibetçe
 ticani
@@ -36402,8 +36295,6 @@ tiz
 tişört
 tkb
 tki
-tl
-tm
 tmmob
 tmo
 tobb
@@ -36680,9 +36571,7 @@ tozut
 tozuttum
 tozutup
 toğan
-tp
 tpao
-tr
 trabzon
 tradisyon
 trafik
@@ -37046,7 +36935,6 @@ tuğçe
 tuş
 tuşla
 tuşluyor
-tv
 töhmet
 tökel
 tökezle
@@ -37392,7 +37280,6 @@ udunu
 udunun
 uduyla
 uefa
-uf
 ufa
 ufacık
 ufacıkken
@@ -37576,7 +37463,6 @@ uluşturdu
 ulvi
 ulviye
 ulviyet
-um
 uma
 umacı
 uman
@@ -37630,7 +37516,6 @@ umursuyor
 umut
 umutlan
 umutsuzuz
-un
 unan
 unat
 unesco
@@ -37649,7 +37534,6 @@ unvan
 unıcef
 upuygun
 upuzun
-ur
 ural
 uralaltay
 uram
@@ -37677,7 +37561,6 @@ uruz
 uruç
 uruğun
 urve
-us
 usa
 usal
 usan
@@ -37710,7 +37593,6 @@ usul
 usulcacık
 usun
 usçudur
-ut
 utan
 utanayım
 utanca
@@ -37748,7 +37630,6 @@ utku
 utman
 utuksuz
 uvertür
-uy
 uya
 uyak
 uyan
@@ -38003,7 +37884,6 @@ uyuşuruz
 uyuşuyor
 uyuşuğun
 uyuşuğuz
-uz
 uza
 uzadıya
 uzak
@@ -38108,7 +37988,6 @@ uzvunda
 uzvunu
 uzvunun
 uzvuyla
-uç
 uça
 uçak
 uçaksavar
@@ -38310,7 +38189,6 @@ uşağıydım
 uşağıyla
 uşkun
 uşşak
-va
 vaade
 vaadi
 vaadidir
@@ -38595,7 +38473,6 @@ vazıh
 vaşak
 vaşağı
 vaşağın
-ve
 veba
 vebal
 veca
@@ -39000,7 +38877,6 @@ vızla
 vızıl
 vızıldasa
 vızır
-ya
 yaba
 yaban
 yabancı
@@ -39824,7 +39700,6 @@ yaşık
 yaşıl
 yaşın
 yaşıt
-ye
 yed
 yedek
 yedekle
@@ -41405,7 +41280,6 @@ zeytinlik
 zeytinyağ
 zeytuni
 zeyyat
-zf
 ziba
 zibidi
 zifaf
@@ -42839,7 +42713,6 @@ zıypak
 çöğ
 çöğdür
 çöğür
-çü
 çüngüş
 çünkü
 çürü
@@ -43036,7 +42909,6 @@ zıypak
 öcüymüş
 öcüyü
 öcüyüz
-öd
 öde
 ödem
 ödememede
@@ -43065,7 +42937,6 @@ zıypak
 ödüncün
 ödünle
 ödünç
-öf
 öfke
 öfkelen
 öge
@@ -43096,7 +42967,6 @@ zıypak
 öküz
 öküzgöz
 öküzgözü
-öl
 öldür
 öldürdüm
 öldürdün
@@ -43344,7 +43214,6 @@ zıypak
 ömrüyse
 ömür
 ömürcan
-ön
 önal
 önalan
 önay
@@ -43455,7 +43324,6 @@ zıypak
 önyükle
 önümdeydi
 önür
-öp
 öptükçe
 öptürdüm
 öptürerek
@@ -43509,7 +43377,6 @@ zıypak
 öpüşürse
 öpüşürüz
 öpüşüyor
-ör
 ördek
 ördeğe
 ördeği
@@ -43644,7 +43511,6 @@ zıypak
 öss
 östaki
 ösym
-öt
 öte
 öteberi
 öteki
@@ -43683,7 +43549,6 @@ zıypak
 ötüşüp
 ötüşür
 ötüşüyor
-öv
 öveç
 övgü
 övün
@@ -43716,7 +43581,6 @@ zıypak
 öylelikle
 öymen
 öys
-öz
 özak
 özakan
 özakın
@@ -43832,7 +43696,6 @@ zıypak
 özümsüyor
 özür
 özüt
-öç
 öğle
 öğlen
 öğlenki
@@ -43949,7 +43812,6 @@ zıypak
 ümüğünden
 ümüğüne
 ümüğünü
-ün
 ünal
 ünalan
 ünaldı
@@ -44111,7 +43973,6 @@ zıypak
 ürüyorsa
 ürüyoruz
 ürüştü
-üs
 üsera
 üsküdar
 üsküf
@@ -44214,7 +44075,6 @@ zıypak
 üstüpü
 üstüvani
 üstüyü
-üt
 ütopik
 ütopya
 ütü
@@ -44243,7 +44103,6 @@ zıypak
 üvez
 üye
 üyemizmiş
-üz
 üzdüysem
 üzdüğüme
 üzdüğümün
@@ -44381,7 +44240,6 @@ zıypak
 üzüntüyle
 üzüntüyü
 üzünç
-üç
 üçayak
 üçe
 üçel
@@ -44447,7 +44305,6 @@ zıypak
 üçüzlerin
 üçüzlerle
 üçüzü
-üş
 üşen
 üşendik
 üşendiler
@@ -44526,7 +44383,6 @@ zıypak
 üşüşürse
 üşüşüyor
 ıdık
-ıh
 ıhla
 ıhlamur
 ıhma
@@ -44611,7 +44467,6 @@ zıypak
 ırıyor
 ırıyorlar
 ırıyoruz
-ıs
 ısfahan
 ıska
 ıskala
@@ -45433,7 +45288,6 @@ zıypak
 şovenizm
 şovmen
 şovrum
-şu
 şua
 şuara
 şuayip
@@ -45681,11 +45535,9 @@ eşleşmek
 etkilemek
 evlenmek
 evirmek
-ezberlemek
 ezilmek
 fırlatmak
 fışkırmak
-fısıldamak
 gecikmek
 geçinmek
 gelişmek
@@ -45704,12 +45556,9 @@ gözlemek
 gözükmek
 güldürmek
 güvenmek
-güzelleşmek
 hapşırmak
 haşlamak
-hatırlamak
 haykırmak
-hazırlamak
 hecelemek
 hissetmek
 hoplamak
@@ -45722,7 +45571,6 @@ içirmek
 iğnelemek
 ilerlemek
 iletmek
-ilgilenmek
 incelemek
 incinmek
 incitmek
@@ -45741,7 +45589,6 @@ kapanmak
 kapsamak
 kararmak
 karışmak
-karşılamak
 kaşınmak
 katılmak
 katlamak
@@ -45754,19 +45601,16 @@ kazanmak
 kazımak
 kesilmek
 keşfetmek
-kımıldamak
 kınamak
 kırılmak
 kırtlamak
 kıskanmak
 kıvranmak
 kızarmak
-kilitlemek
 kiralamak
 kirletmek
 koklamak
 kokutmak
-konaklamak
 koparmak
 korkutmak
 korunmak
@@ -45780,14 +45624,12 @@ kurutmak
 kutlamak
 küçülmek
 küfretmek
-yağmalamak
 yakalamak
 yakınmak
 yakışmak
 yalanmak
 yanıltmak
 yansımak
-yaralanmak
 yarışmak
 yaslanmak
 yaşlanmak
@@ -45800,7 +45642,6 @@ yetişmek
 yıkılmak
 yıkanmak
 yırtılmak
-yiğitleşmek
 yinelemek
 yollamak
 yorulmak
@@ -45808,7 +45649,7 @@ yoğurmak
 yönelmek
 yönetmek
 yumuşamak
-yuvarlamak
 yüklemek
 yükselmek
-
+silik
+vaka
