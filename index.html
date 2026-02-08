@@ -1467,8 +1467,7 @@ function startGameTimer(initialSeconds){
 
 function stopGameTimer(){
     __timer.running = false;
-    if (timerInterval) { try { stopGameTimer();
-            } catch(e) {} }
+    if (timerInterval) { clearInterval(timerInterval); }
     timerInterval = null;
 }
 
