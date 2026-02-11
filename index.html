@@ -1851,10 +1851,15 @@ const gameOverlay = document.getElementById('game-overlay');
             const data = new URLSearchParams();
             data.append("form-name", "best-score");
 
-            data.append("playerName", payload.playerName || "anonim");
-            data.append("playerId", payload.playerId || getOrCreatePlayerId());
-            data.append("mode", payload.mode || (window.gameMode || "classic"));
-            data.append("score", String(payload.score));
+            const playerName = payload.playerName || "anonim";
+            const playerId = payload.playerId || getOrCreatePlayerId();
+            const mode = payload.mode || (window.gameMode || "classic");
+            const scoreNum = Number(payload.score) || 0;
+
+            data.append("playerName", playerName);
+            data.append("playerId", playerId);
+            data.append("mode", mode);
+            data.append("score", String(scoreNum));
 
             // When the run ended (ISO timestamp)
             const playedAt = payload.playedAt || payload.ts || dizgiTodayISO();
@@ -1862,6 +1867,19 @@ const gameOverlay = document.getElementById('game-overlay');
 
             // Backward compatible field (kept for existing dashboards)
             data.append("ts", playedAt);
+
+            // Analytics: send when a best score is submitted
+            try {
+                if (typeof window.gtag === "function") {
+                    window.gtag("event", "score_submit", {
+                        mode: mode,
+                        score: scoreNum,
+                        has_name: !!(playerName && playerName !== "anonim"),
+                        player_id: playerId,
+                        played_at: playedAt
+                    });
+                }
+            } catch (_) {}
 
             // Post to site root (Netlify intercepts)
             return fetch("/", {
