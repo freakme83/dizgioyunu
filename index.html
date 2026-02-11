@@ -987,6 +987,70 @@ body{
 
 
         // =========================
+        // EMERGENCY ANTI-ABUSE CONFIG
+        // =========================
+        const MAX_SUBMIT_SCORE = 20000;
+        const BLOCKED_SUBSTRINGS = [
+          // DEVELOPER-APPROVED BLOCKED TERMS (DO NOT ADD WORDS WITHOUT EXPLICIT APPROVAL)
+          // Initial list provided by the developer below MUST be included as-is.
+          // Any additional suggestions MUST be written only as commented-out suggestions.
+          
+          // >>> APPROVED LIST START
+          // "sik", "çük", "fenasi kerim", "sktr", "skiim", "skim", "amk", "amq", "yarrak", yarraq", "orospu", "çocuu"
+          // <<< APPROVED LIST END
+          "sik",
+          "çük",
+          "fenasi kerim",
+          "sktr",
+          "skiim",
+          "skim",
+          "amk",
+          "amq",
+          "yarrak",
+          "yarraq",
+          "orospu",
+          "çocuu"
+        ];
+
+        function normalizeTR(text) {
+            return (text ?? "")
+                .toString()
+                .replace(/İ/g, "i")
+                .replace(/I/g, "ı")
+                .toLocaleLowerCase("tr-TR");
+        }
+
+        const NORMALIZED_BLOCKED_SUBSTRINGS = BLOCKED_SUBSTRINGS.map((s) => normalizeTR(s)).filter(Boolean);
+
+        function maskBlockedSubstrings(name) {
+            const original = (name ?? "").toString();
+            if (!original) return original;
+            const normalized = normalizeTR(original);
+            let result = "";
+            let i = 0;
+            while (i < normalized.length) {
+                let matchLen = 0;
+                for (const blocked of NORMALIZED_BLOCKED_SUBSTRINGS) {
+                    if (blocked && normalized.startsWith(blocked, i)) {
+                        matchLen = Math.max(matchLen, blocked.length);
+                    }
+                }
+                if (matchLen > 0) {
+                    result += "*";
+                    i += matchLen;
+                } else {
+                    result += original[i];
+                    i += 1;
+                }
+            }
+            return result;
+        }
+
+        function isValidScoreValue(score) {
+            return Number.isInteger(score) && score >= 0 && score <= MAX_SUBMIT_SCORE;
+        }
+
+        // =========================
         // WORDLIST LOADING (vNext)
         // =========================
         // Primary source: external txt next to this HTML (cached by browser)
@@ -1403,8 +1467,7 @@ function startGameTimer(initialSeconds){
 
 function stopGameTimer(){
     __timer.running = false;
-    if (timerInterval) { try { stopGameTimer();
-            } catch(e) {} }
+    if (timerInterval) { clearInterval(timerInterval); }
     timerInterval = null;
 }
 
@@ -1697,7 +1760,7 @@ const gameOverlay = document.getElementById('game-overlay');
             name = name.replace(/[<>]/g, "").replace(/[\u0000-\u001F\u007F]/g, "");
             // Collapse whitespace
             name = name.replace(/\s+/g, " ");
-            return name;
+            return maskBlockedSubstrings(name);
         }
 
         function getStoredPlayerName() {
@@ -1728,32 +1791,58 @@ const gameOverlay = document.getElementById('game-overlay');
             try { localStorage.setItem(DIZGI_NAME_KEY, name); } catch(_) {}
         }
 
-        function getBestScore() {
-            try { return Number(localStorage.getItem(DIZGI_BEST_KEY) || 0) || 0; } catch(_) { return 0; }
+        function bestKeyForMode(baseKey, mode) {
+            const safeMode = (mode || window.gameMode || "classic").toString();
+            return baseKey + "_" + safeMode;
         }
 
-        function setBestScore(v) {
-            try { localStorage.setItem(DIZGI_BEST_KEY, String(v)); } catch(_) {}
+        function getBestScore(mode) {
+            const key = bestKeyForMode(DIZGI_BEST_KEY, mode);
+            try {
+                const stored = localStorage.getItem(key);
+                if (stored === null) {
+                    return Number(localStorage.getItem(DIZGI_BEST_KEY) || 0) || 0;
+                }
+                return Number(stored || 0) || 0;
+            } catch(_) { return 0; }
         }
 
-        function getLastSubmittedBest() {
-            try { return Number(localStorage.getItem(DIZGI_SUBMITTED_KEY) || 0) || 0; } catch(_) { return 0; }
+        function setBestScore(v, mode) {
+            try { localStorage.setItem(bestKeyForMode(DIZGI_BEST_KEY, mode), String(v)); } catch(_) {}
         }
 
-        function setLastSubmittedBest(v) {
-            try { localStorage.setItem(DIZGI_SUBMITTED_KEY, String(v)); } catch(_) {}
+        function getLastSubmittedBest(mode) {
+            const key = bestKeyForMode(DIZGI_SUBMITTED_KEY, mode);
+            try {
+                const stored = localStorage.getItem(key);
+                if (stored === null) {
+                    return Number(localStorage.getItem(DIZGI_SUBMITTED_KEY) || 0) || 0;
+                }
+                return Number(stored || 0) || 0;
+            } catch(_) { return 0; }
         }
 
-        function getPendingBest() {
-            try { return Number(localStorage.getItem(DIZGI_PENDING_KEY) || 0) || 0; } catch(_) { return 0; }
+        function setLastSubmittedBest(v, mode) {
+            try { localStorage.setItem(bestKeyForMode(DIZGI_SUBMITTED_KEY, mode), String(v)); } catch(_) {}
         }
 
-        function setPendingBest(v) {
-            try { localStorage.setItem(DIZGI_PENDING_KEY, String(v)); } catch(_) {}
+        function getPendingBest(mode) {
+            const key = bestKeyForMode(DIZGI_PENDING_KEY, mode);
+            try {
+                const stored = localStorage.getItem(key);
+                if (stored === null) {
+                    return Number(localStorage.getItem(DIZGI_PENDING_KEY) || 0) || 0;
+                }
+                return Number(stored || 0) || 0;
+            } catch(_) { return 0; }
         }
 
-        function clearPendingBest() {
-            try { localStorage.removeItem(DIZGI_PENDING_KEY); } catch(_) {}
+        function setPendingBest(v, mode) {
+            try { localStorage.setItem(bestKeyForMode(DIZGI_PENDING_KEY, mode), String(v)); } catch(_) {}
+        }
+
+        function clearPendingBest(mode) {
+            try { localStorage.removeItem(bestKeyForMode(DIZGI_PENDING_KEY, mode)); } catch(_) {}
         }
 
         function submitBestScoreToNetlify(payload) {
@@ -1762,10 +1851,15 @@ const gameOverlay = document.getElementById('game-overlay');
             const data = new URLSearchParams();
             data.append("form-name", "best-score");
 
-            data.append("playerName", payload.playerName || "anonim");
-            data.append("playerId", payload.playerId || getOrCreatePlayerId());
-            data.append("mode", payload.mode || (window.gameMode || "classic"));
-            data.append("score", String(payload.score));
+            const playerName = payload.playerName || "anonim";
+            const playerId = payload.playerId || getOrCreatePlayerId();
+            const mode = payload.mode || (window.gameMode || "classic");
+            const scoreNum = Number(payload.score) || 0;
+
+            data.append("playerName", playerName);
+            data.append("playerId", playerId);
+            data.append("mode", mode);
+            data.append("score", String(scoreNum));
 
             // When the run ended (ISO timestamp)
             const playedAt = payload.playedAt || payload.ts || dizgiTodayISO();
@@ -1773,6 +1867,19 @@ const gameOverlay = document.getElementById('game-overlay');
 
             // Backward compatible field (kept for existing dashboards)
             data.append("ts", playedAt);
+
+            // Analytics: send when a best score is submitted
+            try {
+                if (typeof window.gtag === "function") {
+                    window.gtag("event", "score_submit", {
+                        mode: mode,
+                        score: scoreNum,
+                        has_name: !!(playerName && playerName !== "anonim"),
+                        player_id: playerId,
+                        played_at: playedAt
+                    });
+                }
+            } catch (_) {}
 
             // Post to site root (Netlify intercepts)
             return fetch("/", {
@@ -1784,27 +1891,30 @@ const gameOverlay = document.getElementById('game-overlay');
 
                 function maybeUpdateAndSubmitPersonalBest(finalScore) {
             // Update local personal best; submit only when NEW best AND not already submitted
-            const oldBest = getBestScore();
-            const lastSubmitted = getLastSubmittedBest();
+            const normalizedScore = Number(finalScore);
+            if (!isValidScoreValue(normalizedScore)) return;
+            const mode = window.gameMode || "classic";
+            const oldBest = getBestScore(mode);
+            const lastSubmitted = getLastSubmittedBest(mode);
 
             // Only act if this run created a NEW personal best
-            if (finalScore <= oldBest) return;
+            if (normalizedScore <= oldBest) return;
 
             // Persist new best locally
-            setBestScore(finalScore);
+            setBestScore(normalizedScore, mode);
 
             // Hold pending best until we have a name (or submit immediately if we do)
-            if (finalScore > lastSubmitted) {
-                setPendingBest(finalScore);
+            if (normalizedScore > lastSubmitted) {
+                setPendingBest(normalizedScore, mode);
             }
 
             const name = sanitizePlayerName(getStoredPlayerName());
             if (name) {
-                const pending = getPendingBest();
-                if (pending > lastSubmitted) {
-                    submitBestScoreToNetlify({ playerName: name, playerId: getOrCreatePlayerId(), mode: gameMode, score: pending, playedAt: dizgiTodayISO() });
-                    setLastSubmittedBest(pending);
-                    clearPendingBest();
+                const pending = getPendingBest(mode);
+                if (pending > lastSubmitted && isValidScoreValue(pending)) {
+                    submitBestScoreToNetlify({ playerName: name, playerId: getOrCreatePlayerId(), mode: mode, score: pending, playedAt: dizgiTodayISO() });
+                    setLastSubmittedBest(pending, mode);
+                    clearPendingBest(mode);
                 }
             }
         }
@@ -1849,12 +1959,13 @@ const gameOverlay = document.getElementById('game-overlay');
                 setStoredPlayerName(cleaned);
 
                 // If we were holding a pending best, submit it now
-                const pending = getPendingBest();
-                const lastSubmitted = getLastSubmittedBest();
-                if (pending > lastSubmitted) {
-                    submitBestScoreToNetlify({ playerName: cleaned, playerId: getOrCreatePlayerId(), mode: gameMode, score: pending, playedAt: dizgiTodayISO() });
-                    setLastSubmittedBest(pending);
-                    clearPendingBest();
+                const mode = window.gameMode || "classic";
+                const pending = getPendingBest(mode);
+                const lastSubmitted = getLastSubmittedBest(mode);
+                if (pending > lastSubmitted && isValidScoreValue(pending)) {
+                    submitBestScoreToNetlify({ playerName: cleaned, playerId: getOrCreatePlayerId(), mode: mode, score: pending, playedAt: dizgiTodayISO() });
+                    setLastSubmittedBest(pending, mode);
+                    clearPendingBest(mode);
                 }
 
                 // Remove UI after saving
@@ -3114,14 +3225,25 @@ document.addEventListener('pointerdown', (e) => {
       return;
     }
 
-    listEl.innerHTML = rows.map(function(r, i){
+    var filteredRows = rows.filter(function(r){
+      var scoreValue = Number(r && r.score !== undefined ? r.score : 0);
+      return isValidScoreValue(scoreValue);
+    });
+
+    if(filteredRows.length === 0){
+      listEl.innerHTML = '';
+      return;
+    }
+
+    listEl.innerHTML = filteredRows.map(function(r, i){
       var name = (r && (r.name ?? r.playerName) ? (r.name ?? r.playerName) : 'Anonim').toString();
-      var score = Number(r && r.score ? r.score : 0) || 0;
+      var score = Number(r && r.score !== undefined ? r.score : 0) || 0;
+      var maskedName = (typeof maskBlockedSubstrings === 'function') ? maskBlockedSubstrings(name) : name;
       return (
         '<li class="leaderboard-row flex items-center justify-between gap-3 px-3 py-2 rounded-xl">' +
           '<div class="min-w-0">' +
             '<span class="leaderboard-rank">' + (i+1) + '.</span>' +
-            '<span class="leaderboard-name truncate ml-2">' + escapeHtml(name) + '</span>' +
+            '<span class="leaderboard-name truncate ml-2">' + escapeHtml(maskedName) + '</span>' +
           '</div>' +
           '<div class="leaderboard-score tabular-nums">' + score + '</div>' +
         '</li>'
