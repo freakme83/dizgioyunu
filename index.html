@@ -1055,8 +1055,12 @@ body{
         // =========================
         // Primary source: external txt next to this HTML (cached by browser)
         // Fallback: small embedded list so the game still opens offline / on fetch failure.
-        const EXTERNAL_WORDLIST_URL = "tr_tr_wordlist_len_le_9_unique.txt";
-        const WORDLIST_CACHE_KEY = "dizgi_wordlist_cache_v1";
+        const WORDLIST_VERSION = "v2";
+        const EXTERNAL_WORDLIST_URLS = [
+          "tr_tr_wordlist_len_le_9_unique.txt",
+          "tr_tr_wordlist_len_le_9_unique"
+        ].map(u => `${u}?${WORDLIST_VERSION}`);
+        const WORDLIST_CACHE_KEY = `dizgi_wordlist_cache_${WORDLIST_VERSION}`;
 
         // NOTE: Fallback is intentionally limited. It is only used if the external wordlist cannot be loaded.
         const FALLBACK_WORDS = ["acı", "ada", "adrenalin", "aksatanda", "alabilsen", "alakalan", "alanınını", "alelıtlak", "alengirli", "almamaksa", "almamamla", "alnındaki", "alparslan", "altimetre", "altınekin", "alınamasa", "alınmakla", "alınmaksa", "alınmakta", "alınmamak", "alınmamam", "alınmaman", "alınmamla", "alınmasak", "alınmasam", "alınmayan", "alınmayla", "alınırken", "alınırsan", "anakronik", "anlamamam", "anlamanda", "anlamasan", "anlatamam", "anlatanda", "anlatansa", "anlatmamı", "anlatmanı", "anlatmasa", "anlatılsa", "anlatımla", "annemindi", "anneminki", "antarktik", "antipatik", "antisemit", "antrenman", "ara", "arabistan", "aramalını", "aranansa", "aranılanı", "aranırlık", "aranıştan", "arattırın", "aritmetik", "art", "artakalan", "artakalır", "arı", "asarlıkta", "asimetrik", "aslanımla", "atamanken", "atanmamam", "atanmasam", "atardamar", "atlamamam", "atlatılsa", "atıklarsa", "ayriyeten", "ayrılansa", "ayrılarak", "bak", "bakakalan", "balatekin", "ban", "bas", "bat", "benimkini", "bez", "bil", "bilinenli", "bilinerek", "bin", "bit", "biç", "boz", "boğ", "bul", "böl", "bük", "büz", "bık", "bıyıklı", "cay", "coş", "dal", "damalı", "danimarka", "delililik", "delinerek", "delinirse", "deminkini", "denememek", "denememen", "denetimle", "denetimli", "denetmeni", "denilirse", "değ", "deş", "dik", "dil", "din", "dinamitle", "dinlenesi", "dinlenmen", "dinletili", "direnilse", "direnmemi", "diz", "dol", "don", "doy", "doğ", "dur", "duy", "dök", "dön", "döv", "düz", "düş", "edelerken", "edememeli", "edemeyeni", "edenlerle", "edenlerse", "ederlerse", "edilemese", "edilesini", "edilirken", "edilirlik", "edilirsen", "edilmekle", "edimlerle", "ekalliyet", "ekişirken", "eklemesek", "ekmekçi", "eksantrik", "eksilerle", "eksiltili", "elemendik", "elenirsek", "elenirsem", "elenişten", "elenmekti", "eleştirel", "eleştirin", "emrederek", "emredilen", "emredilir", "emrindeki", "enteresan", "eri", "eriklerle", "eriyikten", "erişirken", "erişirlik", "eriştiren", "eriştirir", "esenlikle", "esenlikli", "esenlikte", "etmendeki", "ettilerdi", "ettirilse", "ettirmemi", "ettirmeni", "ettirmese", "eylemesen", "eşelerken", "eşiklerle", "garantile", "gel", "gelinerek", "gelinilen", "gelinilir", "ger", "gez", "geç", "gir", "git", "giy", "göm", "gör", "göç", "gül", "ilgilenil", "ilmindeki", "inaltekin", "inanırlık", "indirilse", "indirimin", "indirimle", "indirimli", "indirmeni", "ingiltere", "inletilip", "inletmese", "insaniyet", "irkilteni", "irkiltmek", "iskarpela", "ismininse", "istenense", "istenilse", "istikamet", "itelerken", "kak", "kal", "kalakalan", "kalakalma", "kalakalır", "kalanımsa", "kalenderi", "kalkanıma", "kalınarak", "kalınmasa", "kalınmaya", "kalınılan", "kameraman", "kamil", "kan", "kanaatkar", "kanunname", "kap", "kapıl", "kar", "karabakal", "karabasan", "karabatak", "karaduran", "karaisalı", "karakarga", "karakaçan", "karakulak", "karalardı", "karamanlı", "karapınar", "kararname", "karasinek", "karat", "karataban", "karayanık", "karayılan", "karnıkara", "kas", "kat", "katakulli", "katalitik", "katederek", "katedilen", "katılansa", "katılınan", "kay", "kayalarsa", "kaymaklan", "kaynaklan", "kaz", "kaş", "kereminki", "kes", "keseninse", "kesimimin", "kesiminki", "kesintili", "kesintisi", "kestirimi", "kimiminki", "kiminkini", "kimliklik", "kinematik", "kiremidin", "kirleteni", "kirletile", "kirletsek", "kok", "kokainman", "kop", "koramiral", "kov", "koy", "koş", "kullansan", "kur", "kus", "küs", "kılınarak", "kır", "kıy", "kız", "mantinota", "matematik", "melankoli", "menederse", "menedilen", "menedilir", "metrekare", "mililitre", "milimetre", "milletime", "milletimi", "minnettar", "mob", "mono", "mukarenet", "mutallaka", "mübah", "nanemolla", "narlıdere", "nasrettin", "opak", "pan", "parametre", "penisilin", "piş", "posta", "pus", "pıs", "rakibimin", "rengarenk", "riayetkar", "roketatar", "saklansan", "sal", "salatalık", "salisilat", "salisilik", "salınarak", "san", "sap", "sar", "saraykent", "sarıkanat", "sarılınan", "sat", "sav", "say", "saç", "sağ", "sek", "sektireme", "selametle", "seliminki", "senirkent", "sentaktik", "ser", "serenliyi", "sev", "sevda", "sez", "seç", "sil", "silindire", "silinerek", "silinirse", "silinmese", "silinmesi", "silintisi", "sin", "sindirile", "sinematek", "sinematik", "sok", "sol", "sonrakini", "sor", "soy", "sun", "sus", "söv", "süz", "sık", "sız", "sığ", "taallukat", "tad", "tadamamak", "tak", "takdirkar", "taklidini", "takılınan", "talepname", "talimname", "tan", "tap", "tar", "tasarımla", "tat", "tatminkar", "taş", "tedarikle", "tekerdeki", "tekerimin", "tekerleme", "tele", "telemetre", "telemetri", "temsilini", "tenkidini", "tep", "tepeninse", "tepetakla", "terelelli", "teriminki", "testerele", "tiroid", "tos", "tut", "tün", "tüt", "tüy", "tık", "tın", "ula", "ulu", "uyu", "uza", "var", "ver", "vur", "yak", "yakalarsa", "yal", "yalanımla", "yaltaklan", "yan", "yandakini", "yap", "yapılı", "yar", "yaralarsa", "yas", "yat", "yay", "yaz", "yaş", "yel", "yemenimin", "yen", "yenememek", "yenilemem", "yenilense", "yenilikle", "yenilikse", "yenilikte", "yenilikti", "yenililik", "yenilinen", "yenilirse", "yenilmemi", "yer", "yet", "yevmiye", "yit", "yol", "yor", "yum", "yumul", "yun", "yut", "yüz", "yık", "yıl", "yığ", "çak", "çal", "çanakkale", "çap", "çat", "çek", "çekilinen", "çel", "çim", "çit", "çiz", "çök", "çöz", "çık", "öde", "önerilini", "ürü", "üstsüz", "ıra", "ışı", "şaş", "şeklinini", "şiş"];
@@ -1239,15 +1243,26 @@ body{
 
 
           try {
-            const res = await fetch(EXTERNAL_WORDLIST_URL, { cache: "force-cache" });
-            if (!res.ok) throw new Error("HTTP " + res.status);
-            const text = await res.text();
-            try { localStorage.setItem(WORDLIST_CACHE_KEY, text); } catch (_) {}
-            text.split(/\r?\n/).forEach(line => {
-              const w = normTR(line);
-              if (w) WORD_SET.add(w);
-            });
-            externalWordlistReady = true;
+            let fetchedText = null;
+            for (const url of EXTERNAL_WORDLIST_URLS) {
+              try {
+                const res = await fetch(url, { cache: "no-store" });
+                if (!res.ok) throw new Error("HTTP " + res.status);
+                fetchedText = await res.text();
+                break;
+              } catch (_) {
+                // try next URL
+              }
+            }
+            if (fetchedText && fetchedText.length > 0) {
+              try { localStorage.setItem(WORDLIST_CACHE_KEY, fetchedText); } catch (_) {}
+              fetchedText.split(/?
+/).forEach(line => {
+                const w = normTR(line);
+                if (w) WORD_SET.add(w);
+              });
+              externalWordlistReady = true;
+            }
           } catch (e) {
             // Keep cache-based readiness if we have it; otherwise remain false.
             // (If cache was available, externalWordlistReady is already true.)
