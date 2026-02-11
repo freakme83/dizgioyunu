@@ -1681,6 +1681,7 @@ const gameOverlay = document.getElementById('game-overlay');
         }
 
         async function startGame() {
+  gameStartFired = false;
             if (sharePanelEl) { sharePanelEl.classList.add('hidden'); setShareCollapsed(true); }
             gameOverlay.classList.remove('state-end');
             gameOverlay.classList.add('state-home');
@@ -2209,6 +2210,16 @@ function backspace() {
                 messageEl.textContent = "En az 3 harf";
                 messageEl.className = "mt-6 text-center text-sm font-black min-h-[1.5rem] text-amber-300";
                 return;
+            }
+            if (!gameStartFired) {
+                gameStartFired = true;
+                if (typeof gtag === 'function') {
+                    gtag('event', 'game_start', {
+                        event_category: 'game',
+                        mode: gameMode,
+                        word_len: raw.length
+                    });
+                }
             }
             checkWord(raw);
         }
@@ -2759,6 +2770,7 @@ function updateDevEasyWord() {
             }
 
 let gameMode = 'classic';
+let gameStartFired = false; // fires once per game on first word submit
             updateDevEasyWord();
         let easyTargetWord = ""; // dev-only reveal for easy mode
 
