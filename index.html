@@ -2759,12 +2759,13 @@ function updateDevEasyWord() {
             }
 
 let gameMode = 'classic';
+        window.gameMode = gameMode;
             updateDevEasyWord();
         let easyTargetWord = ""; // dev-only reveal for easy mode
 
-        if (easyBtn) easyBtn.addEventListener('click', () => { gameMode = 'easy';
+        if (easyBtn) easyBtn.addEventListener('click', () => { gameMode = 'easy'; window.gameMode = gameMode;
             updateDevEasyWord(); startGame(); });
-        if (classicBtn) classicBtn.addEventListener('click', () => { gameMode = 'classic';
+        if (classicBtn) classicBtn.addEventListener('click', () => { gameMode = 'classic'; window.gameMode = gameMode;
             updateDevEasyWord(); startGame(); });
 passBtn.addEventListener('click', pass);
         
