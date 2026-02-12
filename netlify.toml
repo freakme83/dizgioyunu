@@ -1,0 +1,11 @@
+[[redirects]]
+  from = "https://dizgi-oyunu.netlify.app/*"
+  to = "https://dizgioyunu.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://dizgi-oyunu.netlify.app/*"
+  to = "https://dizgioyunu.com/:splat"
+  status = 301
+  force = true
