@@ -1793,9 +1793,21 @@ const gameOverlay = document.getElementById('game-overlay');
             try { localStorage.setItem(DIZGI_NAME_KEY, name); } catch(_) {}
         }
 
+        function normalizeScoreMode(mode) {
+            const m = (mode || window.gameMode || "classic").toString().toLowerCase().trim();
+            return (m === "easy") ? "easy" : "classic";
+        }
+
         function bestKeyForMode(baseKey, mode) {
-            const safeMode = (mode || window.gameMode || "classic").toString();
+            const safeMode = normalizeScoreMode(mode);
             return baseKey + "_" + safeMode;
+        }
+
+        function getLegacyModeValue(baseKey, mode) {
+            // Legacy non-mode keys should only be considered for classic.
+            // Easy mode must be evaluated independently.
+            if (normalizeScoreMode(mode) !== "classic") return 0;
+            return Number(localStorage.getItem(baseKey) || 0) || 0;
         }
 
         function getBestScore(mode) {
@@ -1803,7 +1815,7 @@ const gameOverlay = document.getElementById('game-overlay');
             try {
                 const stored = localStorage.getItem(key);
                 if (stored === null) {
-                    return Number(localStorage.getItem(DIZGI_BEST_KEY) || 0) || 0;
+                    return getLegacyModeValue(DIZGI_BEST_KEY, mode);
                 }
                 return Number(stored || 0) || 0;
             } catch(_) { return 0; }
@@ -1818,7 +1830,7 @@ const gameOverlay = document.getElementById('game-overlay');
             try {
                 const stored = localStorage.getItem(key);
                 if (stored === null) {
-                    return Number(localStorage.getItem(DIZGI_SUBMITTED_KEY) || 0) || 0;
+                    return getLegacyModeValue(DIZGI_SUBMITTED_KEY, mode);
                 }
                 return Number(stored || 0) || 0;
             } catch(_) { return 0; }
@@ -1833,7 +1845,7 @@ const gameOverlay = document.getElementById('game-overlay');
             try {
                 const stored = localStorage.getItem(key);
                 if (stored === null) {
-                    return Number(localStorage.getItem(DIZGI_PENDING_KEY) || 0) || 0;
+                    return getLegacyModeValue(DIZGI_PENDING_KEY, mode);
                 }
                 return Number(stored || 0) || 0;
             } catch(_) { return 0; }
@@ -2666,11 +2678,13 @@ function updateDevEasyWord() {
             // DEV reveal only when DEV MODE is enabled and we are in EASY mode
             if (!devAccept || gameMode !== 'easy') {
                 el.textContent = '';
+                el.classList.add('hidden');
                 return;
             }
 
             const w = (easyTargetWord || '').toLocaleUpperCase('tr-TR');
             el.textContent = w ? ('DEV (Kolay hedef): ' + w) : 'DEV (Kolay hedef): (seçiliyor)';
+            el.classList.remove('hidden');
         }
 
 
