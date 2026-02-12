@@ -2678,11 +2678,13 @@ function updateDevEasyWord() {
             // DEV reveal only when DEV MODE is enabled and we are in EASY mode
             if (!devAccept || gameMode !== 'easy') {
                 el.textContent = '';
+                el.classList.add('hidden');
                 return;
             }
 
             const w = (easyTargetWord || '').toLocaleUpperCase('tr-TR');
             el.textContent = w ? ('DEV (Kolay hedef): ' + w) : 'DEV (Kolay hedef): (seçiliyor)';
+            el.classList.remove('hidden');
         }
 
 
