@@ -16,6 +16,7 @@ export class Renderer {
 
     this.dpr = window.devicePixelRatio || 1;
     this.tankRect = { x: 0, y: 0, width: 0, height: 0 };
+    this.camera = { scale: 1, offsetX: 0, offsetY: 0, viewWidth: 0, viewHeight: 0 };
     this.quality = 'high';
     this.debugBounds = false;
 
@@ -24,6 +25,7 @@ export class Renderer {
 
     this.backgroundCanvas = document.createElement('canvas');
     this.vignetteCanvas = document.createElement('canvas');
+    this.#buildPlants();
   }
 
   setQuality(quality) {
@@ -39,7 +41,10 @@ export class Renderer {
     this.canvas.width = Math.floor(width * this.dpr);
     this.canvas.height = Math.floor(height * this.dpr);
 
-    const margin = Math.max(12, Math.min(width, height) * 0.035);
+    const baseMargin = Math.max(12, Math.min(width, height) * 0.035);
+    const isMobilePortrait = (window.matchMedia?.('(pointer: coarse)')?.matches ?? false)
+      && window.innerHeight > window.innerWidth;
+    const margin = isMobilePortrait ? Math.max(8, Math.min(12, baseMargin)) : baseMargin;
     this.tankRect = {
       x: margin,
       y: margin,
@@ -47,8 +52,9 @@ export class Renderer {
       height: Math.max(100, height - margin * 2)
     };
 
+    this.#updateCamera();
+
     this.#buildStaticLayers();
-    this.#buildPlants();
 
     for (const p of this.waterParticles) {
       p.x = Math.min(width, Math.max(0, p.x));
@@ -61,13 +67,46 @@ export class Renderer {
     const localX = clientX - rect.left;
     const localY = clientY - rect.top;
 
-    const { x, y, width, height } = this.tankRect;
-    if (localX < x || localX > x + width || localY < y || localY > y + height) return null;
+    const { offsetX, offsetY, viewWidth, viewHeight, scale } = this.camera;
+    if (localX < offsetX || localX > offsetX + viewWidth || localY < offsetY || localY > offsetY + viewHeight) return null;
 
     return {
-      x: ((localX - x) / width) * this.world.bounds.width,
-      y: ((localY - y) / height) * this.world.bounds.height
+      x: (localX - offsetX) / scale,
+      y: (localY - offsetY) / scale
     };
+  }
+
+  toScreenPoint(worldX, worldY) {
+    const { offsetX, offsetY, scale } = this.camera;
+    if (!Number.isFinite(scale) || scale <= 0) return null;
+    return {
+      x: offsetX + worldX * scale,
+      y: offsetY + worldY * scale
+    };
+  }
+
+  #updateCamera() {
+    const worldWidth = Math.max(1, this.world.bounds.width);
+    const worldHeight = Math.max(1, this.world.bounds.height);
+    const isCoarsePointer = window.matchMedia?.('(pointer: coarse)')?.matches ?? false;
+
+    let availableHeight = this.tankRect.height;
+    if (isCoarsePointer) {
+      const dock = document.getElementById('deckToggle');
+      const canvasRect = this.canvas.getBoundingClientRect();
+      const dockRect = dock?.getBoundingClientRect?.();
+      if (dockRect) {
+        const overlapPx = Math.max(0, canvasRect.bottom - dockRect.top);
+        availableHeight = Math.max(100, this.tankRect.height - overlapPx);
+      }
+    }
+
+    const scale = Math.min(this.tankRect.width / worldWidth, availableHeight / worldHeight);
+    const viewWidth = worldWidth * scale;
+    const viewHeight = worldHeight * scale;
+    const offsetX = this.tankRect.x + (this.tankRect.width - viewWidth) * 0.5;
+    const offsetY = this.tankRect.y + (availableHeight - viewHeight) * 0.5;
+    this.camera = { scale, offsetX, offsetY, viewWidth, viewHeight };
   }
 
   isFilterModuleHit(clientX, clientY) {
@@ -128,8 +167,8 @@ export class Renderer {
   }
 
   #buildStaticLayers() {
-    const w = Math.max(1, Math.floor(this.tankRect.width));
-    const h = Math.max(1, Math.floor(this.tankRect.height));
+    const w = Math.max(1, Math.floor(this.camera.viewWidth));
+    const h = Math.max(1, Math.floor(this.camera.viewHeight));
 
     this.backgroundCanvas.width = w;
     this.backgroundCanvas.height = h;
@@ -176,22 +215,21 @@ export class Renderer {
   }
 
   #drawWaterPlants(ctx, time) {
-    const sx = this.tankRect.width / this.world.bounds.width;
-    const sy = this.tankRect.height / this.world.bounds.height;
+    const { scale: worldScale, offsetX, offsetY } = this.camera;
 
     ctx.save();
     ctx.lineCap = 'round';
 
     for (const plant of this.plants) {
-      const baseX = this.tankRect.x + plant.x * sx;
-      const baseY = this.tankRect.y + plant.bottomY * sy;
-      const h = plant.height * sy;
-      const w = plant.width * sx;
+      const baseX = offsetX + plant.x * worldScale;
+      const baseY = offsetY + plant.bottomY * worldScale;
+      const h = plant.height * worldScale;
+      const w = plant.width * worldScale;
 
       ctx.strokeStyle = plant.color;
       ctx.lineWidth = Math.max(1, w * 0.22);
 
-      const sway = Math.sin(time * plant.swayRate + plant.phase) * plant.swayAmp * sx;
+      const sway = Math.sin(time * plant.swayRate + plant.phase) * plant.swayAmp * worldScale;
       ctx.beginPath();
       ctx.moveTo(baseX, baseY);
       ctx.bezierCurveTo(baseX - w * 0.5 + sway * 0.25, baseY - h * 0.33, baseX + w * 0.5 + sway, baseY - h * 0.66, baseX + sway, baseY - h);
@@ -207,8 +245,7 @@ export class Renderer {
   }
 
   #drawBerryReed(ctx, time) {
-    const sx = this.tankRect.width / this.world.bounds.width;
-    const sy = this.tankRect.height / this.world.bounds.height;
+    const { scale: worldScale } = this.camera;
     const plants = this.world.berryReedPlants ?? [];
     const fruits = this.world.fruits ?? [];
     if (!plants.length) return;
@@ -217,21 +254,21 @@ export class Renderer {
     ctx.lineCap = 'round';
 
     for (const plant of plants) {
-      const plantPose = this.#getBerryReedPlantPose(plant, time, sx, sy);
+      const plantPose = this.#getBerryReedPlantPose(plant, time, worldScale);
       const { baseX, baseY, h, swayPx } = plantPose;
 
       ctx.strokeStyle = 'hsla(26deg 30% 36% / 0.9)';
-      ctx.lineWidth = Math.max(1.4, 2 * sx);
+      ctx.lineWidth = Math.max(1.4, 2 * worldScale);
       ctx.beginPath();
       ctx.moveTo(baseX, baseY);
-      ctx.bezierCurveTo(baseX - 4 * sx + swayPx * 0.2, baseY - h * 0.34, baseX + 3 * sx + swayPx, baseY - h * 0.72, baseX + swayPx, baseY - h);
+      ctx.bezierCurveTo(baseX - 4 * worldScale + swayPx * 0.2, baseY - h * 0.34, baseX + 3 * worldScale + swayPx, baseY - h * 0.72, baseX + swayPx, baseY - h);
       ctx.stroke();
 
       for (const [branchIndex, branch] of (plant.branches ?? []).entries()) {
-        const branchPose = this.#getBerryReedBranchPose(plant, branch, branchIndex, time, sx, sy);
+        const branchPose = this.#getBerryReedBranchPose(plant, branch, branchIndex, time, worldScale);
         const { startX, startY, controlX, controlY, endX, endY } = branchPose;
 
-        ctx.lineWidth = Math.max(1.1, 1.5 * sx);
+        ctx.lineWidth = Math.max(1.1, 1.5 * worldScale);
         ctx.beginPath();
         ctx.moveTo(startX, startY);
         ctx.quadraticCurveTo(controlX, controlY, endX, endY);
@@ -240,13 +277,13 @@ export class Renderer {
     }
 
     for (const fruit of fruits) {
-      const fruitPose = this.#getBerryReedFruitPose(fruit, time, sx, sy);
+      const fruitPose = this.#getBerryReedFruitPose(fruit, time, worldScale);
       if (!fruitPose) continue;
       const { x, y, branchX, branchY } = fruitPose;
-      const r = Math.max(1, (fruit.radius ?? 2.2) * ((sx + sy) * 0.5));
+      const r = Math.max(1, (fruit.radius ?? 2.2) * worldScale);
 
       ctx.strokeStyle = 'hsla(28deg 24% 34% / 0.72)';
-      ctx.lineWidth = Math.max(0.8, 1.05 * sx);
+      ctx.lineWidth = Math.max(0.8, 1.05 * worldScale);
       ctx.beginPath();
       ctx.moveTo(branchX, branchY);
       ctx.lineTo(x, y);
@@ -261,29 +298,30 @@ export class Renderer {
     ctx.restore();
   }
 
-  #getBerryReedPlantPose(plant, time, sx, sy) {
-    const baseX = this.tankRect.x + (plant?.x ?? 0) * sx;
-    const baseY = this.tankRect.y + (plant?.bottomY ?? 0) * sy;
-    const h = (plant?.height ?? 0) * sy;
+  #getBerryReedPlantPose(plant, time, worldScale) {
+    const { offsetX, offsetY } = this.camera;
+    const baseX = offsetX + (plant?.x ?? 0) * worldScale;
+    const baseY = offsetY + (plant?.bottomY ?? 0) * worldScale;
+    const h = (plant?.height ?? 0) * worldScale;
     const swayRate = plant?.swayRate ?? 0.0012;
     const swayPhase = plant?.swayPhase ?? 0;
-    const swayPx = Math.sin(time * swayRate + swayPhase) * (2.4 * sx);
+    const swayPx = Math.sin(time * swayRate + swayPhase) * (2.4 * worldScale);
     return { baseX, baseY, h, swayPx };
   }
 
-  #getBerryReedBranchPose(plant, branch, branchIndex, time, sx, sy) {
-    const { baseX, baseY, h, swayPx } = this.#getBerryReedPlantPose(plant, time, sx, sy);
+  #getBerryReedBranchPose(plant, branch, branchIndex, time, worldScale) {
+    const { baseX, baseY, h, swayPx } = this.#getBerryReedPlantPose(plant, time, worldScale);
     const t = Math.max(0.1, Math.min(0.95, branch?.t ?? 0.5));
     const dir = branch?.side === -1 ? -1 : 1;
     const len = Math.max(0.08, Math.min(0.5, branch?.len ?? 0.26));
     const localRate = (plant?.swayRate ?? 0.0012) * 1.7;
     const localPhase = (plant?.swayPhase ?? 0) + branchIndex * 1.3;
-    const localSway = Math.sin(time * localRate + localPhase) * (0.9 * sx) * len;
+    const localSway = Math.sin(time * localRate + localPhase) * (0.9 * worldScale) * len;
     const startX = baseX + swayPx * t;
     const startY = baseY - h * t;
     const endX = startX + dir * h * len * 0.32 + localSway;
     const endY = startY - h * len * 0.08;
-    const controlX = startX + dir * 4 * sx + localSway * 0.6;
+    const controlX = startX + dir * 4 * worldScale + localSway * 0.6;
     const controlY = startY - h * 0.03;
     const angle = Math.atan2(endY - startY, endX - startX);
     return {
@@ -297,7 +335,7 @@ export class Renderer {
     };
   }
 
-  #getBerryReedFruitPose(fruit, time, sx, sy) {
+  #getBerryReedFruitPose(fruit, time, worldScale) {
     const plants = this.world.berryReedPlants ?? [];
     const plant = plants.find((entry) => entry.id === fruit?.plantId);
     if (!plant) return null;
@@ -305,7 +343,7 @@ export class Renderer {
     const branch = plant.branches?.[branchIndex];
     if (!branch) return null;
 
-    const branchPose = this.#getBerryReedBranchPose(plant, branch, branchIndex, time, sx, sy);
+    const branchPose = this.#getBerryReedBranchPose(plant, branch, branchIndex, time, worldScale);
     const u = Math.max(0, Math.min(1, fruit?.u ?? 0.9));
     const v = Number.isFinite(fruit?.v) ? fruit.v : 0;
     const branchX = branchPose.startX + (branchPose.endX - branchPose.startX) * u;
@@ -322,18 +360,17 @@ export class Renderer {
 
 
   #drawGroundAlgae(ctx, time) {
-    const sx = this.tankRect.width / this.world.bounds.width;
-    const sy = this.tankRect.height / this.world.bounds.height;
+    const { scale: worldScale, offsetX, offsetY } = this.camera;
 
     ctx.save();
     ctx.lineCap = 'round';
 
     for (const algae of this.world.groundAlgae ?? []) {
-      const baseX = this.tankRect.x + algae.x * sx;
-      const baseY = this.tankRect.y + algae.y * sy;
-      const h = algae.height * sy;
-      const w = algae.width * sx;
-      const sway = Math.sin(time * algae.swayRate + algae.phase) * algae.swayAmp * sx;
+      const baseX = offsetX + algae.x * worldScale;
+      const baseY = offsetY + algae.y * worldScale;
+      const h = algae.height * worldScale;
+      const w = algae.width * worldScale;
+      const sway = Math.sin(time * algae.swayRate + algae.phase) * algae.swayAmp * worldScale;
 
       ctx.strokeStyle = 'hsla(115deg 58% 62% / 0.52)';
       ctx.lineWidth = Math.max(0.9, w * 0.21);
@@ -353,17 +390,16 @@ export class Renderer {
   }
 
   #drawPlayEffects(ctx, time) {
-    const sx = this.tankRect.width / this.world.bounds.width;
-    const sy = this.tankRect.height / this.world.bounds.height;
+    const { scale: worldScale, offsetX, offsetY } = this.camera;
 
     for (const session of this.world.playSessions ?? []) {
       if (!session.startedNearAlgae) continue;
-      const x = this.tankRect.x + session.origin.x * sx;
-      const y = this.tankRect.y + session.origin.y * sy;
+      const x = offsetX + session.origin.x * worldScale;
+      const y = offsetY + session.origin.y * worldScale;
       const life = Math.max(0, session.untilSec - this.world.simTimeSec);
       const pulse = (Math.sin(time * 0.007 + session.id) + 1) * 0.5;
-      const r1 = (16 + pulse * 8) * sx;
-      const r2 = (28 + pulse * 12) * sx;
+      const r1 = (16 + pulse * 8) * worldScale;
+      const r2 = (28 + pulse * 12) * worldScale;
       const alpha = Math.min(0.34, 0.14 + life * 0.02);
 
       ctx.beginPath();
@@ -381,7 +417,7 @@ export class Renderer {
   }
 
   #drawTankDropShadow(ctx) {
-    const { x, y, width, height } = this.tankRect;
+    const { offsetX: x, offsetY: y, viewWidth: width, viewHeight: height } = this.camera;
     const g = ctx.createRadialGradient(x + width * 0.5, y + height + 8, width * 0.2, x + width * 0.5, y + height + 8, width * 0.8);
     g.addColorStop(0, 'rgba(0,0,0,0.22)');
     g.addColorStop(1, 'rgba(0,0,0,0)');
@@ -390,20 +426,20 @@ export class Renderer {
   }
 
   #clipTankWater(ctx) {
-    const { x, y, width, height } = this.tankRect;
+    const { offsetX: x, offsetY: y, viewWidth: width, viewHeight: height } = this.camera;
     ctx.beginPath();
     ctx.rect(x, y, width, height);
     ctx.clip();
   }
 
   #drawCachedBackground(ctx) {
-    const { x, y } = this.tankRect;
-    ctx.drawImage(this.backgroundCanvas, x, y);
+    const { offsetX, offsetY } = this.camera;
+    ctx.drawImage(this.backgroundCanvas, offsetX, offsetY);
   }
 
 
   #drawPollutionTint(ctx) {
-    const { x, y, width, height } = this.tankRect;
+    const { offsetX: x, offsetY: y, viewWidth: width, viewHeight: height } = this.camera;
     const dirt01 = Math.max(0, Math.min(1, this.world.water?.dirt01 ?? 0));
     if (dirt01 <= 0.001) return;
 
@@ -452,7 +488,7 @@ export class Renderer {
   #drawWaterParticles(ctx, delta) {
     if (this.quality === 'low') return;
 
-    const { x, y, width, height } = this.tankRect;
+    const { offsetX: x, offsetY: y, viewWidth: width, viewHeight: height } = this.camera;
     for (const p of this.waterParticles) {
       p.y -= p.speed * delta;
       if (p.y < y - 4 || p.x < x || p.x > x + width) {
@@ -468,18 +504,17 @@ export class Renderer {
   }
 
   #drawBubbles(ctx) {
-    const sx = this.tankRect.width / this.world.bounds.width;
-    const sy = this.tankRect.height / this.world.bounds.height;
+    const { scale: worldScale, offsetX, offsetY } = this.camera;
 
     for (const b of this.world.bubbles) {
-      const bx = this.tankRect.x + b.x * sx;
-      const by = this.tankRect.y + b.y * sy;
+      const bx = offsetX + b.x * worldScale;
+      const by = offsetY + b.y * worldScale;
 
       ctx.beginPath();
       ctx.strokeStyle = 'rgba(196,236,255,0.38)';
       ctx.fillStyle = 'rgba(175,220,248,0.1)';
       ctx.lineWidth = 1;
-      ctx.arc(bx, by, b.radius, 0, TAU);
+      ctx.arc(bx, by, b.radius * worldScale, 0, TAU);
       ctx.fill();
       ctx.stroke();
     }
@@ -490,16 +525,15 @@ export class Renderer {
     const water = this.world.water;
     if (!water?.filterInstalled) return null;
 
-    const sx = this.tankRect.width / this.world.bounds.width;
-    const sy = this.tankRect.height / this.world.bounds.height;
+    const { scale: worldScale, offsetX, offsetY, viewWidth, viewHeight } = this.camera;
     const tier = Math.max(1, Math.min(3, Math.floor(water.filterTier ?? 1)));
-    const width = Math.max(16, 28 * sx);
+    const width = Math.max(16, 28 * worldScale);
     const tierHeightScale = 1 + (tier - 1) * 0.1;
-    const height = Math.max(26, 52 * sy * tierHeightScale);
+    const height = Math.max(26, 52 * worldScale * tierHeightScale);
 
     return {
-      x: this.tankRect.x + this.tankRect.width - width - 10,
-      y: this.tankRect.y + this.tankRect.height - height - 10,
+      x: offsetX + viewWidth - width - 10,
+      y: offsetY + viewHeight - height - 10,
       width,
       height
     };
@@ -573,13 +607,12 @@ export class Renderer {
   }
 
   #drawFood(ctx) {
-    const sx = this.tankRect.width / this.world.bounds.width;
-    const sy = this.tankRect.height / this.world.bounds.height;
+    const { scale: worldScale, offsetX, offsetY } = this.camera;
 
     for (const item of this.world.food) {
-      const x = this.tankRect.x + item.x * sx;
-      const y = this.tankRect.y + item.y * sy;
-      const radius = 1.4 + item.amount * 1.1;
+      const x = offsetX + item.x * worldScale;
+      const y = offsetY + item.y * worldScale;
+      const radius = (1.4 + item.amount * 1.1) * worldScale;
 
       ctx.beginPath();
       ctx.fillStyle = 'rgba(146, 228, 148, 0.95)';
@@ -595,12 +628,11 @@ export class Renderer {
 
 
   #drawPoop(ctx) {
-    const sx = this.tankRect.width / this.world.bounds.width;
-    const sy = this.tankRect.height / this.world.bounds.height;
+    const { scale: worldScale, offsetX, offsetY } = this.camera;
 
     for (const item of this.world.poop ?? []) {
-      const x = this.tankRect.x + item.x * sx;
-      const y = this.tankRect.y + item.y * sy;
+      const x = offsetX + item.x * worldScale;
+      const y = offsetY + item.y * worldScale;
       const maxTtl = Math.max(1, Number.isFinite(item.maxTtlSec) ? item.maxTtlSec : 120);
       const ttlSec = Math.max(0, Number.isFinite(item.ttlSec) ? item.ttlSec : maxTtl);
       const life01 = Math.max(0, Math.min(1, ttlSec / maxTtl));
@@ -608,25 +640,24 @@ export class Renderer {
 
       ctx.beginPath();
       ctx.fillStyle = `rgba(116, 73, 44, ${alpha})`;
-      ctx.ellipse(x, y, 3.4, 2.1, 0.2, 0, TAU);
+      ctx.ellipse(x, y, 3.4 * worldScale, 2.1 * worldScale, 0.2, 0, TAU);
       ctx.fill();
 
       ctx.beginPath();
       ctx.fillStyle = `rgba(154, 109, 72, ${alpha * 0.5})`;
-      ctx.ellipse(x - 0.8, y - 0.5, 1.3, 0.9, 0.2, 0, TAU);
+      ctx.ellipse(x - 0.8 * worldScale, y - 0.5 * worldScale, 1.3 * worldScale, 0.9 * worldScale, 0.2, 0, TAU);
       ctx.fill();
     }
   }
 
 
   #drawEggs(ctx) {
-    const sx = this.tankRect.width / this.world.bounds.width;
-    const sy = this.tankRect.height / this.world.bounds.height;
+    const { scale: worldScale, offsetX, offsetY } = this.camera;
 
     for (const egg of this.world.eggs ?? []) {
-      const x = this.tankRect.x + egg.x * sx;
-      const y = this.tankRect.y + egg.y * sy;
-      const r = 2.2;
+      const x = offsetX + egg.x * worldScale;
+      const y = offsetY + egg.y * worldScale;
+      const r = 2.2 * worldScale;
 
       ctx.beginPath();
       ctx.fillStyle = 'rgba(245, 243, 233, 0.95)';
@@ -641,50 +672,48 @@ export class Renderer {
   }
 
   #drawFxParticles(ctx) {
-    const sx = this.tankRect.width / this.world.bounds.width;
-    const sy = this.tankRect.height / this.world.bounds.height;
+    const { scale: worldScale, offsetX, offsetY } = this.camera;
 
     for (const p of this.world.fxParticles ?? []) {
       if (p.kind !== 'MATING_BUBBLE') continue;
       const life01 = Math.max(0, Math.min(1, p.ttlSec / Math.max(0.001, p.lifeSec ?? 0.8)));
       const alpha = 0.65 * life01;
-      const x = this.tankRect.x + p.x * sx;
-      const y = this.tankRect.y + p.y * sy;
+      const x = offsetX + p.x * worldScale;
+      const y = offsetY + p.y * worldScale;
 
       ctx.beginPath();
       ctx.fillStyle = `rgba(221, 246, 255, ${alpha})`;
-      ctx.arc(x, y, p.radius, 0, TAU);
+      ctx.arc(x, y, p.radius * worldScale, 0, TAU);
       ctx.fill();
     }
   }
 
   #drawFishSchool(ctx, time) {
-    const sx = this.tankRect.width / this.world.bounds.width;
-    const sy = this.tankRect.height / this.world.bounds.height;
+    const { scale: worldScale, offsetX, offsetY } = this.camera;
 
     for (const fish of this.world.fish) {
       const pos = {
-        x: this.tankRect.x + fish.position.x * sx,
-        y: this.tankRect.y + fish.position.y * sy
+        x: offsetX + fish.position.x * worldScale,
+        y: offsetY + fish.position.y * worldScale
       };
-      this.#drawFish(ctx, fish, pos, time);
+      this.#drawFish(ctx, fish, pos, time, worldScale);
     }
   }
 
-  #drawFish(ctx, fish, position, time) {
+  #drawFish(ctx, fish, position, time, worldScale) {
     const orientation = fish.heading();
     const rp = typeof fish.getRenderParams === 'function'
       ? fish.getRenderParams()
       : { radius: fish.size, bodyLength: fish.size * 1.32, bodyHeight: fish.size * 0.73, tailWagAmp: fish.size * 0.13, eyeScale: 1, saturationMult: 1, lightnessMult: 1 };
 
     const pregnancySwell = fish.pregnancySwell01?.(this.world.simTimeSec) ?? 0;
-    const bodyLength = rp.bodyLength * (1 + pregnancySwell * 0.35);
-    const bodyHeight = rp.bodyHeight * (1 + pregnancySwell);
+    const bodyLength = rp.bodyLength * (1 + pregnancySwell * 0.35) * worldScale;
+    const bodyHeight = rp.bodyHeight * (1 + pregnancySwell) * worldScale;
     const isDead = fish.lifeState === 'DEAD';
     const isSkeleton = fish.lifeState === 'SKELETON';
     const isHovering = Boolean(fish.isHovering?.(this.world.simTimeSec));
     const tailWagScale = isHovering ? 0.18 : 1;
-    const tailWag = isDead || isSkeleton ? 0 : Math.sin(time * 0.004 + position.x * 0.008) * rp.tailWagAmp * tailWagScale;
+    const tailWag = isDead || isSkeleton ? 0 : Math.sin(time * 0.004 + position.x * 0.008) * rp.tailWagAmp * tailWagScale * worldScale;
     const tint = Math.sin((fish.colorHue + rp.radius) * 0.14) * 3;
 
     const baseLight = 54 + Math.sin(rp.radius * 0.33) * 4;
@@ -773,17 +802,17 @@ export class Renderer {
     if (!isSkeleton) {
       ctx.fillStyle = 'rgba(255,255,255,0.7)';
       ctx.beginPath();
-      ctx.arc(bodyLength * 0.22, -bodyHeight * 0.12, rp.radius * 0.07 * (rp.eyeScale ?? 1), 0, TAU);
+      ctx.arc(bodyLength * 0.22, -bodyHeight * 0.12, rp.radius * 0.07 * (rp.eyeScale ?? 1) * worldScale, 0, TAU);
       ctx.fill();
 
       ctx.fillStyle = isDead ? '#47515a' : '#0c1f2f';
       ctx.beginPath();
-      ctx.arc(bodyLength * 0.24, -bodyHeight * 0.12, rp.radius * 0.034 * (rp.eyeScale ?? 1), 0, TAU);
+      ctx.arc(bodyLength * 0.24, -bodyHeight * 0.12, rp.radius * 0.034 * (rp.eyeScale ?? 1) * worldScale, 0, TAU);
       ctx.fill();
     }
 
     const mouthOpen = isSkeleton ? 0 : (fish.mouthOpen01?.() ?? 0);
-    const mouthSize = rp.radius * 0.05 + mouthOpen * rp.radius * 0.055;
+    const mouthSize = (rp.radius * 0.05 + mouthOpen * rp.radius * 0.055) * worldScale;
     const mouthX = bodyLength * 0.49;
 
     ctx.fillStyle = 'rgba(18, 28, 34, 0.8)';
@@ -820,13 +849,13 @@ export class Renderer {
   }
 
   #drawCachedVignette(ctx) {
-    const { x, y } = this.tankRect;
-    ctx.drawImage(this.vignetteCanvas, x, y);
+    const { offsetX, offsetY } = this.camera;
+    ctx.drawImage(this.vignetteCanvas, offsetX, offsetY);
   }
 
 
   #drawDebugBounds(ctx) {
-    const { x, y, width, height } = this.tankRect;
+    const { offsetX: x, offsetY: y, viewWidth: width, viewHeight: height, scale } = this.camera;
 
     ctx.save();
     ctx.strokeStyle = 'rgba(255, 209, 102, 0.9)';
@@ -837,15 +866,12 @@ export class Renderer {
     const sampleFish = this.world.fish[0];
     if (sampleFish && typeof sampleFish.debugMovementBounds === 'function') {
       const bounds = sampleFish.debugMovementBounds();
-      const sx = width / this.world.bounds.width;
-      const sy = height / this.world.bounds.height;
-
       ctx.strokeStyle = 'rgba(123, 255, 182, 0.9)';
       ctx.strokeRect(
-        x + bounds.x * sx + 0.5,
-        y + bounds.y * sy + 0.5,
-        Math.max(0, bounds.width * sx - 1),
-        Math.max(0, bounds.height * sy - 1)
+        x + bounds.x * scale + 0.5,
+        y + bounds.y * scale + 0.5,
+        Math.max(0, bounds.width * scale - 1),
+        Math.max(0, bounds.height * scale - 1)
       );
     }
 
@@ -854,7 +880,7 @@ export class Renderer {
   }
 
   #drawTankFrame(ctx) {
-    const { x, y, width, height } = this.tankRect;
+    const { offsetX: x, offsetY: y, viewWidth: width, viewHeight: height } = this.camera;
 
     ctx.strokeStyle = 'rgba(224, 241, 255, 0.31)';
     ctx.lineWidth = 1.3;

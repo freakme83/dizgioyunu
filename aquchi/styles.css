@@ -280,6 +280,7 @@ body.cinema-mode .tank-shell {
   --tank-height: clamp(460px, 82vh, 790px);
   --tank-max-width: 1274px;
   min-height: 100vh;
+  min-height: 100dvh;
   padding: clamp(20px, 3.5vw, 48px);
   display: grid;
   grid-template-columns: minmax(0, 1fr) 288px;
@@ -431,31 +432,47 @@ input[type='range'] {
 
 @media (max-width: 860px) {
   .page-layout {
+    --controls-dock-height: 58px;
+  }
+
+  .page-layout {
     grid-template-columns: 1fr;
     align-items: start;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-bottom: calc(var(--controls-dock-height) + env(safe-area-inset-bottom, 0px) + 10px);
   }
 
   .tank-stage,
   .tank-shell {
     width: 100%;
-    height: min(72vh, 700px);
+    height: calc(100vh - var(--controls-dock-height) - 24px);
+    height: calc(100dvh - var(--controls-dock-height) - 24px);
     min-height: 360px;
   }
 
   .deck-toggle {
     display: block;
     position: fixed;
-    right: 18px;
-    bottom: 18px;
-    width: auto;
-    padding: 9px 12px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+    min-height: var(--controls-dock-height);
+    background: rgba(9, 21, 33, 0.95);
+    backdrop-filter: blur(6px);
     z-index: 20;
   }
 
   .ui-deck {
     position: fixed;
     right: 14px;
-    bottom: 64px;
+    bottom: calc(var(--controls-dock-height) + env(safe-area-inset-bottom, 0px) + 8px);
     top: auto;
     width: min(320px, calc(100vw - 28px));
     height: auto;
