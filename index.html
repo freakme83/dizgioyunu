@@ -6,72 +6,148 @@
   <title>Obi Game Studios — Dizgi & Aquchi</title>
   <meta name="description" content="Minimal browser games: Dizgi and Aquchi." />
 
+  <!-- FAVICONS -->
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+
+  <!-- Premium Minimal Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@450;600;750&display=swap" rel="stylesheet">
+
   <style>
     :root{
       --bg:#ffffff;
       --text:#0b0d10;
       --muted:#5b6675;
-      --card:#ffffff;
       --line:rgba(16,24,40,.12);
-      --shadow: 0 10px 30px rgba(16,24,40,.10);
-      --shadow2: 0 6px 16px rgba(16,24,40,.08);
+      --shadow: 0 6px 16px rgba(16,24,40,.08);
       --max: 1020px;
-
-      --accent:#111111;
-      --chip: rgba(16,24,40,.06);
     }
 
     *{box-sizing:border-box}
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui;
+      background:var(--bg);
       color:var(--text);
       line-height:1.45;
+      -webkit-font-smoothing: antialiased;
     }
 
-    a{color:inherit; text-decoration:none}
-    .wrap{max-width:var(--max); margin:0 auto; padding:50px 20px 70px}
+    a{text-decoration:none; color:inherit}
 
-    header{padding-bottom:24px}
+    .wrap{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:50px 20px 70px;
+    }
+
+    header{
+      padding-bottom:30px;
+    }
+
+    .brandRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
     .brand{
-      display:flex; align-items:center; gap:10px;
-      font-weight:720;
-      letter-spacing:.2px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-weight:750;
       font-size:18px;
+      letter-spacing:-.2px;
+    }
+
+    .brandLogo{
+      width:28px;
+      height:28px;
+      object-fit:contain;
+    }
+
+    .topActions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .smallLink{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size:14px;
+      padding:8px 12px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#fff;
+      color:var(--muted);
+    }
+
+    .smallLink:hover{
+      box-shadow:var(--shadow);
+      color:var(--text);
     }
 
     h1{
-      margin:24px 0 0;
-      font-size: clamp(30px, 4vw, 44px);
-      letter-spacing:-.7px;
+      margin:24px 0 10px;
+      font-size:clamp(30px,4vw,44px);
+      font-weight:750;
+      letter-spacing:-.9px;
       line-height:1.05;
+    }
+
+    .subtitle{
+      margin:0;
+      color:var(--muted);
+      font-size:15px;
     }
 
     .grid{
       display:grid;
-      grid-template-columns: 1fr;
-      gap:20px;
+      grid-template-columns:1fr;
+      gap:22px;
       margin-top:40px;
     }
-    @media(min-width:900px){ .grid{grid-template-columns:1fr 1fr} }
+
+    @media(min-width:900px){
+      .grid{grid-template-columns:1fr 1fr}
+    }
 
     .card{
-      background: var(--card);
       border:1px solid var(--line);
       border-radius:22px;
       overflow:hidden;
-      box-shadow: var(--shadow2);
+      background:#fff;
+      box-shadow:var(--shadow);
       display:flex;
       flex-direction:column;
+      transition:transform .15s ease;
+    }
+
+    .card:hover{
+      transform:translateY(-3px);
     }
 
     .shot{
-      background:#f3f5f8;
-      aspect-ratio: 16 / 9;
+      aspect-ratio:16/9;
       overflow:hidden;
       border-bottom:1px solid var(--line);
     }
+
+    .shot a{
+      display:block;
+      width:100%;
+      height:100%;
+    }
+
     .shot img{
       width:100%;
       height:100%;
@@ -79,30 +155,35 @@
       display:block;
     }
 
-    .content{padding:18px; display:flex; flex-direction:column; gap:10px}
-    h2{margin:0; font-size:20px}
-
-    .desc{margin:0; color:var(--muted); font-size:14.5px}
-
-    .actions{
+    .content{
+      padding:18px;
       display:flex;
+      flex-direction:column;
       gap:10px;
-      margin-top:14px;
+    }
+
+    h2{
+      margin:0;
+      font-size:20px;
+      font-weight:750;
+    }
+
+    .desc{
+      margin:0;
+      color:var(--muted);
+      font-size:14.5px;
     }
 
     .btn{
+      margin-top:12px;
+      align-self:flex-start;
       padding:10px 14px;
       border-radius:14px;
-      font-weight:680;
+      font-weight:600;
       border:1px solid var(--line);
-      background:#fff;
-    }
-    .btn.primary{
-      background: var(--text);
+      background:var(--text);
       color:#fff;
-      border-color: transparent;
     }
-    .btn:hover{box-shadow: var(--shadow2)}
 
     hr{
       border:0;
@@ -110,101 +191,119 @@
       margin:50px 0 30px;
     }
 
-    .studio{
-      display:grid;
-      gap:10px;
-      max-width: 800px;
+    .studio h3{
+      margin:0;
+      font-size:16px;
+      font-weight:750;
     }
 
-    .studio h3{margin:0; font-size:16px}
-    .studio p{margin:0; color:var(--muted); font-size:14.5px}
+    .studio p{
+      margin:8px 0 0;
+      color:var(--muted);
+      font-size:14.5px;
+    }
 
     .footerRow{
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:12px;
       flex-wrap:wrap;
-      margin-top:20px;
+      gap:14px;
+      margin-top:18px;
     }
 
-    .smallLink{
-      font-size:14px;
-      padding:8px 12px;
-      border:1px solid var(--line);
-      border-radius:12px;
-      background:#fff;
+    .icon{
+      width:16px;
+      height:16px;
     }
-    .smallLink:hover{box-shadow: var(--shadow2)}
   </style>
 </head>
 
 <body>
-  <div class="wrap">
+<div class="wrap">
 
-    <header>
-      <div class="brand">
-        Obi Game Studios
-      </div>
+<header>
+  <div class="brandRow">
+    <div class="brand">
+      <img src="/favicon-32x32.png" class="brandLogo" alt="Obi Game Studios">
+      <span>Obi Game Studios</span>
+    </div>
 
-      <h1>Minimal browser games.</h1>
-    </header>
+    <div class="topActions">
+      <a class="smallLink" href="https://x.com/DizgiOyunu" target="_blank">
+        <svg class="icon" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M18.9 2H22l-6.8 7.8L23 22h-6.2l-4.9-6.4L6 22H3l7.3-8.4L1 2h6.3l4.5 5.9L18.9 2z"/>
+        </svg>
+        X
+      </a>
 
-    <section class="grid">
-
-      <!-- DIZGI -->
-      <article class="card">
-        <div class="shot">
-          <img src="/images/dizgi-shot.jpg" alt="Dizgi screenshot" loading="lazy" />
-        </div>
-
-        <div class="content">
-          <h2>Dizgi</h2>
-          <p class="desc">A fast Turkish word puzzle focused on speed and pattern recognition.</p>
-
-          <div class="actions">
-            <a class="btn primary" href="/dizgi/">Play</a>
-          </div>
-        </div>
-      </article>
-
-      <!-- AQUCHI -->
-      <article class="card">
-        <div class="shot">
-          <img src="/images/aquchi-shot.jpg" alt="Aquchi screenshot" loading="lazy" />
-        </div>
-
-        <div class="content">
-          <h2>Aquchi</h2>
-          <p class="desc">A micro-ecosystem aquarium simulation built around emergent behavior.</p>
-
-          <div class="actions">
-            <a class="btn primary" href="/aquchi/">Play</a>
-          </div>
-        </div>
-      </article>
-
-    </section>
-
-    <hr />
-
-    <section class="studio">
-      <h3>About</h3>
-      <p>
-        Obi Game Studios builds small, system-driven browser games with a clean and focused interface.
-      </p>
-
-      <div class="footerRow">
-        <a class="btn primary" href="https://buymeacoffee.com/dizgioyunu" target="_blank" rel="noopener">
-          ☕ Buy me a coffee
-        </a>
-
-        <a class="smallLink" href="https://x.com/DizgiOyunu" target="_blank" rel="noopener">
-          X / Twitter
-        </a>
-      </div>
-    </section>
-
+      <a class="smallLink" href="mailto:dizgi.oyunu@gmail.com">
+        <svg class="icon" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5L4 8V6l8 5 8-5v2z"/>
+        </svg>
+        Contact
+      </a>
+    </div>
   </div>
+
+  <h1>Minimal browser games.</h1>
+  <p class="subtitle">Clean UI. System-driven design.</p>
+</header>
+
+<section class="grid">
+
+  <!-- DIZGI -->
+  <article class="card">
+    <div class="shot">
+      <a href="/dizgi/">
+        <img src="/images/dizgi-shot.jpg" alt="Dizgi screenshot">
+      </a>
+    </div>
+    <div class="content">
+      <h2>Dizgi</h2>
+      <p class="desc">A fast Turkish word puzzle.</p>
+      <a class="btn" href="/dizgi/">Play</a>
+    </div>
+  </article>
+
+  <!-- AQUCHI -->
+  <article class="card">
+    <div class="shot">
+      <a href="/aquchi/">
+        <img src="/images/aquchi-shot.jpg" alt="Aquchi screenshot">
+      </a>
+    </div>
+    <div class="content">
+      <h2>Aquchi</h2>
+      <p class="desc">A micro-ecosystem aquarium simulation.</p>
+      <a class="btn" href="/aquchi/">Play</a>
+    </div>
+  </article>
+
+</section>
+
+<hr>
+
+<section class="studio">
+  <h3>About</h3>
+  <p>
+    Obi Game Studios builds small, focused browser games with minimal and precise design.
+  </p>
+
+  <div class="footerRow">
+    <a class="btn" href="https://buymeacoffee.com/dizgioyunu" target="_blank">
+      ☕ Buy me a coffee
+    </a>
+
+    <a class="smallLink" href="mailto:dizgi.oyunu@gmail.com">
+      <svg class="icon" viewBox="0 0 24 24">
+        <path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5L4 8V6l8 5 8-5v2z"/>
+      </svg>
+      dizgi.oyunu@gmail.com
+    </a>
+  </div>
+</section>
+
+</div>
 </body>
 </html>
