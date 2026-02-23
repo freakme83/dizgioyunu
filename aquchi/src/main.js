@@ -521,7 +521,9 @@ function showFilterToast(textValue) {
 }
 
 function speciesLabel(speciesId) {
-  return speciesId === 'AZURE_DART' ? 'Azure Dart' : 'Lab Minnow';
+  if (speciesId === 'AZURE_DART') return 'Azure Dart';
+  if (speciesId === 'SILT_SIFTER') return 'Silt Sifter';
+  return 'Lab Minnow';
 }
 
 function fishDisplayName(fish) {
@@ -681,7 +683,8 @@ function refreshDevModeUI() {
   if (!panel) return;
   panel.sync({
     speedMultiplier: world?.speedMultiplier ?? 1,
-    paused: world?.paused ?? false
+    paused: world?.paused ?? false,
+    speedCap: world?.getAvailableSimSpeedMultiplierCap?.() ?? 1
   });
 }
 
@@ -828,6 +831,8 @@ function tick(now) {
   if (ecosystemFailed) return;
   renderer.render(now, renderDelta);
 
+  const speedUnlockState = world.getSpeedUnlockState?.() ?? { speedCap: world.getAvailableSimSpeedMultiplierCap?.() ?? 1, pendingUnlocks: [] };
+
   panel.updateStats({
     simTimeSec: world.simTimeSec,
     fishCount: world.fish.length,
@@ -843,6 +848,7 @@ function tick(now) {
     filterNextTierUnlockFeeds: world.getFilterTierUnlockFeeds?.((world.water.filterTier ?? 0) + 1) ?? 0,
     foodsNeededForNextTier: Math.max(0, (world.getFilterTierUnlockFeeds?.((world.water.filterTier ?? 0) + 1) ?? 0) - world.foodsConsumedCount),
     installProgress01: world.water.installProgress01,
+    upgradeProgress01: world.water.upgradeProgress01,
     maintenanceProgress01: world.water.maintenanceProgress01,
     maintenanceCooldownSec: world.water.maintenanceCooldownSec,
     filterDepletedThreshold01: world.filterDepletedThreshold01,
@@ -852,7 +858,12 @@ function tick(now) {
     canAddBerryReed: world.canAddBerryReedPlant?.() ?? false,
     berryReedPlantCount: world.berryReedPlants?.length ?? 0,
     canAddAzureDart: world.canAddAzureDart?.() ?? false,
-    azureDartCount: world.getAzureDartCount?.() ?? 0
+    azureDartCount: world.getAzureDartCount?.() ?? 0,
+    canAddSiltSifter: world.canAddSiltSifter?.() ?? false,
+    siltSifterCount: world.getSiltSifterCount?.() ?? 0,
+    siltSifterUnlockBirths: 10,
+    simSpeedCap: speedUnlockState.speedCap,
+    simSpeedPendingUnlocks: speedUnlockState.pendingUnlocks
   });
   panel.updateFishInspector(world.getFishInspectorList?.() ?? world.fish, world.selectedFishId, world.simTimeSec);
   updateCorpseActionButton();
@@ -1067,6 +1078,7 @@ function startSimulation({ savedPayload = null } = {}) {
       return result;
     },
     onAddAzureDart: () => world.addAzureDartSchool?.(),
+    onAddSiltSifter: () => world.addSiltSifterSchool?.(),
     onGrantUnlockPrereqs: () => world.grantAllUnlockPrerequisites?.(),
     onRestartConfirm: () => restartToStartScreen()
   };
@@ -1106,7 +1118,8 @@ function startSimulation({ savedPayload = null } = {}) {
 
   panel.sync({
     speedMultiplier: world.speedMultiplier,
-    paused: world.paused
+    paused: world.paused,
+    speedCap: world.getAvailableSimSpeedMultiplierCap?.() ?? 1
   });
 
   resize();

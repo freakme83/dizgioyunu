@@ -285,6 +285,47 @@ export const SPECIES = Object.freeze({
     bioloadFactor: 0.35,
     poopBioloadFactor: 0.25,
     renderStyle: 'AZURE_DART'
+  }),
+  SILT_SIFTER: Object.freeze({
+    id: 'SILT_SIFTER',
+    displayName: 'Silt Sifter',
+    diet: ['poop', 'pellet_when_starving'],
+    adultSizeScale: 0.86,
+    speedScale: 0.84,
+    lifespanScale: 1.3,
+    reproductionScale: 1.3,
+    clutchSizes: [1, 3],
+    clutchWeights: [0.45, 0.45, 0.1],
+    schooling: Object.freeze({
+      enabled: false,
+      biasMin: 0,
+      biasMax: 0,
+      soloWindowSec: [0, 0],
+      soloCooldownSec: [0, 0],
+      cohesion: 0,
+      separation: 0,
+      alignment: 0,
+      neighborRadius: 0,
+      separationRadius: 0,
+      maxInfluence: 0
+    }),
+    turnRateScale: 1.05,
+    desiredTurnRateScale: 0.94,
+    bioloadFactor: 0.92,
+    poopBioloadFactor: 0,
+    poopEnabled: false,
+    bottomDweller: Object.freeze({
+      preferredBandStart01: 0.75,
+      preferredBandEnd01: 1,
+      steerBiasStrength: 1.9,
+      scanStepXMinPx: 35,
+      scanStepXMaxPx: 125,
+      scanJitterYMaxPx: 18,
+      probeChancePerRetarget: 0.24,
+      probeDepthMinPx: 3,
+      probeDepthMaxPx: 14
+    }),
+    renderStyle: 'SILT_SIFTER'
   })
 });
 
