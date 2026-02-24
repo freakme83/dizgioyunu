@@ -398,6 +398,23 @@ h2 {
   color: var(--text-main);
 }
 
+.stat-row--eggs {
+  color: #2ecc71;
+}
+
+
+
+.control-group.is-dim {
+  opacity: 0.58;
+}
+
+.control-hint {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.76rem;
+  line-height: 1.3;
+}
+
 
 .control-group.is-dim {
   opacity: 0.58;
@@ -560,6 +577,11 @@ input[type='range'] {
   border-color: rgba(140, 220, 255, 0.82);
   background: rgba(56, 117, 167, 0.35);
 }
+
+.fish-row__name--pregnant {
+  color: #2ecc71;
+}
+
 
 .fish-detail {
   border-top: 1px solid var(--deck-border);

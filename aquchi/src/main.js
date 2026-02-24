@@ -526,6 +526,19 @@ function speciesLabel(speciesId) {
   return 'Lab Minnow';
 }
 
+function summarizeEggsBySpecies() {
+  if (!world) return [];
+  const counts = new Map();
+  for (const egg of world.eggs ?? []) {
+    const speciesId = egg?.speciesId ?? 'LAB_MINNOW';
+    counts.set(speciesId, (counts.get(speciesId) ?? 0) + 1);
+  }
+
+  return [...counts.entries()]
+    .map(([speciesId, count]) => ({ speciesLabel: speciesLabel(speciesId), count }))
+    .sort((a, b) => a.speciesLabel.localeCompare(b.speciesLabel));
+}
+
 function fishDisplayName(fish) {
   if (!fish) return 'Unknown fish';
   const name = String(fish.name ?? '').trim() || `Fish #${fish.id}`;
@@ -863,7 +876,15 @@ function tick(now) {
     siltSifterCount: world.getSiltSifterCount?.() ?? 0,
     siltSifterUnlockBirths: 10,
     simSpeedCap: speedUnlockState.speedCap,
-    simSpeedPendingUnlocks: speedUnlockState.pendingUnlocks
+    simSpeedPendingUnlocks: speedUnlockState.pendingUnlocks,
+    eggsBySpecies: summarizeEggsBySpecies(),
+    waterDebug: {
+      hygiene01: world.water?.hygiene01,
+      dirt01: world.water?.dirt01,
+      filter01: world.water?.filter01,
+      effectiveFilter01: world.water?.effectiveFilter01,
+      filterEnabled: world.water?.filterEnabled
+    }
   });
   panel.updateFishInspector(world.getFishInspectorList?.() ?? world.fish, world.selectedFishId, world.simTimeSec);
   updateCorpseActionButton();

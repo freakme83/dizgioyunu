@@ -1108,6 +1108,8 @@ export class World {
   discardFish(fishId) {
     const index = this.fish.findIndex((entry) => entry.id === fishId && entry.lifeState !== 'ALIVE');
     if (index < 0) return false;
+    const fish = this.fish[index];
+    fish.corpseRemoved = true;
     this.fish.splice(index, 1);
     this.#unregisterFishById(fishId);
     return true;
