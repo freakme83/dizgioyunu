@@ -976,11 +976,14 @@ body{
         <span class="text-white font-bold">Kolay modda:</span> 7–8 harfli kelimeler <span class="text-white font-bold">+25</span> puan, 9 harfli kelimeler <span class="text-white font-bold">+40</span> puan.
       </p>
 
-      <p><span class="text-white font-bold">Serbest çevirme bonusu:</span> Kolay modda 4 harfli kelime ve üstü cezasız yeniden çevirme hakkı verir. “Tekrar çevir” çubuğu bu durumda yeşil yanar.</p>
+      <p><span class="text-white font-bold">Serbest çevirme bonusu:</span> Klasik modda 4–5 harfli kelime <span class="text-white font-bold">+1</span>, 6 harf ve üstü kelime <span class="text-white font-bold">+2</span> cezasız yeniden çevirme hakkı verir. “Tekrar çevir” çubuğu bu durumda yeşil yanar.</p>
 
-      <p><span class="text-white font-bold">Süre bonusu:</span> Klasik modda 4 harfli kelime ve üstü, kolay modda 5 harfli kelime ve üstü; kelimenin uzunluğuna bağlı olarak ek süre kazandırır.</p>
+      <p><span class="text-white font-bold">Süre bonusu:</span><br>
+        <span class="text-white font-bold">Klasik modda:</span> 4 harf <span class="text-white font-bold">+4 sn</span>, 5 harf <span class="text-white font-bold">+8 sn</span>, 6 harf <span class="text-white font-bold">+15 sn</span>, 7–9 harf <span class="text-white font-bold">+20 sn</span>.<br>
+        <span class="text-white font-bold">Kolay modda:</span> 3–4 harf <span class="text-white font-bold">+0 sn</span>, 5 harf <span class="text-white font-bold">+4 sn</span>, 6 harf <span class="text-white font-bold">+8 sn</span>, 7–9 harf <span class="text-white font-bold">+14 sn</span>.
+      </p>
 
-      <p><span class="text-white font-bold">Joker:</span> Klasik modda 5 harfli kelime ve üstü “joker” kazandırır. Harflerde yeşil bir parıltı olması jokeriniz olduğu anlamına gelir. Bu durumda harf setindeki bir harfi fazladan bir kez daha kullanma hakkınız vardır.</p>
+      <p><span class="text-white font-bold">Joker:</span> Klasik modda 5–6 harfli kelime <span class="text-white font-bold">+1</span>, 7 harf ve üstü kelime <span class="text-white font-bold">+2</span> joker kazandırır. Harflerde yeşil bir parıltı olması jokeriniz olduğu anlamına gelir. Bu durumda harf setindeki bir harfi fazladan bir kez daha kullanma hakkınız vardır.</p>
     </div>
   </div>
 </div>
@@ -2030,17 +2033,17 @@ function awardTimeOnly(len) {
         timeBonus = (gameMode === "easy") ? 0 : 4;
         if (gameMode === "classic") passBonus = 1;
     } else if (len === 5) {
-        timeBonus = 8;
+        timeBonus = (gameMode === "easy") ? 4 : 8;
         if (gameMode === "classic") { passBonus = 1; jokerBonus = 1; }
     } else if (len === 6) {
-        timeBonus = 15;
+        timeBonus = (gameMode === "easy") ? 8 : 15;
         if (gameMode === "classic") { passBonus = 2; jokerBonus = 1; }
     } else if (len === 7 || len === 8) {
-        timeBonus = 20;
+        timeBonus = (gameMode === "easy") ? 14 : 20;
         extraPoints = 50;
         if (gameMode === "classic") { passBonus = 2; jokerBonus = 2; }
     } else if (len >= 9) {
-        timeBonus = 20;
+        timeBonus = (gameMode === "easy") ? 14 : 20;
         extraPoints = 100;
         if (gameMode === "classic") { passBonus = 2; jokerBonus = 2; }
     }
