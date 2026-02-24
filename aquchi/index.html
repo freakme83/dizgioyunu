@@ -4,16 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Aquchi</title>
-
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-GVVFCT9J5D"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-GVVFCT9J5D');
-    </script>
-
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
@@ -84,14 +74,16 @@
           <div class="stat-row"><span>Fish</span><strong data-stat="fishCount">0</strong></div>
           <div class="stat-row"><span>Cleanliness</span><strong data-stat="cleanliness">100%</strong></div>
           <div class="stat-row"><span>Water quality trend</span><strong data-stat="cleanlinessTrend">Stable</strong></div>
+          <div data-stat="eggsSummary"></div>
         </section>
 
         <section class="tab-content" data-content="controls" role="tabpanel">
           <h2>Controls</h2>
 
-          <label class="control-group">
+          <label class="control-group" data-sim-speed-group>
             <span>Simulation Speed: <strong data-value="simSpeed">1.0x</strong></span>
             <input type="range" min="0.5" max="3" value="1" step="0.1" data-control="simSpeed" />
+            <p class="control-hint" data-sim-speed-condition hidden></p>
           </label>
 
           <div class="button-row split">
@@ -115,7 +107,7 @@
               <div class="button-row"><button type="button" data-control="installFilter" hidden>Install water filter</button></div>
               <div class="button-row" data-filter-toggle-row hidden><button type="button" data-control="toggleFilterPower">On / Off</button></div>
               <div class="button-row"><button type="button" data-control="upgradeFilter" hidden>Upgrade filter ⚡</button></div>
-              <div class="button-row"><button type="button" data-control="maintainFilter" hidden>Maintain filter</button></div>
+              <div class="button-row"><button type="button" data-control="maintainFilter" hidden>Change filter</button></div>
             </div>
           </section>
 
@@ -138,6 +130,12 @@
               </div>
               <p class="filter-message" data-azure-req-berry>Requires: Berry Reed added</p>
               <p class="filter-message" data-azure-req-cleanliness>Requires: Cleanliness 80%+</p>
+
+              <div class="species-row" data-silt-sifter-row>
+                <button type="button" data-control="addSiltSifter">Silt Sifter</button>
+                <strong data-silt-sifter-state>Locked</strong>
+              </div>
+              <p class="filter-message" data-silt-sifter-req-births>Requires: 10 births (0/10)</p>
             </div>
           </section>
 

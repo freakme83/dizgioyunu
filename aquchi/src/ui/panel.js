@@ -13,6 +13,8 @@ export class Panel {
     this.currentInspectorSelectedFishId = null;
     this.currentInspectorDetailTab = 'info';
     this.currentInspectorSpeciesTab = 'LAB_MINNOW';
+    this.inspectorAzureUnlocked = false;
+    this.inspectorSiltUnlocked = false;
     this.lastInspectorSignature = null;
     this.lastObservedSelectedFishId = null;
     this.inspectorRenderThrottleMs = 200;
@@ -27,6 +29,11 @@ export class Panel {
     this.fishCountStat = this.root.querySelector('[data-stat="fishCount"]');
     this.cleanlinessStat = this.root.querySelector('[data-stat="cleanliness"]');
     this.cleanlinessTrendStat = this.root.querySelector('[data-stat="cleanlinessTrend"]');
+    this.eggsSummaryRoot = this.root.querySelector('[data-stat="eggsSummary"]');
+    this.statsPanel = this.root.querySelector('[data-content="stats"]');
+    this.devWaterStatsRoot = document.createElement('div');
+    this.devWaterStatsRoot.hidden = true;
+    this.statsPanel?.appendChild(this.devWaterStatsRoot);
     if (!this.cleanlinessTrendStat && this.cleanlinessStat?.closest('.stat-row')) {
       const row = document.createElement('div');
       row.className = 'stat-row';
@@ -75,6 +82,10 @@ export class Panel {
     this.azureDartReqBerry = this.root.querySelector('[data-azure-req-berry]');
     this.azureDartReqCleanliness = this.root.querySelector('[data-azure-req-cleanliness]');
     this.azureDartRow = this.root.querySelector('[data-azure-dart-row]');
+    this.addSiltSifterButton = this.root.querySelector('[data-control="addSiltSifter"]');
+    this.siltSifterState = this.root.querySelector('[data-silt-sifter-state]');
+    this.siltSifterReqBirths = this.root.querySelector('[data-silt-sifter-req-births]');
+    this.siltSifterRow = this.root.querySelector('[data-silt-sifter-row]');
 
     this.installFilterButton = this.root.querySelector('[data-control="installFilter"]');
     this.maintainFilterButton = this.root.querySelector('[data-control="maintainFilter"]');
@@ -86,6 +97,8 @@ export class Panel {
     this.upgradeFilterButton = this.root.querySelector('[data-control="upgradeFilter"]');
 
     this.speedValue = this.root.querySelector('[data-value="simSpeed"]');
+    this.simSpeedGroup = this.root.querySelector('[data-sim-speed-group]');
+    this.simSpeedCondition = this.root.querySelector('[data-sim-speed-condition]');
     this.fishInspector = this.root.querySelector('[data-fish-inspector]');
 
     this.devSection = document.createElement('section');
@@ -192,8 +205,8 @@ export class Panel {
       this.handlers.onAddAzureDart?.();
     });
 
-    this.addAzureDartButton?.addEventListener('click', () => {
-      this.handlers.onAddAzureDart?.();
+    this.addSiltSifterButton?.addEventListener('click', () => {
+      this.handlers.onAddSiltSifter?.();
     });
 
     this.grantUnlockPrereqsButton?.addEventListener('click', () => {
@@ -262,7 +275,8 @@ export class Panel {
     this.fishInspector.addEventListener('click', (event) => {
       const speciesTabButton = event.target.closest('[data-inspector-species-tab]');
       if (speciesTabButton) {
-        const nextSpecies = speciesTabButton.dataset.inspectorSpeciesTab === 'AZURE_DART' ? 'AZURE_DART' : 'LAB_MINNOW';
+        const tab = speciesTabButton.dataset.inspectorSpeciesTab;
+        const nextSpecies = tab === 'AZURE_DART' ? 'AZURE_DART' : (tab === 'SILT_SIFTER' ? 'SILT_SIFTER' : 'LAB_MINNOW');
         this.currentInspectorSpeciesTab = nextSpecies;
         this.currentInspectorSelectedFishId = null;
         this.handlers.onFishSelect?.(null);
@@ -294,23 +308,30 @@ export class Panel {
 
 
 
-  refreshSpeedControl() {
+  refreshSpeedControl(speedCap = getMaxSimSpeedMultiplier()) {
     if (!this.speedSlider) return;
-    this.speedSlider.max = String(getMaxSimSpeedMultiplier());
+    const normalizedCap = Math.max(1, Math.min(getMaxSimSpeedMultiplier(), Number(speedCap) || 1));
+    this.speedSlider.max = String(normalizedCap);
     const current = Number(this.speedSlider.value);
-    const clamped = Math.max(0.5, Math.min(getMaxSimSpeedMultiplier(), Number.isFinite(current) ? current : 1));
+    const clamped = Math.max(0.5, Math.min(normalizedCap, Number.isFinite(current) ? current : 1));
     this.speedSlider.value = String(clamped);
+    this.speedSlider.disabled = normalizedCap <= 1;
+    this.simSpeedGroup?.classList.toggle('is-dim', normalizedCap <= 1);
     if (this.speedValue) this.speedValue.textContent = `${clamped.toFixed(1)}x`;
   }
 
   updateDevSection() {
-    if (!this.devSection) return;
-    this.devSection.hidden = !isDevMode();
+    const devMode = isDevMode();
+    if (this.devSection) this.devSection.hidden = !devMode;
+    if (this.devWaterStatsRoot) {
+      this.devWaterStatsRoot.hidden = !devMode;
+      if (!devMode) this.devWaterStatsRoot.innerHTML = '';
+    }
   }
 
-  sync({ speedMultiplier, paused }) {
-    this.refreshSpeedControl();
-    const clampedSpeed = Math.max(0.5, Math.min(getMaxSimSpeedMultiplier(), Number(speedMultiplier) || 1));
+  sync({ speedMultiplier, paused, speedCap = getMaxSimSpeedMultiplier() }) {
+    this.refreshSpeedControl(speedCap);
+    const clampedSpeed = Math.max(0.5, Math.min(speedCap, Number(speedMultiplier) || 1));
     this.speedSlider.value = String(clampedSpeed);
     this.speedValue.textContent = `${clampedSpeed.toFixed(1)}x`;
     this.toggleButton.textContent = paused ? 'Resume' : 'Pause';
@@ -340,6 +361,7 @@ export class Panel {
     filterNextTierUnlockFeeds,
     foodsNeededForNextTier,
     installProgress01,
+    upgradeProgress01,
     maintenanceProgress01,
     maintenanceCooldownSec,
     filterDepletedThreshold01,
@@ -349,10 +371,17 @@ export class Panel {
     canAddBerryReed,
     berryReedPlantCount,
     canAddAzureDart,
-    azureDartCount
+    azureDartCount,
+    canAddSiltSifter,
+    siltSifterCount,
+    siltSifterUnlockBirths,
+    simSpeedCap,
+    simSpeedPendingUnlocks,
+    eggsBySpecies = [],
+    waterDebug = null
   }) {
     this.updateDevSection();
-    this.refreshSpeedControl();
+    this.refreshSpeedControl(simSpeedCap ?? getMaxSimSpeedMultiplier());
 
     if (this.simTimeStat) {
       const totalSec = Math.max(0, Math.floor(simTimeSec ?? 0));
@@ -360,6 +389,19 @@ export class Panel {
       const mm = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
       const ss = String(totalSec % 60).padStart(2, '0');
       this.simTimeStat.textContent = `${hh}:${mm}:${ss}`;
+    }
+
+    const pendingUnlocks = Array.isArray(simSpeedPendingUnlocks) ? simSpeedPendingUnlocks : [];
+    if (this.simSpeedCondition) {
+      if (pendingUnlocks.length === 0) {
+        this.simSpeedCondition.hidden = true;
+        this.simSpeedCondition.textContent = '';
+      } else {
+        const nextUnlock = pendingUnlocks[0];
+        const unlockMinute = Math.ceil((nextUnlock.unlockAtSec ?? 0) / 60);
+        this.simSpeedCondition.hidden = false;
+        this.simSpeedCondition.textContent = `${nextUnlock.targetMultiplier}x unlocks at minute ${unlockMinute}.`;
+      }
     }
 
     this.fishCountStat.textContent = String(fishCount);
@@ -379,9 +421,45 @@ export class Panel {
       }[trendLabel];
     }
 
+    if (this.eggsSummaryRoot) {
+      const eggRows = Array.isArray(eggsBySpecies)
+        ? eggsBySpecies
+          .filter((entry) => Number.isFinite(entry?.count) && entry.count > 0)
+          .map((entry) => {
+            const species = this.#escapeHtml(entry.speciesLabel || 'Unknown');
+            const count = Math.floor(entry.count);
+            return `<div class="stat-row stat-row--eggs"><span>${count} eggs in the tank (${species})</span></div>`;
+          })
+        : [];
+      this.eggsSummaryRoot.innerHTML = eggRows.join('');
+    }
+
+    if (this.devWaterStatsRoot) {
+      const debug = waterDebug && typeof waterDebug === 'object' ? waterDebug : {};
+      if (isDevMode()) {
+        const hygiene01 = Number.isFinite(debug.hygiene01) ? debug.hygiene01 : 0;
+        const dirt01 = Number.isFinite(debug.dirt01) ? debug.dirt01 : 0;
+        const filter01Value = Number.isFinite(debug.filter01) ? debug.filter01 : 0;
+        const effectiveFilter01 = Number.isFinite(debug.effectiveFilter01) ? debug.effectiveFilter01 : 0;
+        const filterEnabled = Boolean(debug.filterEnabled);
+        this.devWaterStatsRoot.hidden = false;
+        this.devWaterStatsRoot.innerHTML = `
+          <div class="stat-row"><span>DEV · hygiene01</span><strong>${hygiene01.toFixed(4)}</strong></div>
+          <div class="stat-row"><span>DEV · dirt01</span><strong>${dirt01.toFixed(4)}</strong></div>
+          <div class="stat-row"><span>DEV · filter01</span><strong>${filter01Value.toFixed(4)}</strong></div>
+          <div class="stat-row"><span>DEV · effectiveFilter01</span><strong>${effectiveFilter01.toFixed(4)}</strong></div>
+          <div class="stat-row"><span>DEV · filterEnabled</span><strong>${filterEnabled ? 'true' : 'false'}</strong></div>
+        `;
+      } else {
+        this.devWaterStatsRoot.hidden = true;
+        this.devWaterStatsRoot.innerHTML = '';
+      }
+    }
+
     const consumed = Math.max(0, Math.floor(foodsConsumedCount ?? 0));
     const target = Math.max(0, Math.floor(filterUnlockThreshold ?? 0));
     const isInstalling = (installProgress01 ?? 0) > 0;
+    const isUpgrading = (upgradeProgress01 ?? 0) > 0;
     const isMaintaining = (maintenanceProgress01 ?? 0) > 0;
 
     if (this.filterAccordion) {
@@ -398,6 +476,8 @@ export class Panel {
         this.filterMessage.textContent = `To install the filter: feed your fish ${target} times.`;
       } else if (isInstalling) {
         this.filterMessage.textContent = `Installing... ${Math.round((installProgress01 ?? 0) * 100)}%`;
+      } else if (isUpgrading) {
+        this.filterMessage.textContent = `Changing filter... ${Math.round((upgradeProgress01 ?? 0) * 100)}%`;
       } else if (!filterInstalled) {
         this.filterMessage.textContent = 'Filter available. Install to start cleaning water.';
       } else {
@@ -405,13 +485,15 @@ export class Panel {
       }
     }
 
-    if (this.filterInstallProgressRow) this.filterInstallProgressRow.hidden = !isInstalling;
-    if (this.filterInstallBarTrack) this.filterInstallBarTrack.hidden = !isInstalling;
-    if (this.filterInstallProgress) this.filterInstallProgress.textContent = `${Math.round((installProgress01 ?? 0) * 100)}%`;
-    if (this.filterInstallBar) this.filterInstallBar.style.width = `${Math.round((installProgress01 ?? 0) * 100)}%`;
+    const activeFilterProgress01 = isInstalling ? (installProgress01 ?? 0) : (isUpgrading ? (upgradeProgress01 ?? 0) : 0);
+    const showFilterProgress = isInstalling || isUpgrading;
+    if (this.filterInstallProgressRow) this.filterInstallProgressRow.hidden = !showFilterProgress;
+    if (this.filterInstallBarTrack) this.filterInstallBarTrack.hidden = !showFilterProgress;
+    if (this.filterInstallProgress) this.filterInstallProgress.textContent = `${Math.round(activeFilterProgress01 * 100)}%`;
+    if (this.filterInstallBar) this.filterInstallBar.style.width = `${Math.round(activeFilterProgress01 * 100)}%`;
 
     if (this.installFilterButton) {
-      const canInstall = filterUnlocked && !filterInstalled && !isInstalling;
+      const canInstall = filterUnlocked && !filterInstalled && !isInstalling && !isUpgrading;
       this.installFilterButton.hidden = !canInstall;
       this.installFilterButton.disabled = !canInstall;
     }
@@ -432,7 +514,7 @@ export class Panel {
           statusLabel = 'MAINTENANCE DUE';
           statusColor = '#f1a04f';
         } else {
-          statusLabel = 'ON';
+          statusLabel = isUpgrading ? 'OFF' : 'ON';
           statusColor = '#84e89a';
         }
       }
@@ -458,7 +540,7 @@ export class Panel {
     const nextUnlock = Math.max(0, Math.floor(filterNextTierUnlockFeeds ?? 0));
     const neededFeeds = Math.max(0, Math.floor(foodsNeededForNextTier ?? 0));
     const showUpgrade = filterInstalled && tier < 3;
-    const canUpgrade = showUpgrade && (isDevMode() || neededFeeds <= 0) && !isInstalling && !isMaintaining && filterEnabled;
+    const canUpgrade = showUpgrade && (isDevMode() || neededFeeds <= 0) && !isInstalling && !isUpgrading && !isMaintaining && filterEnabled;
 
     if (this.filterTierRow) this.filterTierRow.hidden = !filterInstalled;
     if (this.filterTier) this.filterTier.textContent = `Tier ${Math.max(1, tier)}/3`;
@@ -480,7 +562,7 @@ export class Panel {
     }
 
     if (this.maintainFilterButton) {
-      const canMaintain = filterInstalled && !isInstalling && !isMaintaining && (maintenanceCooldownSec ?? 0) <= 0;
+      const canMaintain = filterInstalled && !isInstalling && !isUpgrading && !isMaintaining && (maintenanceCooldownSec ?? 0) <= 0;
       this.maintainFilterButton.hidden = !filterInstalled;
       this.maintainFilterButton.disabled = !canMaintain;
     }
@@ -544,6 +626,27 @@ export class Panel {
       this.addAzureDartButton.disabled = !azureUnlocked;
       this.#setSpeciesButtonReady(this.addAzureDartButton, azureUnlocked);
     }
+
+    const siltRequiredBirths = Math.max(1, Math.floor(siltSifterUnlockBirths ?? 10));
+    const siltBirthProgress = Math.max(0, Math.floor(birthsCount ?? 0));
+    const siltUnlocked = Boolean(canAddSiltSifter);
+    this.inspectorAzureUnlocked = this.inspectorAzureUnlocked || azureUnlocked || (azureDartCount ?? 0) > 0;
+    this.inspectorSiltUnlocked = this.inspectorSiltUnlocked || siltUnlocked || (siltSifterCount ?? 0) > 0;
+    if (this.siltSifterReqBirths) {
+      this.siltSifterReqBirths.textContent = `Requires: ${siltRequiredBirths} births (${Math.min(siltBirthProgress, siltRequiredBirths)}/${siltRequiredBirths})${isDevMode() ? ' ✓' : ''}`;
+    }
+    if (this.siltSifterState) {
+      this.siltSifterState.textContent = (siltSifterCount ?? 0) >= 4 ? 'Added' : (siltUnlocked ? 'Ready' : 'Locked');
+      this.siltSifterState.style.color = (siltSifterCount ?? 0) >= 4
+        ? '#84e89a'
+        : (siltUnlocked ? '#cfeeff' : '');
+    }
+    if (this.siltSifterRow) this.siltSifterRow.classList.toggle('is-locked', !siltUnlocked);
+    if (this.addSiltSifterButton) {
+      const atCap = (siltSifterCount ?? 0) >= 4;
+      this.addSiltSifterButton.disabled = !siltUnlocked || atCap;
+      this.#setSpeciesButtonReady(this.addSiltSifterButton, siltUnlocked && !atCap);
+    }
   }
 
   updateFishInspector(fishList, selectedFishId, simTimeSec) {
@@ -582,10 +685,26 @@ export class Panel {
 
     const selectedFishAnySpecies = sorted.find((fish) => fish.id === selectedFishId) ?? null;
     const selectedChanged = selectedFishId !== this.lastObservedSelectedFishId;
-    if (selectedChanged && (selectedFishAnySpecies?.speciesId === 'AZURE_DART' || selectedFishAnySpecies?.speciesId === 'LAB_MINNOW')) {
+    if (selectedChanged && (
+      selectedFishAnySpecies?.speciesId === 'AZURE_DART'
+      || selectedFishAnySpecies?.speciesId === 'SILT_SIFTER'
+      || selectedFishAnySpecies?.speciesId === 'LAB_MINNOW'
+    )) {
       this.currentInspectorSpeciesTab = selectedFishAnySpecies.speciesId;
     }
     this.lastObservedSelectedFishId = selectedFishId ?? null;
+
+    const hasAzureFishInSession = sorted.some((fish) => (fish.speciesId ?? 'LAB_MINNOW') === 'AZURE_DART');
+    const hasSiltFishInSession = sorted.some((fish) => (fish.speciesId ?? 'LAB_MINNOW') === 'SILT_SIFTER');
+    if (hasAzureFishInSession) this.inspectorAzureUnlocked = true;
+    if (hasSiltFishInSession) this.inspectorSiltUnlocked = true;
+
+    const visibleSpeciesTabs = ['LAB_MINNOW'];
+    if (this.inspectorAzureUnlocked) visibleSpeciesTabs.push('AZURE_DART');
+    if (this.inspectorSiltUnlocked) visibleSpeciesTabs.push('SILT_SIFTER');
+    if (!visibleSpeciesTabs.includes(this.currentInspectorSpeciesTab)) {
+      this.currentInspectorSpeciesTab = 'LAB_MINNOW';
+    }
 
     const filtered = sorted.filter((fish) => (fish.speciesId ?? 'LAB_MINNOW') === this.currentInspectorSpeciesTab);
     const selectedFish = filtered.find((fish) => fish.id === selectedFishId) ?? null;
@@ -618,11 +737,13 @@ export class Panel {
         const deadClass = fish.lifeState !== 'ALIVE' ? ' fishRow--dead' : '';
         const stageLabel = typeof fish.lifeStageLabel === 'function' ? fish.lifeStageLabel() : (fish.lifeStage ?? '');
         const state = `${stageLabel} · ${fish.hungerState}`;
+        const isPregnant = fish.sex === 'female' && (fish.repro?.state === 'GRAVID' || fish.repro?.state === 'LAYING');
         const liveName = fish.name?.trim() || '';
         const draftName = this.nameDraftByFishId.get(fish.id) ?? liveName;
         const rawLabel = draftName || 'Unnamed';
         const label = this.#escapeHtml(rawLabel);
-        return `<button type="button" class="fish-row${selectedClass}${deadClass}" data-fish-id="${fish.id}">${label} · ${fish.sex} · ${state}</button>`;
+        const pregnantClass = isPregnant ? ' fish-row__name--pregnant' : '';
+        return `<button type="button" class="fish-row${selectedClass}${deadClass}" data-fish-id="${fish.id}"><span class="fish-row__name${pregnantClass}">${label}</span> · ${fish.sex} · ${state}</button>`;
       })
       .join('');
 
@@ -634,10 +755,16 @@ export class Panel {
 
     const labActive = this.currentInspectorSpeciesTab === 'LAB_MINNOW';
     const azureActive = this.currentInspectorSpeciesTab === 'AZURE_DART';
+    const siltActive = this.currentInspectorSpeciesTab === 'SILT_SIFTER';
     const speciesTabsHtml = `
       <div class="inspector-species-tabs" role="tablist" aria-label="Fish species">
         <button type="button" class="inspector-species-tab${labActive ? ' active' : ''}" data-inspector-species-tab="LAB_MINNOW" role="tab" aria-selected="${labActive}">Lab Minnow</button>
-        <button type="button" class="inspector-species-tab${azureActive ? ' active' : ''}" data-inspector-species-tab="AZURE_DART" role="tab" aria-selected="${azureActive}">Azure Dart</button>
+        ${this.inspectorAzureUnlocked
+    ? `<button type="button" class="inspector-species-tab${azureActive ? ' active' : ''}" data-inspector-species-tab="AZURE_DART" role="tab" aria-selected="${azureActive}">Azure Dart</button>`
+    : ''}
+        ${this.inspectorSiltUnlocked
+    ? `<button type="button" class="inspector-species-tab${siltActive ? ' active' : ''}" data-inspector-species-tab="SILT_SIFTER" role="tab" aria-selected="${siltActive}">Silt Sifter</button>`
+    : ''}
       </div>
     `;
 
@@ -663,26 +790,31 @@ export class Panel {
   }
 
   #fishDetailsMarkup(fish, simTimeSec) {
-    const canDiscard = fish.lifeState !== 'ALIVE';
+    const corpseDirtApplied01 = Number.isFinite(fish.corpseDirtApplied01) ? fish.corpseDirtApplied01 : 0;
+    const canDiscard = fish.lifeState === 'DEAD' && !fish.corpseRemoved && corpseDirtApplied01 <= 0;
     const liveName = fish.name?.trim() || '';
     const draftName = this.nameDraftByFishId.get(fish.id) ?? liveName;
-    const aquariumTime = this.#formatMMSS(fish.ageSeconds(simTimeSec));
+    const aquariumClockSec = fish.lifeState === 'DEAD' && Number.isFinite(fish.deadAtSec)
+      ? fish.deadAtSec
+      : simTimeSec;
+    const aquariumTime = this.#formatMMSS(fish.ageSeconds(aquariumClockSec));
 
     const isPregnant = fish.sex === 'female' && (fish.repro?.state === 'GRAVID' || fish.repro?.state === 'LAYING');
     const pregnantMarkup = isPregnant
       ? '<div class="status-line status--pregnant">pregnant</div>'
       : '';
 
-    const speciesLabel = fish.speciesId === 'AZURE_DART' ? 'Azure Dart' : 'Lab Minnow';
+    const speciesLabel = fish.speciesId === 'AZURE_DART'
+      ? 'Azure Dart'
+      : (fish.speciesId === 'SILT_SIFTER' ? 'Silt Sifter' : 'Lab Minnow');
     const infoRows = `
       <label class="control-group fish-name-group"><span>Name</span><input type="text" maxlength="24" value="${this.#escapeAttribute(draftName)}" data-fish-name-input placeholder="Fish name" /></label>
       <div class="stat-row"><span>Fish ID</span><strong>${fish.id}</strong></div>
       <div class="stat-row"><span>Species</span><strong>${speciesLabel}</strong></div>
       <div class="stat-row"><span>Sex</span><strong>${fish.sex}</strong></div>
       <div class="stat-row"><span>Life Stage</span><strong>${typeof fish.lifeStageLabel === 'function' ? fish.lifeStageLabel() : (fish.lifeStage ?? '')}</strong></div>
-      <div class="stat-row"><span>Hunger</span><strong>${fish.hungerState} (${Math.round(fish.hunger01 * 100)}%)</strong></div>
+      <div class="stat-row"><span>Hunger</span><strong>${fish.hungerState}</strong></div>
       <div class="stat-row"><span>Wellbeing</span><strong>${Math.round(fish.wellbeing01 * 100)}%</strong></div>
-      <div class="stat-row"><span>Growth</span><strong>${Math.round((fish.growth01 ?? 0) * 100)}%</strong></div>
       <div class="stat-row"><span>Aquarium Time</span><strong>${aquariumTime}</strong></div>
       ${pregnantMarkup}
     `;
@@ -691,7 +823,7 @@ export class Panel {
     const motherValue = this.#historyFishReference(history.motherId);
     const fatherValue = this.#historyFishReference(history.fatherId);
     const lifetimeValue = this.#formatMMSS(typeof fish.getLifeTimeSec === 'function' ? fish.getLifeTimeSec(simTimeSec) : 0);
-    const [childrenSummary, childrenMarkup] = this.#historyFishReferenceList(history.childrenIds);
+    const [childrenSummary] = this.#historyFishReferenceList(history.childrenIds);
 
     const historyRows = `
       <div class="stat-row"><span>Mother</span><strong>${motherValue}</strong></div>
@@ -702,7 +834,6 @@ export class Panel {
       <div class="stat-row"><span>Meals eaten</span><strong>${Math.max(0, Math.floor(history.mealsEaten ?? 0))}</strong></div>
       <div class="stat-row"><span>Times mated</span><strong>${Math.max(0, Math.floor(history.mateCount ?? 0))}</strong></div>
       <div class="stat-row"><span>Children</span><strong>${childrenSummary}</strong></div>
-      <div class="history-children-list">${childrenMarkup}</div>
     `;
 
     const tabInfoActive = this.currentInspectorDetailTab !== 'history';
@@ -715,7 +846,7 @@ export class Panel {
       </div>
       <div class="fish-detail-pane${tabInfoActive ? ' active' : ''}" data-fish-detail-pane="info">${infoRows}</div>
       <div class="fish-detail-pane${tabHistoryActive ? ' active' : ''}" data-fish-detail-pane="history">${historyRows}</div>
-      ${canDiscard ? '<div class="button-row"><button type="button" data-fish-discard>Discard</button></div>' : ''}
+      ${canDiscard ? '<div class="button-row"><button type="button" data-fish-discard>Remove from tank</button></div>' : ''}
     `;
   }
 

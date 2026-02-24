@@ -398,6 +398,23 @@ h2 {
   color: var(--text-main);
 }
 
+.stat-row--eggs {
+  color: #2ecc71;
+}
+
+
+
+.control-group.is-dim {
+  opacity: 0.58;
+}
+
+.control-hint {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.76rem;
+  line-height: 1.3;
+}
+
 
 input[type='range'] {
   width: 100%;
@@ -548,6 +565,11 @@ input[type='range'] {
   border-color: rgba(140, 220, 255, 0.82);
   background: rgba(56, 117, 167, 0.35);
 }
+
+.fish-row__name--pregnant {
+  color: #2ecc71;
+}
+
 
 .fish-detail {
   border-top: 1px solid var(--deck-border);
@@ -722,6 +744,26 @@ button {
 
 .species-row strong {
   font-size: 0.76rem;
+  color: var(--text-soft);
+}
+
+.species-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: -4px 0 8px;
+}
+
+.species-stepper button {
+  min-width: 24px;
+  height: 24px;
+  padding: 0;
+  line-height: 1;
+}
+
+.species-stepper strong {
+  min-width: 18px;
+  text-align: center;
   color: var(--text-soft);
 }
 

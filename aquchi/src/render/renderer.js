@@ -7,6 +7,7 @@ import { CONFIG } from '../config.js';
 
 const TAU = Math.PI * 2;
 const rand = (min, max) => min + Math.random() * (max - min);
+const SELECTION_PULSE_DURATION_MS = 2000;
 
 export class Renderer {
   constructor(canvas, world) {
@@ -25,6 +26,8 @@ export class Renderer {
 
     this.backgroundCanvas = document.createElement('canvas');
     this.vignetteCanvas = document.createElement('canvas');
+    this.lastObservedSelectedFishId = null;
+    this.selectionPulse = { fishId: null, startedAtMs: 0 };
     this.#buildPlants();
   }
 
@@ -135,6 +138,7 @@ export class Renderer {
 
     ctx.save();
     this.#clipTankWater(ctx);
+    this.#syncSelectionPulse(time);
     this.#drawCachedBackground(ctx);
     this.#drawPollutionTint(ctx);
     this.#drawWaterPlants(ctx, time);
@@ -154,6 +158,28 @@ export class Renderer {
 
     this.#drawTankFrame(ctx);
     if (this.debugBounds) this.#drawDebugBounds(ctx);
+  }
+
+  #syncSelectionPulse(timeMs) {
+    const selectedFishId = this.world.selectedFishId ?? null;
+    if (selectedFishId !== this.lastObservedSelectedFishId) {
+      this.lastObservedSelectedFishId = selectedFishId;
+      this.selectionPulse = {
+        fishId: selectedFishId,
+        startedAtMs: selectedFishId ? timeMs : 0
+      };
+    }
+  }
+
+  #selectionPulseProgress(fishId, timeMs) {
+    if (!fishId || fishId !== this.selectionPulse.fishId) return 0;
+
+    const elapsedMs = timeMs - this.selectionPulse.startedAtMs;
+    if (!Number.isFinite(elapsedMs) || elapsedMs < 0 || elapsedMs > SELECTION_PULSE_DURATION_MS) {
+      return 0;
+    }
+
+    return 1 - elapsedMs / SELECTION_PULSE_DURATION_MS;
   }
 
   #createParticles(count) {
@@ -528,7 +554,7 @@ export class Renderer {
     const { scale: worldScale, offsetX, offsetY, viewWidth, viewHeight } = this.camera;
     const tier = Math.max(1, Math.min(3, Math.floor(water.filterTier ?? 1)));
     const width = Math.max(16, 28 * worldScale);
-    const tierHeightScale = 1 + (tier - 1) * 0.1;
+    const tierHeightScale = 1 + (tier - 1) * 0.14;
     const height = Math.max(26, 52 * worldScale * tierHeightScale);
 
     return {
@@ -564,13 +590,11 @@ export class Renderer {
     let ledColor = 'rgba(170, 180, 188, 0.45)';
     if (water.filterEnabled) {
       if (health <= depletedThreshold01) {
-        ledColor = 'rgba(255, 82, 82, 0.96)';
+        ledColor = isBlinkOn ? 'rgba(255, 82, 82, 0.96)' : 'rgba(122, 46, 46, 0.45)';
       } else if (health <= warningThreshold01) {
         ledColor = 'rgba(246, 163, 74, 0.96)';
-      } else if (isBlinkOn) {
-        ledColor = 'rgba(96, 255, 140, 0.95)';
       } else {
-        ledColor = 'rgba(52, 120, 72, 0.45)';
+        ledColor = 'rgba(96, 255, 140, 0.95)';
       }
     }
 
@@ -594,7 +618,7 @@ export class Renderer {
     if ((water.effectiveFilter01 ?? 0) > 0) {
       const bubbleCount = this.quality === 'high' ? 4 : 2;
       for (let i = 0; i < bubbleCount; i += 1) {
-        const bubbleY = y + moduleH * 0.88 - ((time * 0.05 + i * 8) % (moduleH * 0.75));
+        const bubbleY = y + moduleH * 0.82 - ((time * 0.05 + i * 8) % (moduleH * 0.9));
         const bubbleX = x - 4 - Math.sin(time * 0.004 + i * 1.3) * 2;
         ctx.beginPath();
         ctx.fillStyle = 'rgba(188, 234, 255, 0.33)';
@@ -721,6 +745,7 @@ export class Renderer {
 
     const sat = Math.max(18, Math.min(76, 52 * (rp.saturationMult ?? 1)));
     const isAzureDart = fish.speciesId === 'AZURE_DART';
+    const isSiltSifter = fish.speciesId === 'SILT_SIFTER';
 
     ctx.save();
     ctx.translate(position.x, position.y);
@@ -728,7 +753,16 @@ export class Renderer {
     ctx.scale(orientation.facing, 1);
 
     const bodyPath = new Path2D();
-    bodyPath.ellipse(0, 0, bodyLength * 0.5, bodyHeight * 0.5, 0, 0, TAU);
+    if (isSiltSifter) {
+      bodyPath.moveTo(-bodyLength * 0.56, 0);
+      bodyPath.quadraticCurveTo(-bodyLength * 0.36, bodyHeight * 0.58, bodyLength * 0.1, bodyHeight * 0.48);
+      bodyPath.quadraticCurveTo(bodyLength * 0.46, bodyHeight * 0.22, bodyLength * 0.56, 0);
+      bodyPath.quadraticCurveTo(bodyLength * 0.44, -bodyHeight * 0.22, bodyLength * 0.08, -bodyHeight * 0.48);
+      bodyPath.quadraticCurveTo(-bodyLength * 0.34, -bodyHeight * 0.58, -bodyLength * 0.56, 0);
+      bodyPath.closePath();
+    } else {
+      bodyPath.ellipse(0, 0, bodyLength * 0.5, bodyHeight * 0.5, 0, 0, TAU);
+    }
 
     if (isSkeleton) {
       ctx.fillStyle = 'hsl(36deg 8% 72%)';
@@ -736,6 +770,23 @@ export class Renderer {
     } else if (isDead) {
       ctx.fillStyle = 'hsl(0deg 0% 56%)';
       ctx.fill(bodyPath);
+    } else if (isSiltSifter) {
+      const grad = ctx.createLinearGradient(-bodyLength * 0.52, 0, bodyLength * 0.56, 0);
+      grad.addColorStop(0, 'hsl(38deg 18% 46%)');
+      grad.addColorStop(0.42, 'hsl(70deg 16% 41%)');
+      grad.addColorStop(1, 'hsl(55deg 11% 35%)');
+      ctx.fillStyle = grad;
+      ctx.fill(bodyPath);
+
+      ctx.strokeStyle = 'rgba(48, 64, 52, 0.35)';
+      ctx.lineWidth = Math.max(1, bodyHeight * 0.1);
+      for (let i = 0; i < 3; i += 1) {
+        const yy = (-0.24 + i * 0.24) * bodyHeight;
+        ctx.beginPath();
+        ctx.moveTo(-bodyLength * 0.18, yy);
+        ctx.lineTo(bodyLength * 0.33, yy + Math.sin(i + time * 0.002) * bodyHeight * 0.04);
+        ctx.stroke();
+      }
     } else if (isAzureDart) {
       const baseHue = Math.max(190, Math.min(232, fish.colorHue ?? 212));
       const pattern = Math.max(0, Math.min(1, fish.traits?.colorPatternSeed ?? 0.5));
@@ -771,10 +822,17 @@ export class Renderer {
       }
     }
 
-    if (fish.id === this.world.selectedFishId) {
-      ctx.strokeStyle = 'rgba(152, 230, 255, 0.8)';
-      ctx.lineWidth = 1.1;
-      ctx.stroke(bodyPath);
+    const selectionPulse = this.#selectionPulseProgress(fish.id, time);
+    if (selectionPulse > 0) {
+      const pulseElapsedMs = (1 - selectionPulse) * SELECTION_PULSE_DURATION_MS;
+      const blink = 0.62 + Math.sin((pulseElapsedMs / 1000) * TAU * 2.1) * 0.22;
+      const radius = Math.max(bodyLength, bodyHeight) * 0.58 + worldScale * 5;
+      const alpha = Math.max(0, Math.min(1, selectionPulse * blink));
+      ctx.strokeStyle = `rgba(166, 236, 255, ${alpha})`;
+      ctx.lineWidth = Math.max(1, worldScale * 2.1);
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, TAU);
+      ctx.stroke();
     }
 
     if (this.quality === 'high' && !isSkeleton) {
@@ -785,19 +843,70 @@ export class Renderer {
     ctx.strokeStyle = 'rgba(205, 230, 245, 0.13)';
     ctx.stroke(bodyPath);
 
-    ctx.fillStyle = isSkeleton ? 'hsl(35deg 9% 54%)' : (isDead ? 'hsl(0deg 0% 42%)' : (isAzureDart ? 'hsl(206deg 84% 68%)' : `hsl(${fish.colorHue + tint - 8}deg ${Math.max(12, sat - 12)}% ${light - 12}%)`));
+    ctx.fillStyle = isSkeleton
+      ? 'hsl(35deg 9% 54%)'
+      : (isDead
+        ? 'hsl(0deg 0% 42%)'
+        : (isAzureDart
+          ? 'hsl(206deg 84% 68%)'
+          : (isSiltSifter ? 'hsl(46deg 14% 34%)' : `hsl(${fish.colorHue + tint - 8}deg ${Math.max(12, sat - 12)}% ${light - 12}%)`)));
     ctx.beginPath();
     ctx.moveTo(-bodyLength * 0.52, 0);
     if (isAzureDart) {
       ctx.lineTo(-bodyLength * 0.86, bodyHeight * 0.22 + tailWag * 0.8);
       ctx.lineTo(-bodyLength * 0.98, 0);
       ctx.lineTo(-bodyLength * 0.86, -bodyHeight * 0.22 - tailWag * 0.8);
+    } else if (isSiltSifter) {
+      ctx.lineTo(-bodyLength * 0.82, bodyHeight * 0.25 + tailWag * 0.42);
+      ctx.lineTo(-bodyLength * 0.95, 0);
+      ctx.lineTo(-bodyLength * 0.82, -bodyHeight * 0.25 - tailWag * 0.42);
     } else {
       ctx.lineTo(-bodyLength * 0.84, bodyHeight * 0.35 + tailWag);
       ctx.lineTo(-bodyLength * 0.84, -bodyHeight * 0.35 - tailWag);
     }
     ctx.closePath();
     ctx.fill();
+
+    if (isSiltSifter && !isSkeleton) {
+      const dorsalBaseX = bodyLength * 0.02;
+      ctx.beginPath();
+      ctx.fillStyle = isDead ? 'rgba(95,95,95,0.6)' : 'rgba(86, 102, 78, 0.9)';
+      ctx.moveTo(dorsalBaseX - bodyLength * 0.1, -bodyHeight * 0.16);
+      ctx.lineTo(dorsalBaseX + bodyLength * 0.01, -bodyHeight * 0.86);
+      ctx.lineTo(dorsalBaseX + bodyLength * 0.16, -bodyHeight * 0.12);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = isDead ? 'rgba(90,90,90,0.52)' : 'rgba(62, 72, 60, 0.52)';
+      ctx.lineWidth = Math.max(0.8, bodyHeight * 0.07);
+      for (let i = 0; i < 4; i += 1) {
+        const yy = (-0.3 + i * 0.2) * bodyHeight;
+        ctx.beginPath();
+        ctx.moveTo(-bodyLength * 0.4 + i * bodyLength * 0.15, yy);
+        ctx.lineTo(-bodyLength * 0.2 + i * bodyLength * 0.15, yy + bodyHeight * 0.08);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = isDead ? 'rgba(110,110,110,0.45)' : 'rgba(220, 206, 158, 0.68)';
+      ctx.lineWidth = Math.max(0.9, bodyHeight * 0.05);
+      ctx.beginPath();
+      ctx.moveTo(bodyLength * 0.44, bodyHeight * 0.03);
+      ctx.lineTo(bodyLength * 0.58, bodyHeight * 0.12);
+      ctx.moveTo(bodyLength * 0.45, 0);
+      ctx.lineTo(bodyLength * 0.62, 0.03 * bodyHeight);
+      ctx.moveTo(bodyLength * 0.44, -bodyHeight * 0.03);
+      ctx.lineTo(bodyLength * 0.58, -bodyHeight * 0.12);
+      ctx.stroke();
+
+      ctx.fillStyle = isDead ? 'rgba(85,85,85,0.35)' : 'rgba(46, 56, 43, 0.26)';
+      for (let i = 0; i < 16; i += 1) {
+        const px = -bodyLength * 0.42 + (i % 8) * bodyLength * 0.11 + ((Math.floor(i / 8)) * bodyLength * 0.04);
+        const py = -bodyHeight * 0.28 + (Math.floor(i / 8)) * bodyHeight * 0.3;
+        ctx.beginPath();
+        ctx.arc(px, py, Math.max(0.7, bodyHeight * 0.04), 0, TAU);
+        ctx.fill();
+      }
+    }
 
     if (!isSkeleton) {
       ctx.fillStyle = 'rgba(255,255,255,0.7)';
@@ -814,17 +923,18 @@ export class Renderer {
     const mouthOpen = isSkeleton ? 0 : (fish.mouthOpen01?.() ?? 0);
     const mouthSize = (rp.radius * 0.05 + mouthOpen * rp.radius * 0.055) * worldScale;
     const mouthX = bodyLength * 0.49;
+    const mouthY = isSiltSifter ? bodyHeight * 0.1 : 0;
 
     ctx.fillStyle = 'rgba(18, 28, 34, 0.8)';
     if (mouthOpen > 0.02) {
       ctx.beginPath();
-      ctx.moveTo(mouthX, 0);
-      ctx.lineTo(mouthX + mouthSize * 1.2, mouthSize * 0.9);
-      ctx.lineTo(mouthX + mouthSize * 1.2, -mouthSize * 0.9);
+      ctx.moveTo(mouthX, mouthY);
+      ctx.lineTo(mouthX + mouthSize * 1.2, mouthY + mouthSize * 0.9);
+      ctx.lineTo(mouthX + mouthSize * 1.2, mouthY - mouthSize * 0.9);
       ctx.closePath();
       ctx.fill();
     } else {
-      ctx.fillRect(mouthX - 0.6, -0.35, 1.2, 0.7);
+      ctx.fillRect(mouthX - 0.6, mouthY - 0.35, 1.2, 0.7);
     }
 
     ctx.restore();

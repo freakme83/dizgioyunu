@@ -90,6 +90,7 @@ export const FISH_SAVE_KEYS = [
   'repro',
   'matingAnim',
   'digestBites',
+  'lastPoopConsumedAtSimSec',
   'schoolingBias',
   'soloUntilSec',
   'nextSoloWindowAtSec',
@@ -211,6 +212,8 @@ export class Fish {
     this.cruisePhase = rand(0, TAU);
     this.cruiseRate = rand(0.35, 0.7);
 
+    this.bottomSweepDirection = Math.random() < 0.5 ? -1 : 1;
+    this.bottomSweepLaneY = Number.isFinite(options.bottomSweepLaneY) ? options.bottomSweepLaneY : null;
     this.target = this.#pickTarget();
     this.lastDistanceMoved = 0;
 
@@ -226,7 +229,7 @@ export class Fish {
     this.skeletonAtSec = null;
     this.corpseRemoved = false;
     this.corpseDirtApplied01 = 0;
-    this.behavior = { mode: 'wander', targetFoodId: null, speedBoost: 1 };
+    this.behavior = { mode: 'wander', targetFoodId: null, targetKind: null, speedBoost: 1 };
     this.eatAnimTimer = 0;
     this.eatAnimDuration = 0.22;
 
@@ -252,6 +255,7 @@ export class Fish {
 
     this.matingAnim = null;
     this.digestBites = Math.max(0, Math.floor(options.digestBites ?? 0));
+    this.lastPoopConsumedAtSimSec = Number.isFinite(options.lastPoopConsumedAtSimSec) ? options.lastPoopConsumedAtSimSec : null;
 
     this.hoverUntilSec = 0;
     this.nextHoverEligibleAtSimSec = rand(HOVER_COOLDOWN_MIN_SEC, HOVER_COOLDOWN_MAX_SEC);
@@ -312,6 +316,10 @@ export class Fish {
     fish.wellbeing01 = clamp01(Number.isFinite(fish.wellbeing01) ? fish.wellbeing01 : 1);
     fish.waterPenalty01 = clamp01(Number.isFinite(fish.waterPenalty01) ? fish.waterPenalty01 : 0);
     fish.digestBites = Math.max(0, Math.floor(fish.digestBites ?? 0));
+    fish.lastPoopConsumedAtSimSec = Number.isFinite(source.lastPoopConsumedAtSimSec) ? source.lastPoopConsumedAtSimSec : null;
+    if (!fish.behavior || typeof fish.behavior !== 'object') fish.behavior = { mode: 'wander', targetFoodId: null, targetKind: null, speedBoost: 1 };
+    if (!('targetKind' in fish.behavior)) fish.behavior.targetKind = null;
+    fish.bottomSweepLaneY = Number.isFinite(source.bottomSweepLaneY) ? source.bottomSweepLaneY : null;
 
     if (!fish.position || !Number.isFinite(fish.position.x) || !Number.isFinite(fish.position.y)) {
       fish.position = { x: bounds.width * 0.5, y: bounds.height * 0.5 };
@@ -378,7 +386,7 @@ export class Fish {
       this.deathReason = 'STARVATION';
       this.hungerState = 'DEAD';
       this.currentSpeed = 0;
-      this.behavior = { mode: 'deadSink', targetFoodId: null, speedBoost: 1 };
+      this.behavior = { mode: 'deadSink', targetFoodId: null, targetKind: null, speedBoost: 1 };
     }
   }
 
@@ -446,6 +454,7 @@ export class Fish {
   }
 
   playProbability(nearAlgae = false) {
+    if (this.speciesId === 'SILT_SIFTER' || this.species?.renderStyle === 'SILT_SIFTER') return 0;
     if (this.lifeStage === 'OLD') return 0;
 
     if (this.lifeStage === 'BABY') return nearAlgae ? 0.8 : 0.5;
@@ -460,7 +469,7 @@ export class Fish {
     this._worldRef = world ?? null;
 
     if (this.lifeState !== 'ALIVE') {
-      this.behavior = { mode: 'deadSink', targetFoodId: null, speedBoost: 1 };
+      this.behavior = { mode: 'deadSink', targetFoodId: null, targetKind: null, speedBoost: 1 };
       this.#updateHoverAfterBehavior(world?.simTimeSec ?? 0);
       return;
     }
@@ -469,6 +478,7 @@ export class Fish {
       this.behavior = {
         mode: 'seekLayTarget',
         targetFoodId: null,
+        targetKind: null,
         speedBoost: 1
       };
       this.target = { x: this.repro.layTargetX, y: this.repro.layTargetY };
@@ -481,6 +491,7 @@ export class Fish {
       this.behavior = {
         mode: isRunner ? 'playEvade' : 'playChase',
         targetFoodId: null,
+        targetKind: null,
         speedBoost: isRunner ? PLAY_RUNNER_SPEED_BOOST : PLAY_SPEED_BOOST,
         targetFishId: this.playState.targetFishId
       };
@@ -488,15 +499,18 @@ export class Fish {
       return;
     }
 
-    if (this.hungerState === 'FED') {
-      this.behavior = { mode: 'wander', targetFoodId: null, speedBoost: 1 };
+    const speciesDiet = getSpeciesDiet(this.speciesId);
+    const poopSeekingEvenWhenFed = speciesDiet.includes('poop');
+
+    if (this.hungerState === 'FED' && !poopSeekingEvenWhenFed) {
+      this.behavior = { mode: 'wander', targetFoodId: null, targetKind: null, speedBoost: 1 };
       this.#updateHoverAfterBehavior(world?.simTimeSec ?? 0);
       return;
     }
 
     const visibleFood = this.#findNearestFood(world);
     if (!visibleFood) {
-      this.behavior = { mode: 'wander', targetFoodId: null, speedBoost: 1 };
+      this.behavior = { mode: 'wander', targetFoodId: null, targetKind: null, speedBoost: 1 };
       this.#updateHoverAfterBehavior(world?.simTimeSec ?? 0);
       return;
     }
@@ -504,6 +518,7 @@ export class Fish {
     this.behavior = {
       mode: 'seekFood',
       targetFoodId: visibleFood.id,
+      targetKind: visibleFood.kind ?? null,
       speedBoost: FOOD_SPEED_BOOST[this.hungerState] ?? 1
     };
     this.target = { x: visibleFood.x, y: visibleFood.y };
@@ -520,7 +535,10 @@ export class Fish {
     // Pursuit: keep the target synced to the pellet's *current* position.
     if (this.behavior.mode === 'seekFood' && this.behavior.targetFoodId) {
       const targetFood = this.#findTargetFoodById(this._worldRef, this.behavior.targetFoodId);
-      if (targetFood) this.target = { x: targetFood.x, y: targetFood.y };
+      if (targetFood) {
+        this.target = { x: targetFood.x, y: targetFood.y };
+        this.behavior.targetKind = targetFood.kind ?? this.behavior.targetKind ?? null;
+      }
     }
 
     if (this.behavior.mode === 'playChase' && this.behavior.targetFishId && this._worldRef?.fish) {
@@ -570,6 +588,10 @@ export class Fish {
     const schooling = this.#schoolingVector(this._worldRef, nowSec);
     desiredX += schooling.x;
     desiredY += schooling.y;
+    const chasingPoop = this.behavior?.mode === 'seekFood' && this.behavior?.targetKind === 'poop';
+    const bottomBias = this.#bottomDwellerBiasVector(chasingPoop);
+    desiredX += bottomBias.x;
+    desiredY += bottomBias.y;
 
     if (this.matingAnim && this.lifeState === 'ALIVE') {
       const progress = clamp01((nowSec - this.matingAnim.startSec) / Math.max(0.001, this.matingAnim.durationSec ?? 1.1));
@@ -663,8 +685,11 @@ export class Fish {
 
     const consumed = targetFood.kind === 'fruit'
       ? world.consumeFruit?.(targetFood.id)
-      : world.consumeFood(targetFood.id, targetFood.amount);
+      : (targetFood.kind === 'poop'
+        ? world.consumePoop?.(targetFood.id, this.id)
+        : world.consumeFood(targetFood.id, targetFood.amount));
     if (consumed <= 0) return;
+    if (targetFood.kind === 'poop') this.lastPoopConsumedAtSimSec = Number.isFinite(world?.simTimeSec) ? world.simTimeSec : this.lastPoopConsumedAtSimSec;
     this.eatAnimTimer = this.eatAnimDuration;
     this.eat(consumed);
     this.history.mealsEaten += 1;
@@ -673,7 +698,7 @@ export class Fish {
 
     if (this.digestBites >= 2) {
       this.digestBites = 0;
-      world.schedulePoopFromFish?.(this.id, rand(5, 10));
+      if (this.species?.poopEnabled !== false) world.schedulePoopFromFish?.(this.id, rand(5, 10));
     }
   }
 
@@ -719,7 +744,7 @@ export class Fish {
       this.deathReason = 'OLD_AGE';
       this.hungerState = 'DEAD';
       this.currentSpeed = 0;
-      this.behavior = { mode: 'deadSink', targetFoodId: null, speedBoost: 1 };
+      this.behavior = { mode: 'deadSink', targetFoodId: null, targetKind: null, speedBoost: 1 };
     }
   }
 
@@ -819,7 +844,8 @@ export class Fish {
 
     const diet = getSpeciesDiet(this.speciesId);
     const candidates = [];
-    if (diet.includes('pellet')) {
+    const canEatPellet = diet.includes('pellet') || (diet.includes('pellet_when_starving') && this.hungerState === 'STARVING');
+    if (canEatPellet) {
       for (const food of world?.food ?? []) candidates.push({ ...food, kind: 'pellet' });
     }
     if (diet.includes('fruit')) {
@@ -830,10 +856,22 @@ export class Fish {
         candidates.push({ id: fruit.id, x: pose.x, y: pose.y, amount: 1, kind: 'fruit' });
       }
     }
+    if (diet.includes('poop')) {
+      for (const poop of world?.poop ?? []) {
+        if (!poop?.canBeEaten) continue;
+        if (poop.y < this.bounds.height * 0.5 && this.behavior?.mode !== 'seekFood') continue;
+        candidates.push({ id: poop.id, x: poop.x, y: poop.y, amount: poop.nutrition ?? 0.1, kind: 'poop' });
+      }
+    }
+
+    const poopOnly = diet.includes('poop')
+      ? candidates.filter((entry) => entry.kind === 'poop')
+      : [];
+    const pool = poopOnly.length ? poopOnly : candidates;
 
     let best = null;
     let bestDist = Infinity;
-    for (const food of candidates) {
+    for (const food of pool) {
       const dist = Math.hypot(food.x - this.position.x, food.y - this.position.y);
       if (dist > visionRadius || dist >= bestDist) continue;
       best = food;
@@ -844,7 +882,8 @@ export class Fish {
 
   #findTargetFoodById(world, targetId) {
     const diet = getSpeciesDiet(this.speciesId);
-    if (diet.includes('pellet')) {
+    const canEatPellet = diet.includes('pellet') || (diet.includes('pellet_when_starving') && this.hungerState === 'STARVING');
+    if (canEatPellet) {
       const pellet = world?.food?.find((entry) => entry.id === targetId);
       if (pellet) return { ...pellet, kind: 'pellet' };
     }
@@ -854,6 +893,10 @@ export class Fish {
         const pose = world?.getFruitPosition?.(fruit);
         if (pose) return { id: fruit.id, x: pose.x, y: pose.y, amount: 1, kind: 'fruit' };
       }
+    }
+    if (diet.includes('poop')) {
+      const poop = world?.poop?.find((entry) => entry.id === targetId && entry.canBeEaten !== false);
+      if (poop) return { ...poop, amount: poop.nutrition ?? 0.1, kind: 'poop' };
     }
     return null;
   }
@@ -991,6 +1034,43 @@ export class Fish {
   #pickTarget() {
     const inset = clamp(Math.min(this.bounds.width, this.bounds.height) * 0.04, 8, 18);
     const swimHeight = Math.max(inset, this.bounds.height - inset);
+    const bottom = this.species?.bottomDweller;
+
+    if (bottom) {
+      const movement = this.#movementBounds();
+      const sweepInset = clamp(this.bounds.width * 0.12, 24, 120);
+      const minSweepX = clamp(movement.minX + sweepInset, movement.minX, movement.maxX);
+      const maxSweepX = clamp(movement.maxX - sweepInset, movement.minX, movement.maxX);
+      const effectiveMinX = Math.min(minSweepX, maxSweepX - 16);
+      const effectiveMaxX = Math.max(maxSweepX, minSweepX + 16);
+
+      if (this.position.x >= effectiveMaxX - 8) this.bottomSweepDirection = -1;
+      if (this.position.x <= effectiveMinX + 8) this.bottomSweepDirection = 1;
+
+      const laneMinY = this.bounds.height * 0.8;
+      const laneMaxY = this.bounds.height * 0.97;
+      if (!Number.isFinite(this.bottomSweepLaneY) || this.bottomSweepLaneY < laneMinY || this.bottomSweepLaneY > laneMaxY) {
+        this.bottomSweepLaneY = rand(laneMinY, laneMaxY);
+      }
+      if (Math.random() < 0.2) {
+        this.bottomSweepLaneY = clamp(this.bottomSweepLaneY + rand(-12, 12), laneMinY, laneMaxY);
+      }
+
+      const probeChance = clamp(bottom.probeChancePerRetarget ?? 0.24, 0, 1);
+      const probeUp = Math.random() < probeChance
+        ? rand(bottom.probeDepthMinPx ?? 3, bottom.probeDepthMaxPx ?? 14)
+        : rand(0, 3);
+      const verticalWobble = rand(-10, 10);
+
+      const targetX = this.bottomSweepDirection > 0
+        ? effectiveMaxX - rand(0, 12)
+        : effectiveMinX + rand(0, 12);
+
+      return {
+        x: clamp(targetX, movement.minX, movement.maxX),
+        y: clamp(this.bottomSweepLaneY + verticalWobble - probeUp, movement.minY, movement.maxY)
+      };
+    }
 
     return {
       x: rand(inset, Math.max(inset, this.bounds.width - inset)),
@@ -1038,7 +1118,28 @@ export class Fish {
   }
 
 
+
+  #bottomDwellerBiasVector(allowExcursion = false) {
+    const bottom = this.species?.bottomDweller;
+    if (!bottom) return { x: 0, y: 0 };
+
+    const baseStart01 = clamp(bottom.preferredBandStart01 ?? 0.75, 0, 1);
+    const bandStart01 = allowExcursion ? Math.max(0.58, baseStart01 - 0.14) : baseStart01;
+    const bandEnd01 = clamp(bottom.preferredBandEnd01 ?? 1, bandStart01, 1);
+    const bandStart = this.bounds.height * bandStart01;
+    const bandEnd = this.bounds.height * bandEnd01;
+    const center = allowExcursion
+      ? this.bounds.height * (bandStart01 + (bandEnd01 - bandStart01) * 0.72)
+      : (bandStart + bandEnd) * 0.5;
+    const distance = center - this.position.y;
+    const span = Math.max(8, (bandEnd - bandStart) * (allowExcursion ? 0.8 : 0.85));
+    const strength = (bottom.steerBiasStrength ?? 1.3) * (allowExcursion ? 0.55 : 0.72);
+    const pull = clamp(distance / span, -1, 1) * strength;
+    return { x: 0, y: pull };
+  }
+
   #schoolingVector(world, nowSec) {
+    if (this.speciesId === 'SILT_SIFTER' || this.species?.renderStyle === 'SILT_SIFTER') return { x: 0, y: 0 };
     const schooling = this.species?.schooling ?? {};
     if (!schooling.enabled || !world?.fish?.length) return { x: 0, y: 0 };
 
