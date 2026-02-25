@@ -609,6 +609,88 @@ function withMockedDevMode(enabled, fn) {
   }
 }
 
+
+
+test('nestbrush unlock, single-instance cap, and growth gating work', () => {
+  const world = makeWorldForTest();
+
+  world.birthsCount = 2;
+  assert.equal(world.canAddNestbrush(), false);
+  assert.equal(world.addNestbrush().ok, false);
+
+  world.birthsCount = 3;
+  assert.equal(world.canAddNestbrush(), true);
+  assert.equal(world.addNestbrush().ok, true);
+  assert.equal(world.addNestbrush().reason, 'MAX_COUNT');
+
+  assert.equal(world.nestbrush.stage, 1);
+  const initialProgress = world.nestbrush.growthProgressSec;
+  world.water.hygiene01 = 0.84;
+  world.update(500);
+  assert.equal(world.nestbrush.stage, 1);
+  assert.equal(world.nestbrush.growthProgressSec, initialProgress);
+
+  world.water.hygiene01 = 0.95;
+  world.update(720);
+  assert.equal(world.nestbrush.stage, 2);
+  world.update(720);
+  assert.equal(world.nestbrush.stage, 3);
+  assert.equal(world.getNestbrushCapacity(), 12);
+});
+
+test('lab minnow eggs use per-egg nestbrush protection and capacity', () => {
+  const world = makeWorldForTest();
+  world.simTimeSec = 20;
+  world.birthsCount = 3;
+  world.water.hygiene01 = 1;
+  world.addNestbrush();
+
+  const female = world.fish[0];
+  const male = world.fish[1] ?? female;
+  female.speciesId = 'LAB_MINNOW';
+  male.speciesId = 'LAB_MINNOW';
+  female.sex = 'female';
+  forceFishAliveAdultFed(female);
+
+  female.repro.state = 'LAYING';
+  female.repro.fatherId = male.id;
+  female.repro.layTargetX = female.position.x;
+  female.repro.layTargetY = female.position.y;
+  withStubbedRandom(0, () => world.update(0.2));
+
+  assert.equal(world.eggs.length, 2);
+  assert.equal(world.eggs.every((egg) => egg.isProtectedByNestbrush), true);
+  assert.equal(world.eggs.every((egg) => egg.nestbrushAttachment != null), true);
+
+  world.nestbrush.stage = 1;
+  world.eggs.push({ ...world.eggs[0], id: world.nextEggId++ });
+  world.eggs.push({ ...world.eggs[1], id: world.nextEggId++ });
+
+  female.repro.state = 'LAYING';
+  female.repro.fatherId = male.id;
+  female.repro.layTargetX = female.position.x;
+  female.repro.layTargetY = female.position.y;
+  withStubbedRandom(0, () => world.update(0.2));
+
+  const latestEggs = world.eggs.slice(-2);
+  assert.equal(latestEggs.every((egg) => egg.isProtectedByNestbrush === false), true);
+
+  const unprotectedEgg = latestEggs[0];
+  const protectedEgg = world.eggs[0];
+  const protectedIncubation = protectedEgg.hatchAtSec - protectedEgg.laidAtSec;
+  const unprotectedIncubation = unprotectedEgg.hatchAtSec - unprotectedEgg.laidAtSec;
+  assert.ok(unprotectedIncubation > protectedIncubation);
+
+  const json = world.toJSON();
+  const loaded = World.fromJSON({ saveVersion: 1, worldState: json }, {
+    width: world.bounds.width,
+    height: world.bounds.height,
+    initialFishCount: world.initialFishCount
+  });
+  assert.ok(loaded.nestbrush);
+  assert.equal(loaded.eggs.some((egg) => egg.isProtectedByNestbrush), true);
+});
+
 test('dev mode bypasses feature unlock gates and grants extended speed range', () => {
   withMockedDevMode(true, () => {
     const world = makeWorldForTest();
@@ -617,6 +699,7 @@ test('dev mode bypasses feature unlock gates and grants extended speed range', (
     world.foodsConsumedCount = 0;
     world.filterUnlocked = false;
 
+    assert.equal(world.canAddNestbrush(), true);
     assert.equal(world.canAddBerryReedPlant(), true);
     assert.equal(world.installWaterFilter(), true);
 

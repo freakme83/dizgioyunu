@@ -143,6 +143,7 @@ export class Renderer {
     this.#drawPollutionTint(ctx);
     this.#drawWaterPlants(ctx, time);
     this.#drawBerryReed(ctx, time);
+    this.#drawNestbrush(ctx, time);
     this.#drawGroundAlgae(ctx, time);
     this.#drawPlayEffects(ctx, time);
     this.#drawWaterParticles(ctx, delta);
@@ -150,7 +151,7 @@ export class Renderer {
     this.#drawFilterModule(ctx, time);
     this.#drawFood(ctx);
     this.#drawPoop(ctx);
-    this.#drawEggs(ctx);
+    this.#drawEggs(ctx, time);
     this.#drawFxParticles(ctx);
     this.#drawFishSchool(ctx, time);
     this.#drawCachedVignette(ctx);
@@ -382,6 +383,108 @@ export class Renderer {
       branchX,
       branchY
     };
+  }
+
+
+  #drawNestbrush(ctx, time) {
+    const { scale: worldScale, offsetX, offsetY } = this.camera;
+    const nestbrush = this.world.nestbrush;
+    if (!nestbrush) return;
+
+    const stage = Math.max(1, Math.min(3, Math.floor(nestbrush.stage ?? 1)));
+    const baseX = offsetX + nestbrush.x * worldScale;
+    const baseY = offsetY + nestbrush.bottomY * worldScale;
+    const height = nestbrush.height * worldScale;
+    const stageProgress01 = Math.max(0, Math.min(1, (nestbrush.growthProgressSec ?? 0) / 720));
+    const previewGrowth01 = stage < 3 ? Math.pow(stageProgress01, 1.8) : 0;
+    const organicStage = stage + previewGrowth01;
+    const spread = (22 + (organicStage - 1) * 18) * worldScale;
+    const sway = Math.sin((time / 1000) * (nestbrush.swayRate ?? 0.001) + (nestbrush.swayPhase ?? 0)) * (3 * worldScale);
+
+    ctx.save();
+
+    // Round-dot shrub clump with slight spacing.
+    const clumpCenterY = baseY - height * 0.08;
+    const rows = [
+      // Bottom row is anchored to ground for a floor-attached bush silhouette.
+      { y: 0, count: 6 + stage, widthFactor: 0.8 },
+      { y: -height * 0.1, count: 5 + stage, widthFactor: 0.68 },
+      { y: -height * 0.2, count: 4 + stage, widthFactor: 0.54 },
+      { y: -height * 0.3, count: 3 + stage, widthFactor: 0.40 }
+    ];
+
+    for (const [rowIndex, row] of rows.entries()) {
+      const rowCount = row.count;
+      const laneHalf = spread * row.widthFactor;
+      const spacing = rowCount > 1 ? (laneHalf * 2) / (rowCount - 1) : 0;
+      const circleRadius = (2.05 + rowIndex * 0.4 + stage * 0.32) * worldScale;
+
+      for (let i = 0; i < rowCount; i += 1) {
+        const xOffset = rowCount > 1 ? (-laneHalf + spacing * i) : 0;
+        const norm = rowCount > 1 ? i / (rowCount - 1) : 0.5;
+        const sideWeight = Math.abs(norm * 2 - 1);
+        const leafX = baseX + xOffset + sway * (0.5 + (1 - sideWeight) * 0.4);
+        const leafY = clumpCenterY + row.y - sideWeight * height * 0.035;
+
+        ctx.fillStyle = `hsla(${111 + ((i + rowIndex) % 3) * 4}deg ${56 + stage * 3}% ${34 + (i % 2) * 3}% / 0.88)`;
+        ctx.beginPath();
+        ctx.arc(leafX, leafY, circleRadius, 0, TAU);
+        ctx.fill();
+      }
+
+      // very thin connective twigs between nearby dots
+      if (rowCount > 1) {
+        ctx.strokeStyle = 'hsla(114deg 26% 22% / 0.45)';
+        ctx.lineWidth = Math.max(0.45, 0.6 * worldScale);
+        for (let i = 0; i < rowCount - 1; i += 1) {
+          const normA = i / (rowCount - 1);
+          const normB = (i + 1) / (rowCount - 1);
+          const sideWeightA = Math.abs(normA * 2 - 1);
+          const sideWeightB = Math.abs(normB * 2 - 1);
+          const xA = baseX + (-laneHalf + spacing * i) + sway * (0.5 + (1 - sideWeightA) * 0.4);
+          const yA = clumpCenterY + row.y - sideWeightA * height * 0.07;
+          const xB = baseX + (-laneHalf + spacing * (i + 1)) + sway * (0.5 + (1 - sideWeightB) * 0.4);
+          const yB = clumpCenterY + row.y - sideWeightB * height * 0.07;
+
+          ctx.beginPath();
+          ctx.moveTo(xA, yA);
+          ctx.lineTo(xB, yB);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Organic pre-growth: tiny side buds appear and gradually grow before stage step.
+    if (stage < 3 && previewGrowth01 > 0.001) {
+      const budRadius = (0.9 + 3.1 * previewGrowth01) * worldScale;
+      const budInset = spread * (0.94 + 0.12 * previewGrowth01);
+      const budY = clumpCenterY - height * (0.11 + 0.05 * previewGrowth01);
+      for (const dir of [-1, 1]) {
+        ctx.fillStyle = 'hsla(116deg 62% 37% / 0.9)';
+        ctx.beginPath();
+        ctx.arc(baseX + dir * budInset + sway * 0.6, budY, budRadius, 0, TAU);
+        ctx.fill();
+      }
+    }
+
+    ctx.strokeStyle = 'hsla(112deg 35% 24% / 0.72)';
+    ctx.lineWidth = Math.max(0.8, 1.1 * worldScale);
+    const branchCount = 5 + (stage - 1) * 2;
+    for (let i = 0; i < branchCount; i += 1) {
+      const pose = this.world.getNestbrushBranchPose?.(i, time / 1000);
+      if (!pose) continue;
+      ctx.beginPath();
+      ctx.moveTo(offsetX + pose.startX * worldScale, offsetY + pose.startY * worldScale);
+      ctx.quadraticCurveTo(
+        offsetX + ((pose.startX + pose.endX) * 0.52) * worldScale,
+        offsetY + ((pose.startY + pose.endY) * 0.5 - 0.8) * worldScale,
+        offsetX + pose.endX * worldScale,
+        offsetY + pose.endY * worldScale
+      );
+      ctx.stroke();
+    }
+
+    ctx.restore();
   }
 
 
@@ -675,12 +778,17 @@ export class Renderer {
   }
 
 
-  #drawEggs(ctx) {
+  #drawEggs(ctx, time) {
     const { scale: worldScale, offsetX, offsetY } = this.camera;
 
     for (const egg of this.world.eggs ?? []) {
-      const x = offsetX + egg.x * worldScale;
-      const y = offsetY + egg.y * worldScale;
+      const nestbrushPos = egg?.isProtectedByNestbrush
+        ? this.world.getNestbrushEggWorldPosition?.(egg, time / 1000)
+        : null;
+      const eggX = nestbrushPos?.x ?? egg.x;
+      const eggY = nestbrushPos?.y ?? egg.y;
+      const x = offsetX + eggX * worldScale;
+      const y = offsetY + eggY * worldScale;
       const r = 2.2 * worldScale;
 
       ctx.beginPath();

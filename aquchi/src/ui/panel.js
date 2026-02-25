@@ -73,6 +73,9 @@ export class Panel {
     this.speciesAccordion = this.root.querySelector('[data-species-accordion]');
     this.speciesAccordionToggle = this.root.querySelector('[data-control="toggleSpeciesAccordion"]');
     this.speciesContent = this.root.querySelector('[data-species-content]');
+    this.addNestbrushButton = this.root.querySelector('[data-control="addNestbrush"]');
+    this.nestbrushState = this.root.querySelector('[data-nestbrush-state]');
+    this.nestbrushReqBirths = this.root.querySelector('[data-nestbrush-req-births]');
     this.addBerryReedButton = this.root.querySelector('[data-control="addBerryReed"]');
     this.berryState = this.root.querySelector('[data-berry-state]');
     this.berryReqBirths = this.root.querySelector('[data-berry-req-births]');
@@ -193,6 +196,12 @@ export class Panel {
       if (this.speciesAccordion) this.speciesAccordion.dataset.open = String(nextOpen);
       this.speciesAccordionToggle?.setAttribute('aria-expanded', String(nextOpen));
       if (this.speciesContent) this.speciesContent.hidden = !nextOpen;
+    });
+
+    this.addNestbrushButton?.addEventListener('pointerup', (event) => {
+      event.preventDefault();
+      const result = this.handlers.onAddNestbrush?.();
+      return result;
     });
 
     this.addBerryReedButton?.addEventListener('pointerup', (event) => {
@@ -366,6 +375,9 @@ export class Panel {
     maintenanceCooldownSec,
     filterDepletedThreshold01,
     birthsCount,
+    nestbrushUnlockBirths,
+    canAddNestbrush,
+    nestbrushAdded,
     berryReedUnlockBirths,
     berryReedUnlockCleanlinessPct,
     canAddBerryReed,
@@ -567,13 +579,39 @@ export class Panel {
       this.maintainFilterButton.disabled = !canMaintain;
     }
 
+    const nestbrushRequiredBirths = Math.max(1, Math.floor(nestbrushUnlockBirths ?? 3));
+    const nestbrushBirthProgress = Math.max(0, Math.floor(birthsCount ?? 0));
+    const nestbrushAlreadyAdded = Boolean(nestbrushAdded);
+
+    if (this.nestbrushReqBirths) {
+      this.nestbrushReqBirths.textContent = `Requires: ${nestbrushRequiredBirths} births (${Math.min(nestbrushBirthProgress, nestbrushRequiredBirths)}/${nestbrushRequiredBirths})`;
+    }
+
+    if (this.addNestbrushButton) {
+      if (nestbrushAlreadyAdded) {
+        this.addNestbrushButton.disabled = true;
+        this.addNestbrushButton.textContent = 'Added ✓';
+      } else {
+        this.addNestbrushButton.disabled = !canAddNestbrush;
+        this.addNestbrushButton.textContent = 'Nestbrush';
+      }
+      this.#setSpeciesButtonReady(this.addNestbrushButton, canAddNestbrush && !nestbrushAlreadyAdded);
+    }
+
+    if (this.nestbrushState) {
+      this.nestbrushState.textContent = nestbrushAlreadyAdded ? 'Added' : (canAddNestbrush ? 'Ready' : 'Locked');
+      this.nestbrushState.style.color = nestbrushAlreadyAdded
+        ? '#84e89a'
+        : (canAddNestbrush ? '#cfeeff' : '');
+    }
+
     const roundedCleanlinessPct = Math.round((cleanliness01 ?? 1) * 100);
     const requiredBirths = Math.max(1, Math.floor(berryReedUnlockBirths ?? 4));
     const birthProgress = Math.max(0, Math.floor(birthsCount ?? 0));
     const requiredCleanlinessPct = Math.max(1, Math.min(100, Math.floor(berryReedUnlockCleanlinessPct ?? 80)));
     const alreadyAdded = (berryReedPlantCount ?? 0) >= 1;
 
-    if (this.speciesAccordion) this.speciesAccordion.classList.toggle('is-dim', !canAddBerryReed && !alreadyAdded);
+    if (this.speciesAccordion) this.speciesAccordion.classList.toggle('is-dim', !canAddNestbrush && !nestbrushAlreadyAdded && !canAddBerryReed && !alreadyAdded);
 
     if (this.berryReqBirths) {
       this.berryReqBirths.textContent = `Requires: ${requiredBirths} births (${Math.min(birthProgress, requiredBirths)}/${requiredBirths})`;

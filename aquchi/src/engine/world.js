@@ -48,6 +48,15 @@ const SILT_SIFTER_MAX_PLAYER_COUNT = 4;
 const SILT_SIFTER_RECENT_POOP_MIN_SEC = 180;
 const SILT_SIFTER_RECENT_POOP_MAX_SEC = 300;
 const POOP_DISSOLVE_DIRT_UNITS = Math.max(0, CONFIG.world.poop?.dissolveDirtUnits ?? POOP_DIRT_PER_SEC * POOP_DEFAULT_TTL_SEC);
+const NESTBRUSH_UNLOCK_BIRTHS = 3;
+const NESTBRUSH_GROWTH_MIN_HYGIENE01 = 0.85;
+const NESTBRUSH_STAGE_GROWTH_SEC = 720;
+const NESTBRUSH_MAX_STAGE = 3;
+const NESTBRUSH_CAPACITY_BY_STAGE = [4, 8, 12];
+const NESTBRUSH_INCUBATION_PENALTY_MULTIPLIER = 1.18;
+const NESTBRUSH_HATCH_PENALTY_MULTIPLIER = 0.86;
+const NESTBRUSH_MIN_HEIGHT_RATIO = 0.07;
+const NESTBRUSH_MAX_HEIGHT_RATIO = 0.17;
 
 const FEMALE_NAME_POOL = Array.isArray(CONFIG.FEMALE_NAME_POOL) ? CONFIG.FEMALE_NAME_POOL : [];
 const MALE_NAME_POOL = Array.isArray(CONFIG.MALE_NAME_POOL) ? CONFIG.MALE_NAME_POOL : [];
@@ -135,8 +144,11 @@ export const EGG_SAVE_KEYS = [
   'speciesId',
   'state',
   'canBeEaten',
-  'nutrition'
+  'nutrition',
+  'isProtectedByNestbrush',
+  'nestbrushAttachment'
 ];
+export const NESTBRUSH_SAVE_KEYS = ['id', 'x', 'bottomY', 'height', 'stage', 'growthProgressSec', 'swayPhase', 'swayRate'];
 export const BERRY_REED_BRANCH_SAVE_KEYS = ['t', 'side', 'len'];
 export const BERRY_REED_PLANT_SAVE_KEYS = [
   'id',
@@ -239,9 +251,42 @@ function deserializeEgg(data, bounds, swimHeight) {
     fatherId: source.fatherId ?? null,
     motherTraits: deepCopyPlain(source.motherTraits ?? {}),
     fatherTraits: deepCopyPlain(source.fatherTraits ?? {}),
+    speciesId: typeof source.speciesId === 'string' ? source.speciesId : DEFAULT_SPECIES_ID,
     state: typeof source.state === 'string' ? source.state : 'INCUBATING',
     canBeEaten: Boolean(source.canBeEaten ?? true),
-    nutrition: Math.max(0, Number.isFinite(source.nutrition) ? source.nutrition : 0.25)
+    nutrition: Math.max(0, Number.isFinite(source.nutrition) ? source.nutrition : 0.25),
+    isProtectedByNestbrush: Boolean(source.isProtectedByNestbrush),
+    nestbrushAttachment: source.nestbrushAttachment && typeof source.nestbrushAttachment === 'object'
+      ? {
+        branchIndex: Math.max(0, Math.floor(source.nestbrushAttachment.branchIndex ?? 0)),
+        u: clamp(Number.isFinite(source.nestbrushAttachment.u) ? source.nestbrushAttachment.u : 0.7, 0.1, 0.95),
+        v: clamp(Number.isFinite(source.nestbrushAttachment.v) ? source.nestbrushAttachment.v : 0, -8, 8)
+      }
+      : null
+  };
+}
+
+function serializeNestbrush(plant) {
+  return pickSavedKeys(plant, NESTBRUSH_SAVE_KEYS);
+}
+
+function deserializeNestbrush(data, bounds) {
+  if (!data || typeof data !== 'object') return null;
+  const source = data;
+  const minBottomY = Math.max(0, bounds.height - 8);
+  return {
+    id: Number.isFinite(source.id) ? source.id : 1,
+    x: clamp(Number.isFinite(source.x) ? source.x : bounds.width * 0.5, 12, Math.max(12, bounds.width - 12)),
+    bottomY: clamp(Number.isFinite(source.bottomY) ? source.bottomY : bounds.height - 1, minBottomY, bounds.height),
+    height: clamp(
+      Number.isFinite(source.height) ? source.height : bounds.height * 0.1,
+      bounds.height * NESTBRUSH_MIN_HEIGHT_RATIO,
+      bounds.height * NESTBRUSH_MAX_HEIGHT_RATIO
+    ),
+    stage: clamp(Math.floor(Number.isFinite(source.stage) ? source.stage : 1), 1, NESTBRUSH_MAX_STAGE),
+    growthProgressSec: Math.max(0, Number.isFinite(source.growthProgressSec) ? source.growthProgressSec : 0),
+    swayPhase: Number.isFinite(source.swayPhase) ? source.swayPhase : rand(0, Math.PI * 2),
+    swayRate: clamp(Number.isFinite(source.swayRate) ? source.swayRate : rand(0.0007, 0.0014), 0.0002, 0.003)
   };
 }
 
@@ -507,6 +552,8 @@ export class World {
     this.nextBerryReedPlantId = 1;
     this.nextFruitId = 1;
     this.speciesUnlocks = { berryReed: false, azureDart: false, siltSifter: false };
+    this.nestbrush = null;
+    this.nextNestbrushId = 1;
 
     // Global environment state (will grow over time).
     this.water = this.#createInitialWaterState();
@@ -818,7 +865,8 @@ export class World {
       food: this.food.map((entry) => serializeFood(entry)),
       poop: this.poop.map((entry) => serializePoop(entry)),
       berryReedPlants: this.berryReedPlants.map((entry) => serializeBerryReedPlant(entry)),
-      fruits: this.fruits.map((entry) => serializeBerryReedFruit(entry))
+      fruits: this.fruits.map((entry) => serializeBerryReedFruit(entry)),
+      nestbrush: this.nestbrush ? serializeNestbrush(this.nestbrush) : null
     };
   }
 
@@ -877,6 +925,8 @@ export class World {
         .slice(0, BERRY_REED_MAX_FRUITS)
       : [];
 
+    this.nestbrush = deserializeNestbrush(source.nestbrush, this.bounds);
+
     this.water = deserializeWater(source.water, this.#createInitialWaterState());
 
     this.nextFishId = Math.max(1, ...[...this.fishArchiveById.values()].map((entry) => Math.floor(entry.id || 0) + 1));
@@ -885,6 +935,14 @@ export class World {
     this.nextEggId = Math.max(1, ...this.eggs.map((entry) => Math.floor(entry.id || 0) + 1));
     this.nextBerryReedPlantId = Math.max(1, ...this.berryReedPlants.map((entry) => Math.floor(entry.id || 0) + 1));
     this.nextFruitId = Math.max(1, ...this.fruits.map((entry) => Math.floor(entry.id || 0) + 1));
+    this.nextNestbrushId = Math.max(1, (this.nestbrush?.id ?? 0) + 1);
+
+    if (!this.nestbrush) {
+      for (const egg of this.eggs) {
+        egg.isProtectedByNestbrush = false;
+        egg.nestbrushAttachment = null;
+      }
+    }
 
     this.fishById = new Map();
     for (const fish of this.fish) this.fishById.set(fish.id, fish);
@@ -1244,6 +1302,7 @@ export class World {
     this.#updateFood(simDt, motionDt);
     this.#updatePoop(simDt, motionDt);
     this.#updateEggs(simDt);
+    this.#updateNestbrush(simDt);
     this.#updateBerryReed(simDt);
     this.#updateWaterHygiene(simDt);
     this.#updateFxParticles(motionDt);
@@ -1293,6 +1352,43 @@ export class World {
     if (azureReadyNow) this.speciesUnlocks.azureDart = true;
 
     if (this.birthsCount >= SILT_SIFTER_UNLOCK_BIRTHS) this.speciesUnlocks.siltSifter = true;
+  }
+
+  canAddNestbrush() {
+    return isDevMode() || this.birthsCount >= NESTBRUSH_UNLOCK_BIRTHS;
+  }
+
+  addNestbrush() {
+    const fail = (reason) => ({ ok: false, reason });
+    if (!this.canAddNestbrush()) return fail('LOCKED');
+    if (this.nestbrush) return fail('MAX_COUNT');
+    if (!Number.isFinite(this.bounds?.width) || !Number.isFinite(this.bounds?.height)) return fail('WORLD_NOT_READY');
+
+    const hasBerry = Array.isArray(this.berryReedPlants) && this.berryReedPlants.length > 0;
+    const berryAvgX = hasBerry
+      ? this.berryReedPlants.reduce((sum, plant) => sum + (plant?.x ?? this.bounds.width * 0.5), 0) / this.berryReedPlants.length
+      : this.bounds.width * 0.5;
+    const preferRight = berryAvgX < this.bounds.width * 0.5;
+    const sideAnchor = preferRight ? 0.78 : 0.22;
+    const sideJitter = rand(-0.1, 0.1) * this.bounds.width;
+
+    this.nestbrush = {
+      id: this.nextNestbrushId++,
+      x: clamp(this.bounds.width * sideAnchor + sideJitter, 14, Math.max(14, this.bounds.width - 14)),
+      bottomY: this.bounds.height - rand(0.4, 1.6),
+      height: rand(this.bounds.height * 0.09, this.bounds.height * 0.13),
+      stage: 1,
+      growthProgressSec: 0,
+      swayPhase: rand(0, Math.PI * 2),
+      swayRate: rand(0.0007, 0.0014)
+    };
+
+    return { ok: true };
+  }
+
+  getNestbrushCapacity(stage = this.nestbrush?.stage ?? 1) {
+    const normalizedStage = clamp(Math.floor(stage), 1, NESTBRUSH_MAX_STAGE);
+    return NESTBRUSH_CAPACITY_BY_STAGE[normalizedStage - 1] ?? NESTBRUSH_CAPACITY_BY_STAGE[0];
   }
 
   canAddBerryReedPlant() {
@@ -1405,6 +1501,13 @@ export class World {
     fish.spawnTimeSec = this.simTimeSec - juvenileSeedAgeSec;
     fish.ageSecCached = juvenileSeedAgeSec;
     fish.updateLifeCycle(this.simTimeSec);
+    if (fish.lifeStage === 'BABY') {
+      const fishBabyEndSec = Math.max(30, babyEndSec + (fish.stageShiftBabySec ?? 0));
+      const guaranteedJuvenileAgeSec = fishBabyEndSec / Math.max(0.001, fish.growthRate ?? 1) + 12;
+      fish.spawnTimeSec = this.simTimeSec - guaranteedJuvenileAgeSec;
+      fish.ageSecCached = guaranteedJuvenileAgeSec;
+      fish.updateLifeCycle(this.simTimeSec);
+    }
     this.fish.push(fish);
 
     return true;
@@ -1922,12 +2025,15 @@ export class World {
         y = clamp(plant.bottomY - rand(1, 8), baseLayY - 6, this.#swimHeight());
       }
 
+      const nestbrushPlacement = this.#tryGetNestbrushEggPlacement(speciesId);
+      const incubationPenalty = nestbrushPlacement.protected ? 1 : NESTBRUSH_INCUBATION_PENALTY_MULTIPLIER;
+
       this.eggs.push({
         id: this.nextEggId++,
-        x,
-        y,
+        x: nestbrushPlacement.protected ? nestbrushPlacement.x : x,
+        y: nestbrushPlacement.protected ? nestbrushPlacement.y : y,
         laidAtSec: nowSec,
-        hatchAtSec: nowSec + randRange(EGG_INCUBATION_SEC, 120, 300) * reproScale,
+        hatchAtSec: nowSec + randRange(EGG_INCUBATION_SEC, 120, 300) * reproScale * incubationPenalty,
         motherId: female.id,
         fatherId: female.repro.fatherId,
         motherTraits,
@@ -1935,7 +2041,9 @@ export class World {
         speciesId,
         state: 'INCUBATING',
         canBeEaten: true,
-        nutrition: 0.25
+        nutrition: 0.25,
+        isProtectedByNestbrush: nestbrushPlacement.protected,
+        nestbrushAttachment: nestbrushPlacement.attachment
       });
     }
 
@@ -2131,6 +2239,9 @@ export class World {
       const speciesId = egg.speciesId ?? this.getFishById(egg.motherId)?.speciesId ?? DEFAULT_SPECIES_ID;
       const populationPressure01 = this.#getPopulationPressure01(speciesId);
       hatchChance *= (1 - (populationPressure01 * 0.5));
+      if (speciesId === LAB_MINNOW_SPECIES_ID && !egg.isProtectedByNestbrush) {
+        hatchChance *= NESTBRUSH_HATCH_PENALTY_MULTIPLIER;
+      }
       if (speciesId === AZURE_DART_SPECIES_ID && this.berryReedPlants.length > 0) {
         hatchChance += 0.08;
       }
@@ -2259,6 +2370,88 @@ export class World {
       const interval = Math.max(3, baseInterval + jitter);
       plant.nextFruitAtSec = this.simTimeSec + interval;
       if (!spawned && this.fruits.length >= BERRY_REED_MAX_FRUITS) break;
+    }
+  }
+
+  #tryGetNestbrushEggPlacement(speciesId) {
+    if (speciesId !== LAB_MINNOW_SPECIES_ID || !this.nestbrush) {
+      return { protected: false, x: null, y: null, attachment: null };
+    }
+
+    const capacity = this.getNestbrushCapacity(this.nestbrush.stage);
+    const occupied = this.eggs.filter((egg) => egg?.state === 'INCUBATING' && egg?.isProtectedByNestbrush).length;
+    if (occupied >= capacity) return { protected: false, x: null, y: null, attachment: null };
+
+    const branchCount = 5 + (this.nestbrush.stage - 1) * 2;
+    const attachment = {
+      branchIndex: Math.floor(rand(0, branchCount)),
+      u: rand(0.34, 0.92),
+      v: rand(-4, 4)
+    };
+    const position = this.getNestbrushEggWorldPosition({ nestbrushAttachment: attachment });
+
+    return {
+      protected: true,
+      x: position?.x ?? this.nestbrush.x,
+      y: position?.y ?? (this.nestbrush.bottomY - this.nestbrush.height * 0.55),
+      attachment
+    };
+  }
+
+  getNestbrushEggWorldPosition(egg, timeSec = this.simTimeSec) {
+    if (!this.nestbrush || !egg?.nestbrushAttachment) return null;
+    const branchPose = this.getNestbrushBranchPose(egg.nestbrushAttachment.branchIndex, timeSec);
+    if (!branchPose) return null;
+
+    const u = clamp(egg.nestbrushAttachment.u ?? 0.7, 0.1, 0.95);
+    const v = clamp(egg.nestbrushAttachment.v ?? 0, -8, 8);
+    const branchX = branchPose.startX + (branchPose.endX - branchPose.startX) * u;
+    const branchY = branchPose.startY + (branchPose.endY - branchPose.startY) * u;
+    const angle = Math.atan2(branchPose.endY - branchPose.startY, branchPose.endX - branchPose.startX);
+
+    return {
+      x: branchX - Math.sin(angle) * v,
+      y: branchY + Math.cos(angle) * v
+    };
+  }
+
+  getNestbrushBranchPose(branchIndex = 0, timeSec = this.simTimeSec) {
+    if (!this.nestbrush) return null;
+    const stage = clamp(this.nestbrush.stage ?? 1, 1, NESTBRUSH_MAX_STAGE);
+    const branchCount = 5 + (stage - 1) * 2;
+    const index = Math.max(0, Math.floor(branchIndex) % branchCount);
+    const side = index % 2 === 0 ? -1 : 1;
+    const tier = Math.floor(index / 2);
+    const spreadX = 14 + (stage - 1) * 11;
+    const spreadY = this.nestbrush.height * (0.18 + (stage - 1) * 0.05);
+    const sway = Math.sin(timeSec * (this.nestbrush.swayRate ?? 0.001) + (this.nestbrush.swayPhase ?? 0)) * 4;
+    const localSway = Math.sin(timeSec * ((this.nestbrush.swayRate ?? 0.001) * 2.4) + index * 0.9) * 1.7;
+
+    const centerY = this.nestbrush.bottomY - this.nestbrush.height * 0.38;
+    const laneY = (tier - (branchCount - 1) * 0.25) * (spreadY / Math.max(1, branchCount * 0.5));
+    const startX = this.nestbrush.x + side * spreadX * 0.18 + sway * 0.45;
+    const startY = centerY + laneY;
+
+    const branchLen = spreadX * (0.55 + (tier % 3) * 0.12);
+    const endX = startX + side * branchLen + localSway;
+    const endY = startY + Math.sin(index * 1.17 + stage * 0.8) * 0.9 - this.nestbrush.height * 0.02;
+    return { startX, startY, endX, endY };
+  }
+
+  #updateNestbrush(dt) {
+    if (!Number.isFinite(dt) || dt <= 0 || !this.nestbrush) return;
+
+    const hygiene01 = this.water?.hygiene01 ?? 1;
+    if (hygiene01 < NESTBRUSH_GROWTH_MIN_HYGIENE01) return;
+    if (this.nestbrush.stage >= NESTBRUSH_MAX_STAGE) {
+      this.nestbrush.growthProgressSec = Math.min(this.nestbrush.growthProgressSec ?? 0, NESTBRUSH_STAGE_GROWTH_SEC);
+      return;
+    }
+
+    this.nestbrush.growthProgressSec = (this.nestbrush.growthProgressSec ?? 0) + dt;
+    while (this.nestbrush.growthProgressSec >= NESTBRUSH_STAGE_GROWTH_SEC && this.nestbrush.stage < NESTBRUSH_MAX_STAGE) {
+      this.nestbrush.growthProgressSec -= NESTBRUSH_STAGE_GROWTH_SEC;
+      this.nestbrush.stage += 1;
     }
   }
 
