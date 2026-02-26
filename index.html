@@ -1,186 +1,307 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Aquchi</title>
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
-    <link rel="icon" href="/favicon.ico">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Obi Game Studios — Dizgi & Aquchi</title>
+  <meta name="description" content="Minimal browser games: Dizgi and Aquchi." />
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <section class="start-screen" id="startScreen" aria-label="Start screen">
-      <div class="start-card">
-        <h1>Aquchi Aquarium Simulation</h1>
+  <!-- Canonical -->
+  <link rel="canonical" href="https://dizgioyunu.com/">
 
-        <label class="control-group start-control-group">
-          <span>Initial Fish Count: <strong data-start-value="initialFishCount">4</strong></span>
-          <input type="range" min="1" max="6" value="4" step="1" data-start-control="initialFishCount" />
-        </label>
+  <!-- FAVICONS -->
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
 
-        <div class="start-actions" aria-label="Start actions">
-          <button type="button" class="start-btn" id="startSimButton">Start Sim</button>
-          <button type="button" class="start-btn" id="continueSimButton">Continue</button>
-          <button type="button" class="start-btn" data-info-modal="howToPlay">How to Play</button>
-          <button type="button" class="start-btn" data-info-modal="about">About</button>
-          <button type="button" class="start-btn" id="buyCoffeeButton">Buy me a coffee</button>
-        </div>
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@450;600;750&display=swap" rel="stylesheet">
 
-        <a class="home-link" href="https://dizgioyunu.com/">← Back to Obi Game Studios</a>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#0b0d10;
+      --muted:#5b6675;
+      --line:rgba(16,24,40,.12);
+      --shadow:0 6px 16px rgba(16,24,40,.08);
+      --max:1020px;
+    }
 
-        <details class="about-seo" id="aboutSeoStart" open>
-          <summary>About Aquchi (in a nutshell)</summary>
-          <p>Aquchi is a cozy aquarium simulation game that runs directly in your browser — a calm, system-driven experience designed for slow balance rather than spectacle.</p>
-          <p>Fish eat, reproduce, and respond to subtle shifts in their environment. Water cleanliness, filter upgrades, and environmental stress gradually shape how the tank evolves over time.</p>
-          <p>Rather than chasing constant expansion, Aquchi models feedback and equilibrium. Small actions ripple through the system, nudging the micro-ecosystem toward stability — or collapse.</p>
-        </details>
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter, system-ui;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.45;
+      -webkit-font-smoothing:antialiased;
+    }
 
-        <p class="saved-start-meta" data-saved-start-meta>Saved simulation found: no</p>
-      </div>
-    </section>
+    a{text-decoration:none; color:inherit}
 
-    <div class="info-modal-backdrop" id="infoModalBackdrop" hidden>
-      <section class="info-modal" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
-        <header class="info-modal-header">
-          <h2 id="infoModalTitle">Info</h2>
-          <button type="button" class="info-modal-close" id="infoModalClose" aria-label="Close">✕</button>
-        </header>
-        <div class="info-modal-content" id="infoModalContent"></div>
-      </section>
+    .wrap{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:50px 20px 120px;
+    }
+
+    header{padding-bottom:30px;}
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-weight:750;
+      font-size:18px;
+      letter-spacing:-.2px;
+    }
+
+    .brandLogo{
+      width:28px;
+      height:28px;
+      object-fit:contain;
+    }
+
+    h1{
+      margin:24px 0 10px;
+      font-size:clamp(30px,4vw,44px);
+      font-weight:750;
+      letter-spacing:-.9px;
+      line-height:1.05;
+    }
+
+    .subtitle{
+      margin:0;
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:22px;
+      margin-top:40px;
+    }
+
+    @media(min-width:900px){
+      .grid{grid-template-columns:1fr 1fr}
+    }
+
+    .card{
+      border:1px solid var(--line);
+      border-radius:22px;
+      overflow:hidden;
+      background:#fff;
+      box-shadow:var(--shadow);
+      display:flex;
+      flex-direction:column;
+      transition:transform .15s ease;
+    }
+
+    .card:hover{transform:translateY(-3px);}
+
+    .shot{
+      aspect-ratio:16/9;
+      overflow:hidden;
+      border-bottom:1px solid var(--line);
+    }
+
+    .shot a{
+      display:block;
+      width:100%;
+      height:100%;
+    }
+
+    .shot img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .content{
+      padding:18px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    h2{
+      margin:0;
+      font-size:20px;
+      font-weight:750;
+    }
+
+    .desc{
+      margin:0;
+      color:var(--muted);
+      font-size:14.5px;
+    }
+
+    .btn{
+      margin-top:12px;
+      align-self:flex-start;
+      padding:10px 14px;
+      border-radius:14px;
+      font-weight:600;
+      border:1px solid var(--line);
+      background:var(--text);
+      color:#fff;
+    }
+
+    hr{
+      border:0;
+      border-top:1px solid var(--line);
+      margin:50px 0 30px;
+    }
+
+    .studio h3{
+      margin:0;
+      font-size:16px;
+      font-weight:750;
+    }
+
+    .studio p{
+      margin:8px 0 0;
+      color:var(--muted);
+      font-size:14.5px;
+    }
+
+    .footerRow{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-top:18px;
+    }
+
+    /* Floating bottom-right icons */
+    .floatingLinks{
+      position:fixed;
+      right:24px;
+      bottom:24px;
+      display:flex;
+      gap:14px;
+      z-index:10;
+    }
+
+    .floatingLinks a{
+      width:42px;
+      height:42px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:50%;
+      border:1px solid var(--line);
+      background:#fff;
+      box-shadow:var(--shadow);
+      color:var(--muted);
+      transition:all .15s ease;
+    }
+
+    .floatingLinks a:hover{
+      transform:translateY(-3px);
+      color:var(--text);
+    }
+
+    .icon{
+      width:18px;
+      height:18px;
+    }
+  </style>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GVVFCT9J5D"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-GVVFCT9J5D');
+  </script>
+
+</head>
+
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <img src="/favicon-32x32.png" class="brandLogo" alt="Obi Game Studios">
+    <span>Obi Game Studios</span>
+  </div>
+
+  <h1>Minimal browser games.</h1>
+  <p class="subtitle">Clean UI. System-driven design.</p>
+</header>
+
+<section class="grid">
+
+  <!-- DIZGI -->
+  <article class="card">
+    <div class="shot">
+      <a href="/dizgi/">
+        <img src="/images/dizgi-shot.jpg" alt="Dizgi screenshot">
+      </a>
     </div>
+    <div class="content">
+      <h2>Dizgi</h2>
+      <p class="desc">A fast Turkish word puzzle.</p>
+      <a class="btn" href="/dizgi/">Play</a>
+    </div>
+  </article>
 
-    <main class="page-layout" id="appRoot" hidden>
-      <section class="tank-stage" aria-label="Aquarium stage">
-        <div class="tank-shell">
-          <canvas id="aquariumCanvas" aria-label="Aquchi"></canvas>
-        </div>
-      </section>
+  <!-- AQUCHI -->
+  <article class="card">
+    <div class="shot">
+      <a href="/aquchi/">
+        <img src="/images/aquchi-shot.jpg" alt="Aquchi screenshot">
+      </a>
+    </div>
+    <div class="content">
+      <h2>Aquchi</h2>
+      <p class="desc">A cosy micro-ecosystem aquarium fish sim.</p>
+      <a class="btn" href="/aquchi/">Play</a>
+    </div>
+  </article>
 
-      <button class="deck-toggle" id="deckToggle" type="button" aria-expanded="false" aria-controls="panelRoot">
-        Controls
-      </button>
+</section>
 
-      <aside class="ui-deck" id="panelRoot" aria-label="Simulation panel" data-open="false">
-        <header class="deck-header">
-          <h1>Aquchi</h1>
-          <p>Focus companion</p>
-        </header>
+<hr>
 
-        <div class="tab-buttons" role="tablist">
-          <button class="tab-button active" data-tab="stats" role="tab" aria-selected="true">Stats</button>
-          <button class="tab-button" data-tab="controls" role="tab" aria-selected="false">Controls</button>
-          <button class="tab-button" data-tab="fish" role="tab" aria-selected="false">Fish</button>
-        </div>
+<section class="studio">
+  <h3>About</h3>
+  <p>
+    Obi Game Studios builds small, focused browser games with minimal and precise design.
+  </p>
 
-        <section class="tab-content active" data-content="stats" role="tabpanel">
-          <h2>Stats</h2>
-          <div class="stat-row"><span>Total Sim Time</span><strong data-stat="simTime">00:00:00</strong></div>
-          <div class="stat-row"><span>Fish</span><strong data-stat="fishCount">0</strong></div>
-          <div class="stat-row"><span>Cleanliness</span><strong data-stat="cleanliness">100%</strong></div>
-          <div class="stat-row"><span>Water quality trend</span><strong data-stat="cleanlinessTrend">Stable</strong></div>
-          <div data-stat="eggsSummary"></div>
-        </section>
+  <div class="footerRow">
+    <a class="btn" href="https://buymeacoffee.com/dizgioyunu" target="_blank" rel="noopener">
+      ☕ Buy me a coffee
+    </a>
+  </div>
+</section>
 
-        <section class="tab-content" data-content="controls" role="tabpanel">
-          <h2>Controls</h2>
+</div>
 
-          <label class="control-group" data-sim-speed-group>
-            <span>Simulation Speed: <strong data-value="simSpeed">1.0x</strong></span>
-            <input type="range" min="0.5" max="3" value="1" step="0.1" data-control="simSpeed" />
-            <p class="control-hint" data-sim-speed-condition hidden></p>
-          </label>
+<!-- Floating Bottom Right Icons -->
+<div class="floatingLinks">
+  <!-- X -->
+  <a href="https://x.com/DizgiOyunu" target="_blank" rel="noopener" aria-label="X">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d="M18.9 2H22l-6.8 7.8L23 22h-6.2l-4.9-6.4L6 22H3l7.3-8.4L1 2h6.3l4.5 5.9L18.9 2z"/>
+    </svg>
+  </a>
 
-          <div class="button-row split">
-            <button type="button" data-control="togglePause">Pause</button>
-          </div>
+  <!-- Mail -->
+  <a href="mailto:dizgi.oyunu@gmail.com" aria-label="Email">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5L4 8V6l8 5 8-5v2z"/>
+    </svg>
+  </a>
+</div>
 
-          <section class="filter-accordion is-dim" data-filter-accordion data-open="false">
-            <button class="filter-accordion-toggle" type="button" data-control="toggleFilterAccordion" aria-expanded="false">
-              <span>Water Filter</span>
-              <span class="filter-accordion-chevron">▾</span>
-            </button>
-            <div class="filter-accordion-content" data-filter-content hidden>
-              <p class="filter-message" data-filter-message>To install the filter: feed your fish 0 times.</p>
-              <div class="stat-row" data-filter-feed-row><span>Feed count progress</span><strong data-filter-feed-progress>0 / 0</strong></div>
-              <div class="stat-row" data-filter-install-progress-row hidden><span>Install progress</span><strong data-filter-install-progress>0%</strong></div>
-              <div class="progress-track" data-filter-install-bar-track hidden><div class="progress-fill" data-filter-install-bar></div></div>
-              <div class="stat-row" data-filter-status-row hidden><span>Status</span><strong data-filter-status>OFF</strong></div>
-              <div class="stat-row" data-filter-health-row hidden><span>Filter health</span><strong data-filter-health>0%</strong></div>
-              <div class="stat-row" data-filter-tier-row hidden><span>Filter tier</span><strong data-filter-tier>Tier 1/3</strong></div>
-              <div class="stat-row" data-filter-tier-progress-row hidden><span>Upgrade progress</span><strong data-filter-tier-progress>0 feeds left (0/0)</strong></div>
-              <div class="button-row"><button type="button" data-control="installFilter" hidden>Install water filter</button></div>
-              <div class="button-row" data-filter-toggle-row hidden><button type="button" data-control="toggleFilterPower">On / Off</button></div>
-              <div class="button-row"><button type="button" data-control="upgradeFilter" hidden>Upgrade filter ⚡</button></div>
-              <div class="button-row"><button type="button" data-control="maintainFilter" hidden>Change filter</button></div>
-            </div>
-          </section>
-
-          <section class="filter-accordion is-dim" data-species-accordion data-open="false">
-            <button class="filter-accordion-toggle" type="button" data-control="toggleSpeciesAccordion" aria-expanded="false">
-              <span>Add Species</span>
-              <span class="filter-accordion-chevron">▾</span>
-            </button>
-            <div class="filter-accordion-content" data-species-content hidden>
-              <div class="species-row" data-nestbrush-row>
-                <button type="button" data-control="addNestbrush">Nestbrush</button>
-                <strong data-nestbrush-state>Locked</strong>
-              </div>
-              <p class="filter-message" data-nestbrush-req-births>Requires: 3 births (0/3)</p>
-
-              <div class="species-row" data-berry-row>
-                <button type="button" data-control="addBerryReed">Berry Reed</button>
-                <strong data-berry-state>Locked</strong>
-              </div>
-              <p class="filter-message" data-berry-req-births>Requires: 4 births (0/4)</p>
-              <p class="filter-message" data-berry-req-cleanliness>Requires: Cleanliness 80%+</p>
-
-              <div class="species-row" data-azure-dart-row>
-                <button type="button" data-control="addAzureDart">Azure Dart</button>
-                <strong data-azure-state>Locked</strong>
-              </div>
-              <p class="filter-message" data-azure-req-berry>Requires: Berry Reed added</p>
-              <p class="filter-message" data-azure-req-cleanliness>Requires: Cleanliness 80%+</p>
-
-              <div class="species-row" data-silt-sifter-row>
-                <button type="button" data-control="addSiltSifter">Silt Sifter</button>
-                <strong data-silt-sifter-state>Locked</strong>
-              </div>
-              <p class="filter-message" data-silt-sifter-req-births>Requires: 10 births (0/10)</p>
-            </div>
-          </section>
-
-          <div class="button-row">
-            <button type="button" data-control="restartSim">Restart</button>
-          </div>
-          <div class="restart-confirm" data-restart-confirm hidden>
-            <p>All progress will be lost. Are you sure?</p>
-            <div class="button-row split">
-              <button type="button" data-control="restartConfirmYes">Yes</button>
-              <button type="button" data-control="restartConfirmNo">No</button>
-            </div>
-          </div>
-        </section>
-
-        <section class="tab-content" data-content="fish" role="tabpanel">
-          <div class="fish-inspector" data-fish-inspector></div>
-        </section>
-      </aside>
-    </main>
-
-    <section class="about-seo-footer" id="aboutSeoFooter" aria-label="About Aquchi" hidden>
-      <details class="about-seo" id="aboutSeoInGame">
-        <summary>About Aquchi (in a nutshell)</summary>
-        <p>Aquchi is a cozy aquarium simulation game that runs directly in your browser — a calm, system-driven experience designed for slow balance rather than spectacle.</p>
-        <p>Fish eat, reproduce, and respond to subtle shifts in their environment. Water cleanliness, filter upgrades, and environmental stress gradually shape how the tank evolves over time.</p>
-        <p>Rather than chasing constant expansion, Aquchi models feedback and equilibrium. Small actions ripple through the system, nudging the micro-ecosystem toward stability — or collapse.</p>
-      </details>
-    </section>
-
-    <script type="module" src="src/main.js"></script>
-  </body>
+</body>
 </html>
