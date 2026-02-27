@@ -61,6 +61,7 @@ let lastTrendSampleSimTimeSec = null;
 let lastTrendSampleHygiene01 = null;
 let smoothedHygieneDeltaPerMin = 0;
 let resizeDebounceId = null;
+let worldUsesSavedBounds = false;
 
 
 const fullscreenHint = document.createElement('div');
@@ -109,20 +110,35 @@ function loadSavedWorldSnapshot() {
 
 function getDefaultWorldBounds() {
   const isCoarsePointer = window.matchMedia?.('(pointer: coarse)')?.matches ?? false;
+  const isLandscapeViewport = window.innerWidth > window.innerHeight;
   const isMobileViewport = window.innerWidth < 860;
-  if (isCoarsePointer || isMobileViewport) {
+
+  if (isCoarsePointer) {
+    if (isLandscapeViewport) {
+      return { width: WORLD_DESKTOP_WIDTH, height: WORLD_DESKTOP_HEIGHT };
+    }
     return { width: WORLD_MOBILE_WIDTH, height: WORLD_MOBILE_HEIGHT };
   }
+
+  if (isMobileViewport) {
+    return { width: WORLD_MOBILE_WIDTH, height: WORLD_MOBILE_HEIGHT };
+  }
+
   return { width: WORLD_DESKTOP_WIDTH, height: WORLD_DESKTOP_HEIGHT };
 }
 
-function resolveSavedWorldBounds(payload) {
+function getSavedWorldBounds(payload) {
   const width = Number.isFinite(payload?.boundsWidth) ? payload.boundsWidth : null;
   const height = Number.isFinite(payload?.boundsHeight) ? payload.boundsHeight : null;
   if (width != null && height != null && width > 0 && height > 0) {
     return { width, height };
   }
-  return getDefaultWorldBounds();
+
+  return null;
+}
+
+function resolveSavedWorldBounds(payload) {
+  return getSavedWorldBounds(payload) ?? getDefaultWorldBounds();
 }
 
 function formatRelativeSavedAt(epochMs) {
@@ -751,6 +767,14 @@ corpseActionButton.addEventListener('click', () => {
 
 function resize() {
   if (!started || !world || !renderer) return;
+
+  if (!worldUsesSavedBounds) {
+    const defaultBounds = getDefaultWorldBounds();
+    if (world.bounds.width !== defaultBounds.width || world.bounds.height !== defaultBounds.height) {
+      world.resize(defaultBounds.width, defaultBounds.height);
+    }
+  }
+
   const { width, height } = measureCanvasSize();
   renderer.resize(width, height);
 }
@@ -1066,13 +1090,16 @@ function startSimulation({ savedPayload = null } = {}) {
   clearAwaySnapshot();
 
   if (savedPayload?.saveVersion === SAVE_VERSION) {
-    const { width, height } = resolveSavedWorldBounds(savedPayload);
+    const savedBounds = getSavedWorldBounds(savedPayload);
+    worldUsesSavedBounds = savedBounds != null;
+    const { width, height } = savedBounds ?? getDefaultWorldBounds();
     world = World.fromJSON(savedPayload, {
       width,
       height,
       initialFishCount
     });
   } else {
+    worldUsesSavedBounds = false;
     const { width, height } = getDefaultWorldBounds();
     world = new World(width, height, initialFishCount);
   }
