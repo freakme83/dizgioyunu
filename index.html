@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Obi Game Studios — Dizgi & Aquchi</title>
+  <meta name="description" content="Minimal browser games: Dizgi and Aquchi." />
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://dizgioyunu.com/">
+
+  <!-- FAVICONS -->
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@450;600;750&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#0b0d10;
+      --muted:#5b6675;
+      --line:rgba(16,24,40,.12);
+      --shadow:0 6px 16px rgba(16,24,40,.08);
+      --max:1020px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter, system-ui;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.45;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    a{text-decoration:none; color:inherit}
+
+    .wrap{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:50px 20px 120px;
+    }
+
+    header{padding-bottom:30px;}
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-weight:750;
+      font-size:18px;
+      letter-spacing:-.2px;
+    }
+
+    .brandLogo{
+      width:28px;
+      height:28px;
+      object-fit:contain;
+    }
+
+    h1{
+      margin:24px 0 10px;
+      font-size:clamp(30px,4vw,44px);
+      font-weight:750;
+      letter-spacing:-.9px;
+      line-height:1.05;
+    }
+
+    .subtitle{
+      margin:0;
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:22px;
+      margin-top:40px;
+    }
+
+    @media(min-width:900px){
+      .grid{grid-template-columns:1fr 1fr}
+    }
+
+    .card{
+      border:1px solid var(--line);
+      border-radius:22px;
+      overflow:hidden;
+      background:#fff;
+      box-shadow:var(--shadow);
+      display:flex;
+      flex-direction:column;
+      transition:transform .15s ease;
+    }
+
+    .card:hover{transform:translateY(-3px);}
+
+    .shot{
+      aspect-ratio:16/9;
+      overflow:hidden;
+      border-bottom:1px solid var(--line);
+    }
+
+    .shot a{
+      display:block;
+      width:100%;
+      height:100%;
+    }
+
+    .shot img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .content{
+      padding:18px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    h2{
+      margin:0;
+      font-size:20px;
+      font-weight:750;
+    }
+
+    .desc{
+      margin:0;
+      color:var(--muted);
+      font-size:14.5px;
+    }
+
+    .btn{
+      margin-top:12px;
+      align-self:flex-start;
+      padding:10px 14px;
+      border-radius:14px;
+      font-weight:600;
+      border:1px solid var(--line);
+      background:var(--text);
+      color:#fff;
+    }
+
+    hr{
+      border:0;
+      border-top:1px solid var(--line);
+      margin:50px 0 30px;
+    }
+
+    .studio h3{
+      margin:0;
+      font-size:16px;
+      font-weight:750;
+    }
+
+    .studio p{
+      margin:8px 0 0;
+      color:var(--muted);
+      font-size:14.5px;
+    }
+
+    .footerRow{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-top:18px;
+    }
+
+    /* Floating bottom-right icons */
+    .floatingLinks{
+      position:fixed;
+      right:24px;
+      bottom:24px;
+      display:flex;
+      gap:14px;
+      z-index:10;
+    }
+
+    .floatingLinks a{
+      width:42px;
+      height:42px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:50%;
+      border:1px solid var(--line);
+      background:#fff;
+      box-shadow:var(--shadow);
+      color:var(--muted);
+      transition:all .15s ease;
+    }
+
+    .floatingLinks a:hover{
+      transform:translateY(-3px);
+      color:var(--text);
+    }
+
+    .icon{
+      width:18px;
+      height:18px;
+    }
+  </style>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GVVFCT9J5D"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-GVVFCT9J5D');
+  </script>
+
+</head>
+
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <img src="/favicon-32x32.png" class="brandLogo" alt="Obi Game Studios">
+    <span>Obi Game Studios</span>
+  </div>
+
+  <h1>Minimal browser games.</h1>
+  <p class="subtitle">Clean UI. System-driven design.</p>
+</header>
+
+<section class="grid">
+
+  <!-- DIZGI -->
+  <article class="card">
+    <div class="shot">
+      <a href="/dizgi/">
+        <img src="/images/dizgi-shot.jpg" alt="Dizgi screenshot">
+      </a>
+    </div>
+    <div class="content">
+      <h2>Dizgi</h2>
+      <p class="desc">A fast Turkish word puzzle.</p>
+      <a class="btn" href="/dizgi/">Play</a>
+    </div>
+  </article>
+
+  <!-- AQUCHI -->
+  <article class="card">
+    <div class="shot">
+      <a href="/aquchi/">
+        <img src="/images/aquchi-shot.jpg" alt="Aquchi screenshot">
+      </a>
+    </div>
+    <div class="content">
+      <h2>Aquchi</h2>
+      <p class="desc">A cosy micro-ecosystem aquarium fish sim.</p>
+      <a class="btn" href="/aquchi/">Play</a>
+    </div>
+  </article>
+
+</section>
+
+<hr>
+
+<section class="studio">
+  <h3>About</h3>
+  <p>
+    Obi Game Studios builds small, focused browser games with minimal and precise design.
+  </p>
+
+  <div class="footerRow">
+    <a class="btn" href="https://buymeacoffee.com/dizgioyunu" target="_blank" rel="noopener">
+      ☕ Buy me a coffee
+    </a>
+  </div>
+</section>
+
+</div>
+
+<!-- Floating Bottom Right Icons -->
+<div class="floatingLinks">
+  <!-- X -->
+  <a href="https://x.com/DizgiOyunu" target="_blank" rel="noopener" aria-label="X">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d="M18.9 2H22l-6.8 7.8L23 22h-6.2l-4.9-6.4L6 22H3l7.3-8.4L1 2h6.3l4.5 5.9L18.9 2z"/>
+    </svg>
+  </a>
+
+  <!-- Mail -->
+  <a href="mailto:dizgi.oyunu@gmail.com" aria-label="Email">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5L4 8V6l8 5 8-5v2z"/>
+    </svg>
+  </a>
+</div>
+
+</body>
+</html>
