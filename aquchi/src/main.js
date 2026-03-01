@@ -61,6 +61,7 @@ let lastTrendSampleSimTimeSec = null;
 let lastTrendSampleHygiene01 = null;
 let smoothedHygieneDeltaPerMin = 0;
 let resizeDebounceId = null;
+let worldUsesSavedBounds = false;
 
 
 const fullscreenHint = document.createElement('div');
@@ -109,20 +110,35 @@ function loadSavedWorldSnapshot() {
 
 function getDefaultWorldBounds() {
   const isCoarsePointer = window.matchMedia?.('(pointer: coarse)')?.matches ?? false;
+  const isLandscapeViewport = window.innerWidth > window.innerHeight;
   const isMobileViewport = window.innerWidth < 860;
-  if (isCoarsePointer || isMobileViewport) {
+
+  if (isCoarsePointer) {
+    if (isLandscapeViewport) {
+      return { width: WORLD_DESKTOP_WIDTH, height: WORLD_DESKTOP_HEIGHT };
+    }
     return { width: WORLD_MOBILE_WIDTH, height: WORLD_MOBILE_HEIGHT };
   }
+
+  if (isMobileViewport) {
+    return { width: WORLD_MOBILE_WIDTH, height: WORLD_MOBILE_HEIGHT };
+  }
+
   return { width: WORLD_DESKTOP_WIDTH, height: WORLD_DESKTOP_HEIGHT };
 }
 
-function resolveSavedWorldBounds(payload) {
+function getSavedWorldBounds(payload) {
   const width = Number.isFinite(payload?.boundsWidth) ? payload.boundsWidth : null;
   const height = Number.isFinite(payload?.boundsHeight) ? payload.boundsHeight : null;
   if (width != null && height != null && width > 0 && height > 0) {
     return { width, height };
   }
-  return getDefaultWorldBounds();
+
+  return null;
+}
+
+function resolveSavedWorldBounds(payload) {
+  return getSavedWorldBounds(payload) ?? getDefaultWorldBounds();
 }
 
 function formatRelativeSavedAt(epochMs) {
@@ -251,9 +267,24 @@ ecosystemFailedTitle.style.fontSize = '22px';
 ecosystemFailedTitle.style.color = '#eaf7ff';
 
 const ecosystemFailedBody = document.createElement('p');
-ecosystemFailedBody.textContent = 'All fish are gone. This run cannot be continued.';
-ecosystemFailedBody.style.margin = '0 0 16px';
+ecosystemFailedBody.textContent = 'Echo system failed. All fish are gone. This run cannot be continued.';
+ecosystemFailedBody.style.margin = '0 0 12px';
 ecosystemFailedBody.style.color = 'rgba(232, 244, 255, 0.9)';
+
+const ecosystemFailedReport = document.createElement('pre');
+ecosystemFailedReport.style.margin = '0 0 14px';
+ecosystemFailedReport.style.padding = '10px 12px';
+ecosystemFailedReport.style.maxHeight = '44vh';
+ecosystemFailedReport.style.overflow = 'auto';
+ecosystemFailedReport.style.whiteSpace = 'pre-wrap';
+ecosystemFailedReport.style.wordBreak = 'break-word';
+ecosystemFailedReport.style.fontSize = '13px';
+ecosystemFailedReport.style.lineHeight = '1.5';
+ecosystemFailedReport.style.borderRadius = '10px';
+ecosystemFailedReport.style.border = '1px solid rgba(110, 173, 255, 0.36)';
+ecosystemFailedReport.style.background = 'rgba(6, 14, 20, 0.85)';
+ecosystemFailedReport.style.color = 'rgba(220, 236, 255, 0.96)';
+ecosystemFailedReport.style.userSelect = 'text';
 
 const ecosystemFailedActions = document.createElement('div');
 ecosystemFailedActions.style.display = 'flex';
@@ -271,7 +302,7 @@ ecosystemFailedRestartButton.style.fontWeight = '600';
 ecosystemFailedRestartButton.style.cursor = 'pointer';
 
 ecosystemFailedActions.append(ecosystemFailedRestartButton);
-ecosystemFailedCard.append(ecosystemFailedTitle, ecosystemFailedBody, ecosystemFailedActions);
+ecosystemFailedCard.append(ecosystemFailedTitle, ecosystemFailedBody, ecosystemFailedReport, ecosystemFailedActions);
 ecosystemFailedOverlay.append(ecosystemFailedCard);
 document.body.appendChild(ecosystemFailedOverlay);
 ecosystemFailedOverlay.setAttribute('data-cinema-hide', 'true');
@@ -751,6 +782,14 @@ corpseActionButton.addEventListener('click', () => {
 
 function resize() {
   if (!started || !world || !renderer) return;
+
+  if (!worldUsesSavedBounds) {
+    const defaultBounds = getDefaultWorldBounds();
+    if (world.bounds.width !== defaultBounds.width || world.bounds.height !== defaultBounds.height) {
+      world.resize(defaultBounds.width, defaultBounds.height);
+    }
+  }
+
   const { width, height } = measureCanvasSize();
   renderer.resize(width, height);
 }
@@ -785,6 +824,39 @@ const VISIBLE_MAX_STEP_SEC = 0.25;
 const HIDDEN_STEP_SEC = 0.25;
 const HIDDEN_TICK_MS = 1000;
 
+function formatDurationMmSs(totalSec) {
+  const safe = Math.max(0, Math.floor(Number.isFinite(totalSec) ? totalSec : 0));
+  const minutes = Math.floor(safe / 60);
+  const seconds = safe % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function buildEcosystemFailureReport() {
+  if (!world || typeof world.getEcosystemReport !== 'function') return '';
+  const report = world.getEcosystemReport();
+  const quant = (value, unit = '') => `<span style="color:#7fd1ff;font-weight:700;">${escapeHtml(value)}</span>${unit}`;
+  const lines = [
+    `Simulation lasted ${quant(formatDurationMmSs(report.simDurationSec))}.`,
+    `There were ${quant(report.eggsLaidCount)} eggs in the aquarium, and ${quant(report.birthsCount)} births occurred.`,
+    `There were ${quant(report.deathsCount)} deaths in the aquarium.`,
+    `At peak population, the aquarium had ${quant(report.peakPopulationCount)} fish.`,
+    `The longest-living fish was ${quant(report.longestLivedFishName)}.`,
+    `${quant(report.grandparentCount)} fish became grandparents.`,
+    `A total of ${quant(report.foodAmountConsumedTotal.toFixed(1))} feed was consumed.`
+  ];
+
+  return ['RUN REPORT', ...lines].join('\n');
+}
+
 function checkEcosystemFailure() {
   if (!world || ecosystemFailed) return;
 
@@ -808,6 +880,7 @@ function triggerEcosystemFailed() {
   autoPauseOverlayOpen = false;
   clearAwaySnapshot();
   localStorage.removeItem(SAVE_STORAGE_KEY);
+  ecosystemFailedReport.innerHTML = buildEcosystemFailureReport();
   ecosystemFailedOverlay.hidden = false;
 }
 
@@ -1066,13 +1139,16 @@ function startSimulation({ savedPayload = null } = {}) {
   clearAwaySnapshot();
 
   if (savedPayload?.saveVersion === SAVE_VERSION) {
-    const { width, height } = resolveSavedWorldBounds(savedPayload);
+    const savedBounds = getSavedWorldBounds(savedPayload);
+    worldUsesSavedBounds = savedBounds != null;
+    const { width, height } = savedBounds ?? getDefaultWorldBounds();
     world = World.fromJSON(savedPayload, {
       width,
       height,
       initialFishCount
     });
   } else {
+    worldUsesSavedBounds = false;
     const { width, height } = getDefaultWorldBounds();
     world = new World(width, height, initialFishCount);
   }

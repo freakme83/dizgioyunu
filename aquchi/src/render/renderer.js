@@ -96,11 +96,19 @@ export class Renderer {
     let availableHeight = this.tankRect.height;
     if (isCoarsePointer) {
       const dock = document.getElementById('deckToggle');
-      const canvasRect = this.canvas.getBoundingClientRect();
-      const dockRect = dock?.getBoundingClientRect?.();
-      if (dockRect) {
-        const overlapPx = Math.max(0, canvasRect.bottom - dockRect.top);
-        availableHeight = Math.max(100, this.tankRect.height - overlapPx);
+      const isDockVisible = dock && dock.offsetParent !== null;
+
+      if (isDockVisible) {
+        const canvasRect = this.canvas.getBoundingClientRect();
+        const dockRect = dock.getBoundingClientRect();
+        const hasDockArea = dockRect.height > 0;
+        const hasHorizontalOverlap = dockRect.right > canvasRect.left && dockRect.left < canvasRect.right;
+        const hasVerticalOverlap = dockRect.bottom > canvasRect.top && dockRect.top < canvasRect.bottom;
+
+        if (hasDockArea && hasHorizontalOverlap && hasVerticalOverlap) {
+          const overlapPx = Math.max(0, Math.min(canvasRect.bottom, dockRect.bottom) - Math.max(canvasRect.top, dockRect.top));
+          availableHeight = Math.max(100, this.tankRect.height - overlapPx);
+        }
       }
     }
 
