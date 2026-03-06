@@ -483,6 +483,24 @@ export class Fish {
     }
 
     if (this.repro?.state === 'LAYING' && Number.isFinite(this.repro.layTargetX) && Number.isFinite(this.repro.layTargetY)) {
+      const visibleFood = this.#findNearestFood(world);
+      const isHungry = this.hungerState === 'HUNGRY' || this.hungerState === 'STARVING';
+      if (isHungry && visibleFood) {
+        const nearbyFoodRadius = Math.max(20, FOOD_REACH_RADIUS * 6.5);
+        const foodDist = Math.hypot(visibleFood.x - this.position.x, visibleFood.y - this.position.y);
+        if (foodDist <= nearbyFoodRadius) {
+          this.behavior = {
+            mode: 'seekFood',
+            targetFoodId: visibleFood.id,
+            targetKind: visibleFood.kind ?? null,
+            speedBoost: FOOD_SPEED_BOOST[this.hungerState] ?? 1
+          };
+          this.target = { x: visibleFood.x, y: visibleFood.y };
+          this.#updateHoverAfterBehavior(world?.simTimeSec ?? 0);
+          return;
+        }
+      }
+
       this.behavior = {
         mode: 'seekLayTarget',
         targetFoodId: null,
