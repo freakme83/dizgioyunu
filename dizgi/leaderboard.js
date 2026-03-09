@@ -248,10 +248,11 @@ async function createSubmissionViaSite(formName, fields) {
   }
 }
 
-function buildKey(rawPlayerId, name) {
+function buildKey(rawPlayerId, name, mode) {
+  const safeMode = normalizeMode(mode);
   const pid = (rawPlayerId ?? "").toString().trim();
-  if (pid) return `pid:${pid.slice(0, 64)}`;
-  return `name:${normalizeTR(name)}`;
+  if (pid) return `pid:${pid.slice(0, 64)}|mode:${safeMode}`;
+  return `name:${normalizeTR(name)}|mode:${safeMode}`;
 }
 
 export async function handler(event) {
@@ -317,7 +318,7 @@ export async function handler(event) {
         safeIso(s?.created_at) ||
         null;
 
-      const key = buildKey(raw.playerId, name);
+      const key = buildKey(raw.playerId, name, mode);
 
       return {
         id: s?.id || null,
