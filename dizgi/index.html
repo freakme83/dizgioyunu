@@ -1860,7 +1860,27 @@ const gameOverlay = document.getElementById('game-overlay');
             try { localStorage.removeItem(bestKeyForMode(DIZGI_PENDING_KEY, mode)); } catch(_) {}
         }
 
-        function submitBestScoreToNetlify(payload) {
+        function showScoreSubmitStatus(message, kind = "info") {
+            const descEl = document.getElementById("overlay-desc");
+            if (!descEl) return;
+
+            let el = document.getElementById("dizgi-submit-status");
+            if (!el) {
+                el = document.createElement("div");
+                el.id = "dizgi-submit-status";
+                el.className = "mt-2 text-xs";
+                descEl.appendChild(el);
+            }
+
+            const cls = kind === "ok"
+                ? "text-emerald-300"
+                : (kind === "error" ? "text-amber-300" : "text-slate-400");
+
+            el.className = `mt-2 text-xs ${cls}`;
+            el.textContent = message;
+        }
+
+        async function submitBestScoreToNetlify(payload) {
             // Requires the hidden HTML form to exist at deploy time:
             // <form name="best-score" netlify ... hidden>...</form>
             const data = new URLSearchParams();
@@ -1897,14 +1917,19 @@ const gameOverlay = document.getElementById('game-overlay');
             } catch (_) {}
 
             // Post to site root (Netlify intercepts)
-            return fetch("/", {
+            try {
+                const res = await fetch("/", {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: data.toString()
-            }).catch(() => {});
+                });
+                return !!(res && res.ok);
+            } catch (_) {
+                return false;
+            }
         }
 
-                function maybeUpdateAndSubmitPersonalBest(finalScore) {
+                async function maybeUpdateAndSubmitPersonalBest(finalScore) {
             // Update local personal best; submit only when NEW best AND not already submitted
             const normalizedScore = Number(finalScore);
             if (!isValidScoreValue(normalizedScore)) return;
@@ -1927,10 +1952,32 @@ const gameOverlay = document.getElementById('game-overlay');
             if (name) {
                 const pending = getPendingBest(mode);
                 if (pending > lastSubmitted && isValidScoreValue(pending)) {
-                    submitBestScoreToNetlify({ playerName: name, playerId: getOrCreatePlayerId(), mode: mode, score: pending, playedAt: dizgiTodayISO() });
-                    setLastSubmittedBest(pending, mode);
-                    clearPendingBest(mode);
+                    showScoreSubmitStatus("Skor gönderiliyor…", "info");
+                    const ok = await submitBestScoreToNetlify({ playerName: name, playerId: getOrCreatePlayerId(), mode: mode, score: pending, playedAt: dizgiTodayISO() });
+                    if (ok) {
+                        setLastSubmittedBest(pending, mode);
+                        clearPendingBest(mode);
+                        showScoreSubmitStatus("Skor kaydedildi.", "ok");
+                    } else {
+                        showScoreSubmitStatus("Skor şu an gönderilemedi. Sonra tekrar denenecek.", "error");
+                    }
                 }
+            }
+        }
+
+        async function retryPendingBestSubmission(mode) {
+            const safeMode = normalizeScoreMode(mode);
+            const name = sanitizePlayerName(getStoredPlayerName());
+            if (!name) return;
+
+            const pending = getPendingBest(safeMode);
+            const lastSubmitted = getLastSubmittedBest(safeMode);
+            if (!(pending > lastSubmitted) || !isValidScoreValue(pending)) return;
+
+            const ok = await submitBestScoreToNetlify({ playerName: name, playerId: getOrCreatePlayerId(), mode: safeMode, score: pending, playedAt: dizgiTodayISO() });
+            if (ok) {
+                setLastSubmittedBest(pending, safeMode);
+                clearPendingBest(safeMode);
             }
         }
 
@@ -1968,7 +2015,7 @@ const gameOverlay = document.getElementById('game-overlay');
             const input = document.getElementById("dizgi-player-name-input");
             const btn = document.getElementById("dizgi-player-name-save");
 
-            const save = () => {
+            const save = async () => {
                 const cleaned = sanitizePlayerName(input?.value || "");
                 if (!cleaned) return;
                 setStoredPlayerName(cleaned);
@@ -1978,9 +2025,15 @@ const gameOverlay = document.getElementById('game-overlay');
                 const pending = getPendingBest(mode);
                 const lastSubmitted = getLastSubmittedBest(mode);
                 if (pending > lastSubmitted && isValidScoreValue(pending)) {
-                    submitBestScoreToNetlify({ playerName: cleaned, playerId: getOrCreatePlayerId(), mode: mode, score: pending, playedAt: dizgiTodayISO() });
-                    setLastSubmittedBest(pending, mode);
-                    clearPendingBest(mode);
+                    showScoreSubmitStatus("Skor gönderiliyor…", "info");
+                    const ok = await submitBestScoreToNetlify({ playerName: cleaned, playerId: getOrCreatePlayerId(), mode: mode, score: pending, playedAt: dizgiTodayISO() });
+                    if (ok) {
+                        setLastSubmittedBest(pending, mode);
+                        clearPendingBest(mode);
+                        showScoreSubmitStatus("Skor kaydedildi.", "ok");
+                    } else {
+                        showScoreSubmitStatus("Skor şu an gönderilemedi. Sonra tekrar denenecek.", "error");
+                    }
                 }
 
                 // Remove UI after saving
@@ -1993,6 +2046,11 @@ const gameOverlay = document.getElementById('game-overlay');
                 if (e.key === "Enter") save();
             });
         }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            retryPendingBestSubmission("classic");
+            retryPendingBestSubmission("easy");
+        });
 
 
         
